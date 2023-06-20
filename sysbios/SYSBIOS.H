@@ -2,10 +2,9 @@
 #define ___SYSBIOS_H_
 
 #include "config_sysbios.h"
+#include "stdint.h"
 
 
-
-typedef unsigned long utimer_t;
 
 
 
@@ -16,8 +15,55 @@ typedef struct {
 
 
 
-namespace SYSBIOS {
 
+namespace SYSBIOS {
+	
+#ifdef SBCPP
+class Timer {
+		utimer_t timer_data;
+	
+	public:
+		Timer ();
+		~Timer ();
+		utimer_t get ();
+		void set (utimer_t v);
+};
+
+
+class Periodic;
+
+enum EPERCBMODE {EPERCBMODE_STOP = 0, EPERCBMODE_PERIODIC, EPERCBMODE_REPEATE, EPERCBMODE_ENDENUM};
+
+typedef struct {
+	Periodic *obj;
+	EPERCBMODE state;
+
+	uint32_t c_period;
+	uint32_t l_period;
+	uint32_t repeate_counter;
+} s_evntdata_cb_t;
+
+typedef s_evntdata_cb_t* HPERIOD;
+
+class Periodic {
+		static s_evntdata_cb_t evnt_arr_per[C_SBCPP_PERIODIC];
+		static uint32_t evdatacb_cnt;
+		static bool check_handler (HPERIOD h);
+	
+	protected:
+		static HPERIOD add_timer_cb (Periodic *obj);
+		static void timer_start_one_shot (HPERIOD h, uint32_t period);
+		static void timer_start_periodic (HPERIOD h, uint32_t period);
+		static void timer_start_repeate (HPERIOD h, uint32_t period, uint32_t rep_cnt);
+		static void timer_stop (HPERIOD h);
+		
+	public:
+		virtual void periodic_cb (HPERIOD h) = 0;
+		static uint32_t get_periodic_cb_cnt ();
+		static s_evntdata_cb_t *get_periodic_tag (uint32_t ix);
+};
+
+#endif
 
 extern  unsigned char LastDeltaTicks;
 unsigned long GetTickCountLong();
