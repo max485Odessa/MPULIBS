@@ -697,7 +697,7 @@ return rv;
 
 
 
-bool TSTMSTRING::ToULong (unsigned long &ul_dat)
+bool TSTMSTRING::ToULong (uint32_t &ul_dat)
 {
 bool rv = false;
 if (ConvertStrToULong ((unsigned char*)lpStrRam, &ul_dat)) rv = true;
@@ -833,7 +833,7 @@ if (size_str && lpStrRam)
         uint64_t mult = 1, datrslt, rslt64 = 0;
         uint8_t cnt = size_str, rslt8;
         char *scrch = lpStrRam;
-        uint8_t dat;
+        //uint8_t dat;
         while (cnt)
             {
             mult = 1 << ((cnt - 1) * 4);
@@ -914,7 +914,7 @@ return rv;
 
 
 
-char *TSTMSTRING::SkipBlank (char *lsrc, unsigned long maxsz)
+char *TSTMSTRING::SkipBlank (char *lsrc, uint32_t maxsz)
 {
 while (maxsz)
     {
@@ -957,10 +957,10 @@ return lpEnd;
 }
 
 
-unsigned char *TSTMSTRING::UlongToStr (unsigned char *lpDest, unsigned long datas)
+unsigned char *TSTMSTRING::UlongToStr (unsigned char *lpDest, uint32_t datas)
 {
 unsigned char flagnz=0, resd;
-unsigned long delmt = 1000000000;
+uint32_t delmt = 1000000000;
 while (1)
 	{
 	if (datas>=delmt)
@@ -1036,26 +1036,32 @@ return lpDest;
 
 
 
-bool TSTMSTRING::str_compare (char *lStr1, char *lStr2, unsigned long size)
+bool TSTMSTRING::str_compare (char *lStr1, char *lStr2, uint32_t size)
 {
 	bool rv = false;
-	if (size)
+	if (lStr1 && lStr2 && size)
 		{
+		rv = true;
 		while (size)
 			{
-			if (*lStr1++ != *lStr2++) break;
+			if (*lStr1 != *lStr2)
+				{
+				rv = false;
+				break;
+				}
+			lStr1++;
+			lStr2++;
 			size--;
 			}
-		if (!size) rv = true;
 		}
 	return rv;
 }
 
 
 
-unsigned long TSTMSTRING::lenstr (char *lpAdr)
+uint32_t TSTMSTRING::lenstr (char *lpAdr)
 {
-unsigned long rv = 0;
+uint32_t rv = 0;
 if (lpAdr)
     {
     while (true)
@@ -1065,6 +1071,23 @@ if (lpAdr)
         }
     }
 return rv;
+}
+
+
+
+uint32_t TSTMSTRING::lenstr_max (const char *lsrt, uint32_t maxsz)
+{
+	uint32_t sz = 0;
+	if (lsrt)
+		{
+		while (maxsz)
+			{
+			if (!*lsrt++) break;
+			sz++;	
+			maxsz--;
+			}
+		}
+return sz;
 }
 
 
@@ -1135,7 +1158,7 @@ if (lpRamData)
         lprv++;
         f_subzero = true;
         }
-    unsigned long udata;
+    uint32_t udata;
     long data;
     lprv = ConvertStrToULong (lprv, &udata);
     if (lprv)
@@ -1157,14 +1180,14 @@ return lprv;
 
 // преобразует данные из текста по указаному адресу в unsigned long число
 // если число больше чем 10 знакомест или его нет в первом байте указанного адресса, возвращает 0 - (ошибка)
-unsigned char *TSTMSTRING::ConvertStrToULong (unsigned char *lpRamData, unsigned long *lpDataOut)
+unsigned char *TSTMSTRING::ConvertStrToULong (unsigned char *lpRamData, uint32_t *lpDataOut)
 {
 unsigned char *lprv = 0;
 if (lpRamData)
         {
         // найти конец цифровой строки
         unsigned char dtasd;
-        unsigned long cnterN = 0;
+        uint32_t cnterN = 0;
         unsigned char *lpTmpAdr = lpRamData;
         while (true)
             {
@@ -1194,7 +1217,7 @@ return lprv;
 
 
 
-bool TSTMSTRING::TxtToFloat (float *lpDest, char *lpTxtIn, unsigned long Sizes)
+bool TSTMSTRING::TxtToFloat (float *lpDest, char *lpTxtIn, uint32_t Sizes)
 {
 bool rv = false;
 if (lpDest && lpTxtIn)
@@ -1203,9 +1226,9 @@ if (lpDest && lpTxtIn)
 	if (Sizes && Sizes < 32)
 		{
 		float Datf = 0;
-		unsigned long NLongDroba = 0;
-		unsigned long NLongCel = 0;
-		unsigned long len_drb = 0,len_cel = 0;
+		uint32_t NLongDroba = 0;
+		uint32_t NLongCel = 0;
+		uint32_t len_drb = 0,len_cel = 0;
         bool f_sig = false;
         if (lpTxtIn[0] == '-')
           {
@@ -1267,7 +1290,7 @@ return rv;
 
 // преобразует данные из текста по указаному адресу в unsigned long число
 // если число больше чем 10 знакомест или его нет в первом байте указанного адресса, возвращает 0 - (ошибка)
-bool TSTMSTRING::TxtToULong (unsigned char *lpRamData, unsigned char sz, unsigned long *lpDataOut)
+bool TSTMSTRING::TxtToULong (unsigned char *lpRamData, unsigned char sz, uint32_t *lpDataOut)
 {
 bool rv = false;
 if (lpRamData)
@@ -1297,9 +1320,9 @@ return rv;
 }
 
 
-unsigned long TSTMSTRING::abs32 (long datas)
+uint32_t TSTMSTRING::abs32 (long datas)
 {
-unsigned long rv=(unsigned long)datas;
+uint32_t rv=(uint32_t)datas;
 if (rv>=0x80000000)
 	{
 	rv=(rv ^ 0xFFFFFFFF)+1;
@@ -1308,9 +1331,9 @@ return rv;
 }
 
 
-unsigned long TSTMSTRING::CheckDecimal (char *lTxt, unsigned long sz)
+uint32_t TSTMSTRING::CheckDecimal (char *lTxt, uint32_t sz)
 {
-unsigned long rv = 0;
+uint32_t rv = 0;
 if (lTxt && sz)
 	{
 	unsigned char datt;

@@ -1,8 +1,8 @@
 #include "rfbasecmd.h"
+#include "STMSTRING.h"
 
 
-
-TRFBASECMD::TRFBASECMD (IFCRFTX *objc, uint16_t abcnt_max, uint32_t rxalcsz) : c_abon_max (abcnt_max), c_rxbuf_size (rxalcsz)
+TRFBASECMD::TRFBASECMD (IFCRFTX *objc, uint16_t abcnt_max, uint32_t rxalcsz) : c_rxbuf_size (rxalcsz), c_abon_max (abcnt_max)
 {
 rxbufer = new uint8_t[c_rxbuf_size];
 abitm = new S_ABONENT_ITEM_T[c_abon_max];
@@ -76,7 +76,7 @@ long TRFBASECMD::abnt_find (const S_RFSERIAL_T *sn)
 		long ix = 0;
 		while (ix < abon_list_amount)
 			{
-			if (str_compare ((char*)sn, (char*)abitm[ix].serial.n, sizeof(S_RFSERIAL_T)))
+			if (TSTMSTRING::str_compare ((char*)sn, (char*)abitm[ix].serial.n, sizeof(S_RFSERIAL_T)))
 				{
 				rv = ix;
 				break;
@@ -158,6 +158,9 @@ bool TRFBASECMD::is_free ()
 {
 	return !f_tx_state;
 }
+
+
+
 
 
 
@@ -354,8 +357,9 @@ void TRFMASTER::RF_txend_cb (bool f_ok)
 
 
 
-TRFSLAVE::TRFSLAVE (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz): TRFBASECMD (objc, abcnt, rxalcsz)
+TRFSLAVE::TRFSLAVE (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz, IUSERRFCB *us): TRFBASECMD (objc, abcnt, rxalcsz)
 {
+	user_cb = us;
 	txobj->setrx_cb (this);
 }
 
@@ -389,7 +393,8 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.src_id = self_id;
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 					
-				if (user_get_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), userparam))
+
+				if (user_cb->user_get_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), userparam))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					resp_frame->ix = in_req->ix;
@@ -415,7 +420,7 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.src_id = self_id;
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 
-				if (user_set_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), &resp_frame->param))
+				if (user_cb->user_set_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), &resp_frame->param))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					resp_frame->ix = in_req->ix;
@@ -442,7 +447,7 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 				S_EVENT_ITEM_T event_user;
 				resp_frame->ix = in_req->ix;
-				if (user_get_event_req_cb (in_req->hdr.src_id, in_req->ix, &event_user))
+				if (user_cb->user_get_event_req_cb (in_req->hdr.src_id, in_req->ix, &event_user))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					resp_frame->event = event_user;
@@ -464,7 +469,7 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.src_id = self_id;
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 				resp_frame->event_code = in_req->event_code;
-				if (user_call_event_req_cb (in_req->hdr.src_id, in_req->event_code, in_req->time_event_work))
+				if (user_cb->user_call_event_req_cb (in_req->hdr.src_id, in_req->event_code, in_req->time_event_work))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					}
@@ -485,7 +490,7 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.src_id = self_id;
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 				S_DEVSTATE_T devst;
-				if (user_get_state_req_cb (in_req->hdr.src_id, &devst))
+				if (user_cb->user_get_state_req_cb (in_req->hdr.src_id, &devst))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					resp_frame->state = devst;

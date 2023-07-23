@@ -2,7 +2,7 @@
 #define _h_rfcmd_defines_h_
 
 #include <stdint.h>
-#include "TPARAMS.h"
+//#include "TPARAMS.h"
 
 #define C_SERIALNUMBER_SIZE 5
 #define C_PARAMCAPTION_SIZE 32
@@ -12,6 +12,7 @@ enum ESENSTYPE {ESENSTYPE_NONE = 0, \
 ESENSTYPE_PRESSURE = 1, \
 };
 
+enum EPARAMTYPE {EPARAMTYPE_NONE = 0, EPARAMTYPE_BOOL = 1, EPARAMTYPE_I32 = 2, EPARAMTYPE_U32 = 3, EPARAMTYPE_I64 = 4, EPARAMTYPE_U64 = 5, EPARAMTYPE_RAW8 = 6, EPARAMTYPE_FLOAT = 7, EPARAMTYPE_STR32 = 8, EPARAMTYPE_ENDENUM = 9};
 
 typedef uint16_t local_rf_id_t;
 enum ERESPSTATE {ERESPSTATE_OK = 0, ERESPSTATE_ERROR = 1, ERESPSTATE_TIMEOUT = 2, ERESPSTATE_ENDENUM = 3};
@@ -19,6 +20,18 @@ enum ERESPSTATE {ERESPSTATE_OK = 0, ERESPSTATE_ERROR = 1, ERESPSTATE_TIMEOUT = 2
 //enum EEVRESULT {EEVRESULT_OK = 0, EEVRESULT_PROCESS = 1, EEVRESULT_ERROR = 2, EEVRESULT_TIMEOUT = 3, EEVRESULT_ENDENUM = 4};
 
 #pragma pack (push,1)
+
+typedef struct {
+	union {
+		bool v_b;
+		uint8_t raw[8];
+		int64_t v_i64;
+		uint64_t v_u64;
+		int32_t v_i32;
+		uint32_t v_u32;
+		float v_f;
+	} u;
+} S_PARAMVALUE_T;
 
 typedef struct {
 	uint8_t n[C_SERIALNUMBER_SIZE];
