@@ -56,6 +56,7 @@ class TRFBASECMD {
 		void set_selfid (local_rf_id_t sid);
 		bool add_abonent (S_ABONENT_ITEM_T *abnt);
 		void clear_abonent_list ();
+
 };
 
 
@@ -83,19 +84,29 @@ class TRFMASTER: protected TRFBASECMD, public TFFC, public IFCRFRX {
 };
 
 
-
-class TRFSLAVE: protected TRFBASECMD, public TFFC, public IFCRFRX {
-		virtual void Task ();
-		virtual void RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi);
-		virtual void RF_txend_cb (bool f_ok);
-	protected:
+class IUSERRFCB {
+	public:
 		virtual bool user_call_event_req_cb (local_rf_id_t dvid, uint32_t event_code, uint32_t ev_time) = 0;
 		virtual bool user_get_event_req_cb (local_rf_id_t dvid, uint16_t ix, S_EVENT_ITEM_T *evnt) = 0;
 		virtual bool user_get_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src) = 0;	// пользователь должен изьять параметр и передать его по ссылке
 		virtual bool user_set_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T *src) = 0;
 		virtual bool user_get_state_req_cb (local_rf_id_t dvid, S_DEVSTATE_T *src) = 0;	
+};
+
+
+class TRFSLAVE: protected TRFBASECMD, public TFFC, public IFCRFRX {
+		virtual void Task ();
+		virtual void RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi);
+		virtual void RF_txend_cb (bool f_ok);
+		IUSERRFCB *user_cb;
+	protected:
+		//virtual bool user_call_event_req_cb (local_rf_id_t dvid, uint32_t event_code, uint32_t ev_time);
+		//virtual bool user_get_event_req_cb (local_rf_id_t dvid, uint16_t ix, S_EVENT_ITEM_T *evnt);
+		//virtual bool user_get_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src);	// пользователь должен изьять параметр и передать его по ссылке
+		//virtual bool user_set_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T *src);
+		//virtual bool user_get_state_req_cb (local_rf_id_t dvid, S_DEVSTATE_T *src) = 0;	
 	public:
-		TRFSLAVE (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz);
+		TRFSLAVE (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz, IUSERRFCB *us);
 
 };
 

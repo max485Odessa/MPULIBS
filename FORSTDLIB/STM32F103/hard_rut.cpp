@@ -91,8 +91,21 @@ static void hard_gpio_init_raw (GPIO_InitTypeDef *gpio, S_GPIOPIN *inarr, unsign
 }
 
 
+void _pin_pp_to (S_GPIOPIN *lp_pin, bool val)
+{
+	if (val)
+		{
+    lp_pin->port->BSRR = lp_pin->pin;
+		}
+  else
+		{
+    lp_pin->port->BRR = lp_pin->pin;
+		}
+}
 
-void _pin_low_init_out_op (S_GPIOPIN *lp_pin, unsigned char cnt)
+
+
+void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	while (cnt)
@@ -102,6 +115,7 @@ void _pin_low_init_out_op (S_GPIOPIN *lp_pin, unsigned char cnt)
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_OD;
 		GPIO_InitStructure.GPIO_Pin = lp_pin->pin;
 		GPIO_Init (lp_pin->port, &GPIO_InitStructure);
+		_pin_pp_to (lp_pin, lp_pin->def_val);
 		lp_pin++;
 		cnt--;
 		}
@@ -119,6 +133,7 @@ void _pin_low_init_out_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
 		GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
 		GPIO_InitStructure.GPIO_Pin = lp_pin->pin;
 		GPIO_Init (lp_pin->port, &GPIO_InitStructure);
+		_pin_pp_to (lp_pin, lp_pin->def_val);
 		lp_pin++;
 		cnt--;
 		}
@@ -152,7 +167,7 @@ void _pin_low_init_adc (S_GPIOPIN *lp_pin, unsigned char cnt)
 	hard_gpio_init_raw (&GPIO_InitStructure, lp_pin, cnt);
 }
 
-//  GPIOOType_TypeDef o_type, GPIOPuPd_TypeDef plr_type
+
 
 void _pin_low_init_af_o_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
 {
@@ -162,6 +177,5 @@ void _pin_low_init_af_o_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
 	GPIO_InitStructure.GPIO_Pin = lp_pin->pin;
 	hard_gpio_init_raw (&GPIO_InitStructure, lp_pin, cnt);	
 }
-
 
 

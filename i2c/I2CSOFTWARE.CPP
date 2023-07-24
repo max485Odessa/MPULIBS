@@ -5,7 +5,7 @@
 
 void TI2CIFACE::Pause_I2C ()
 {
-volatile unsigned char cnt = 4;	// 3 текущая пауза на 330 кгц настроена  было 10
+volatile unsigned char cnt = 10;	// 3 текущая пауза на 330 кгц настроена
 while (cnt)
 	{
 	cnt--;
@@ -128,21 +128,13 @@ return rv;
 
 
 
-/*
-// без сдвига 8 бит
-void TI2CIFACE::SetSlaveAdress (unsigned char dev_adr)
-{
-	DEVADRESS = dev_adr;
-}
-*/
-
 
 bool TI2CIFACE::WriteFrame (unsigned char DEVADRESS, unsigned char DestReg, unsigned char *lTx, unsigned short tx_size)
 {
 	bool rv = false;
 	if (tx_size)
 		{
-		//DEVADRESS = DEVADRESS << 1;
+		DEVADRESS = DEVADRESS << 1;
 		Start_I2C ();
 		do {
 				if (DataOut_I2C (DEVADRESS)) break;		// WRITE BIT
@@ -167,7 +159,7 @@ bool TI2CIFACE::ReadFrame (unsigned char DEVADRESS, unsigned char SrcReg, unsign
 bool rv = false;
 	if (rx_size)
 		{
-		//DEVADRESS = DEVADRESS << 1;
+		DEVADRESS = DEVADRESS << 1;
 		Start_I2C ();
 		do {
 				bool ack_level = false;

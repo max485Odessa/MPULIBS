@@ -90,7 +90,7 @@ public:
         void ChangeChars (char schar, char dchar);
 
         bool ToLong (long &ul_dat);
-        bool ToULong (unsigned long &ul_dat);
+        bool ToULong (uint32_t &ul_dat);
         bool ToFloat (float &ul_dat);
         bool HexToUint64 (uint64_t &ul_dat);
 
@@ -102,21 +102,22 @@ public:
         unsigned long size ();
 
         static bool hex1bin (uint8_t dat, uint8_t &rslt);
-        static char *SkipBlank (char *lsrc, unsigned long maxsz);
+        static char *SkipBlank (char *lsrc, uint32_t maxsz);
         static unsigned char *FloatToString (unsigned char *lpRamBuf, float datas, unsigned char pcnt);
-        static unsigned char *UlongToStr (unsigned char *lpDest, unsigned long datas);
-        static char *CopyMemorySDC (char *lpSour, char *lpDest, unsigned int sizes);
-        static bool str_compare (char *lStr1, char *lStr2, unsigned long size);
-        static unsigned long lenstr (char *lpAdr);
+        static unsigned char *UlongToStr (unsigned char *lpDest, uint32_t datas);
+        static char *CopyMemorySDC (char *lpSour, char *lpDest, uint32_t sizes);
+        static bool str_compare (char *lStr1, char *lStr2, uint32_t size);
+        static uint32_t lenstr (char *lpAdr);
         static unsigned char *LongToStr (unsigned char *lpDest, long datas);
         static char ConvBinToASCIIHex (unsigned char datas);
         static void ByteToHEX (unsigned char *lpRams,unsigned char datas);
         static unsigned char *ConvertStrToLong (unsigned char *lpRamData, long *lpDataOut);
-        static unsigned char *ConvertStrToULong (unsigned char *lpRamData, unsigned long *lpDataOut);
-        static bool TxtToFloat (float *lpDest, char *lpTxtIn, unsigned long Sizes);
-        static bool TxtToULong (unsigned char *lpRamData, unsigned char sz, unsigned long *lpDataOut);
-        static unsigned long abs32 (long datas);
-        static unsigned long CheckDecimal (char *lTxt, unsigned long sz);
+        static unsigned char *ConvertStrToULong (unsigned char *lpRamData, uint32_t *lpDataOut);
+        static bool TxtToFloat (float *lpDest, char *lpTxtIn, uint32_t Sizes);
+        static bool TxtToULong (unsigned char *lpRamData, unsigned char sz, uint32_t *lpDataOut);
+        static uint32_t abs32 (long datas);
+        static uint32_t CheckDecimal (char *lTxt, uint32_t sz);
+				static uint32_t lenstr_max (const char *lsrt, uint32_t maxsz);
         //operator  char*() ;
 };
 

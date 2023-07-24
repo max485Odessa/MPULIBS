@@ -1,4 +1,6 @@
 #include "TPARAMS.h"
+#include "STMSTRING.h"
+#include "rutine.h"
 
 static S_CONTROL_FLOAT_T param_press_profile = {EPARAMTYPE_FLOAT, "profile", 1, 6, 3};
 static S_CONTROL_FLOAT_T param_press_on_a = {EPARAMTYPE_FLOAT, "presure_a.on", 1, 6, 3};
@@ -304,4 +306,118 @@ void IRFPARAMS::set_papam_f (EPRMIX ix, float prm)
 		}
 }
 
+
+
+long IRFPARAMS::find_param_to_name (const char *name)
+{
+long rv = -1, ix = 0;	
+if (name)
+	{
+	uint32_t len_name = lenstr_max (name, sizeof(S_PARAM_CAPTION_T));
+	while (ix < EPRMIX_ENDENUM) 
+		{
+			if (TSTMSTRING::str_compare (const_cast<char*>(list[ix]->name),const_cast<char*>(name), len_name))
+			{
+			rv = ix;
+			break;
+			}
+		ix++;
+		}
+	}
+return rv;
+}
+
+
+
+bool IRFPARAMS::get_param (EPRMIX ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &dst)
+{
+	bool rv = false;
+	long ixfnd = -1;
+	
+	if (ix < EPRMIX_ENDENUM) 
+		{
+		ixfnd = ix;
+		}
+	else
+		{
+		ixfnd = find_param_to_name (name->txt);
+		}
+
+		
+	if (ixfnd >= 0)
+		{
+		S_HDRPARAM_T *hdr = list[ixfnd];
+		dst.type = hdr->type;
+		switch (hdr->type)
+			{
+			case EPARAMTYPE_U32:
+				{
+				S_CONTROL_UINT32_T *indata = (S_CONTROL_UINT32_T*)list[ixfnd];
+				dst.param.u.dig.def.u.v_u32 = indata->def;
+				dst.param.u.dig.max.u.v_u32 = indata->max;
+				dst.param.u.dig.min.u.v_u32 = indata->min;
+				dst.param.u.dig.val.u.v_u32 = data[ixfnd].data.u.v_u32;
+				rv = true;
+				break;
+				}
+			case EPARAMTYPE_FLOAT:
+				{
+				S_CONTROL_FLOAT_T *indata = (S_CONTROL_FLOAT_T*)list[ixfnd];
+				dst.param.u.dig.def.u.v_f = indata->def;
+				dst.param.u.dig.max.u.v_f = indata->max;
+				dst.param.u.dig.min.u.v_f = indata->min;
+				dst.param.u.dig.val.u.v_f = data[ixfnd].data.u.v_f;
+				rv = true;
+				break;
+				}
+			default: break;
+			}
+		}
+	return rv;
+}
+
+
+
+bool IRFPARAMS::set_param (EPRMIX ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src)
+{
+	bool rv = false;
+	long ixfnd = -1;
+	
+	if (ix < EPRMIX_ENDENUM) 
+		{
+		ixfnd = ix;
+		}
+	else
+		{
+		ixfnd = find_param_to_name (name->txt);
+		}
+
+		
+	if (ixfnd >= 0)
+		{
+		S_HDRPARAM_T *hdr = list[ixfnd];
+		if (src.type == hdr->type)
+			{
+			switch (hdr->type)
+				{
+				case EPARAMTYPE_U32:
+					{
+					//S_CONTROL_UINT32_T *outdata = (S_CONTROL_UINT32_T*)list[ix];
+					data[ix].data.u.v_u32 = src.param.u.dig.val.u.v_u32;
+					rv = true;
+					break;
+					}
+				case EPARAMTYPE_FLOAT:
+					{
+					//S_CONTROL_FLOAT_T *outdata = (S_CONTROL_FLOAT_T*)list[ix];
+					data[ix].data.u.v_f = src.param.u.dig.val.u.v_f;
+					rv = true;
+					break;
+					}
+				default: break;
+				}
+			}
+		}
+	return rv;
+}
 
