@@ -55,7 +55,7 @@ template <class Tp>
 unsigned long TTFIFO<Tp>::is_free_space ()
 {
 unsigned long rv = 0;
-if (fill_count < c_alloc_frames) rv = fill_count;
+if (fill_count < c_alloc_frames) rv = c_alloc_frames - fill_count;
 return rv;	
 }
 
