@@ -10,16 +10,19 @@ class TTFIFO {
 		unsigned long push_ix;
 		unsigned long pop_ix;
 		unsigned long fill_count;
+		unsigned long peack_count;
 		Tp *circlbuffer;
 	
 	public:
 		TTFIFO (unsigned long el_count);	// елементный размер
 		unsigned long is_free_space ();
 		unsigned long frame_count ();
+		unsigned long statistic_peak ();
 		bool push (const Tp *frm);
 		bool pop (Tp &frm);
 		bool peek (Tp &frm);
 		void clear ();
+		
 };
 
 
@@ -29,6 +32,14 @@ TTFIFO<Tp>::TTFIFO (unsigned long el_count) : c_alloc_frames (el_count)
 {
 circlbuffer = new Tp[el_count];
 clear();
+peack_count = 0;
+}
+
+
+template <class Tp>
+unsigned long TTFIFO<Tp>::statistic_peak ()
+{
+	return peack_count;
 }
 
 
@@ -68,6 +79,7 @@ bool TTFIFO<Tp>::push (const Tp *frm)
 		if (push_ix >= c_alloc_frames) push_ix = 0;
 		circlbuffer[push_ix++] = *frm;
 		fill_count++;
+		if (fill_count > peack_count) peack_count = fill_count;
 		rv = true;
 		}
 	return rv;
