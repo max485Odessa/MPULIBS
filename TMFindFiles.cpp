@@ -2,12 +2,70 @@
 #include "filerut.hpp"
 #include "textrut.hpp"
 #include "windows.h"
+#include "STMSTRING.h"
 
 
 TMFindFiles::TMFindFiles ()
 {
-BaseSearchName = "";
+BaseSearch = "";
 HNDLSearchRaw = INVALID_HANDLE_VALUE;
+}
+
+
+
+bool TMFindFiles::SetCurrentDir (const TDString &dst_dname)
+{
+return SetCurrentDirectory (dst_dname.c_str());
+}
+
+
+
+bool TMFindFiles::CreateDirPaths (const TDString &strpathe, bool f_open_cpath)
+{
+bool rv = false;
+TDString OutDiskName = "", OutPathNames = "", OutFileName = "";
+TDString curpath = "";
+if (!f_open_cpath) GetCurrentDirectory (curpath);
+if (FullExtractFilenamePath ((char*)strpathe.c_str(), OutDiskName, OutPathNames, OutFileName))
+    {
+    unsigned long cntr = 0, fnd_cnt;
+    char *ltxt = (char*)OutPathNames.c_str();
+    TSTMSTRING strin (ltxt, ltxt, GetLenS (ltxt) + 1);
+    strin.getcomastring_indx (0, 0xFFFF, '\\', &cntr);
+    long ix = 0, fnd_ix = 0;
+    
+    TDString resltpath = "";
+    resltpath += OutDiskName;
+    resltpath += ":\\";
+
+    static char buf[256];
+    TSTMSTRING fsp (buf, sizeof(buf));
+
+    bool rslt = SetCurrentDir (resltpath);
+    while (rslt && ix < cntr)
+        {
+        fsp = "";
+        strin.getcomastring_indx (&fsp, fnd_ix, '\\', &fnd_cnt);
+        if (!fsp.Length()) break;
+
+        resltpath += fsp.c_str(); resltpath += "\\";
+        if (!SetCurrentDir (resltpath))
+            {
+            // папки небыло, создаем папку
+            if (!CreateDirectory_E (fsp.c_str())) break;
+            }
+        if (!SetCurrentDir (resltpath)) break;
+
+        fnd_ix++;
+        ix++;
+        }
+    if (!fsp.Length())
+        {
+        if (ix == (cntr - 1)) rv = true;
+        }
+    }
+if (!f_open_cpath) SetCurrentDir (curpath);
+return rv;
 }
 
 
@@ -29,13 +87,21 @@ unsigned long szstr = GetLenStr (lpath);
 if (szstr > 2)
     {
     if (lpath[(szstr - 1)] != '\\') strpathe = strpathe + '\\';
-    BaseSearchName = strpathe;
+    BaseSearch = strpathe;
     }
 else
     {
-    BaseSearchName = "";
+    BaseSearch = "";
     }
 return rv;
+}
+
+
+
+void TMFindFiles::GetCurrentDirectory (TDString &dst_dname)
+{
+TDString str = GetCurrentDir().c_str();
+dst_dname = str.c_str();
 }
 
 
@@ -84,7 +150,7 @@ while (rslt)
     if (curExt == filterExt || filterExt == "*")
         {
         // расширение совпало с фильтром - удалить файл
-        TDString fullnames = BaseSearchName + FndFile;
+        TDString fullnames = BaseSearch + FndFile;
         if (DeleteFile_E ((char*)fullnames.c_str())) rv++;
         }
     rslt = FindNext_File (FndFile);
@@ -100,7 +166,7 @@ bool TMFindFiles::FindFistRaw (TDString &OutFileName)
 {
 bool rv = false;
 OutFileName = "";
-TDString FullFiltr = BaseSearchName + "*.*";
+TDString FullFiltr = BaseSearch + "*.*";
 HNDLSearchRaw = FindFirstFile (FullFiltr.c_str (),&FDRaw);
 if (HNDLSearchRaw != INVALID_HANDLE_VALUE)
     {
@@ -173,9 +239,9 @@ unsigned long TMFindFiles::GetListFileName (TDString filterstr, TDString &DestLi
 {
 unsigned long rv = 0;
 DestList = "";
-if (BaseSearchName != "")
+if (BaseSearch != "")
     {
-    TDString strpathe = BaseSearchName + filterstr;
+    TDString strpathe = BaseSearch + filterstr;
     if (MaxCntFiles)
         {
         TDString locstr = "";
@@ -207,9 +273,9 @@ unsigned long TMFindFiles::GetListDirName (TDString filterstr, TDString &DestLis
 {
 unsigned long rv = 0;
 DestList = "";
-if (BaseSearchName != "")
+if (BaseSearch != "")
     {
-    TDString strpathe = BaseSearchName + filterstr;
+    TDString strpathe = BaseSearch + filterstr;
     if (MaxCntFiles)
         {
         TDString locstr = "";

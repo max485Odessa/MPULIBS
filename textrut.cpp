@@ -184,13 +184,13 @@ return strRv;
 bool GetBitMasiv (TEX::BUFPAR *lInp, unsigned long BitN, bool &GetValue)
 {
 bool rv = false;
-if (lInp && lInp->lpRam && lInp->sizes)
+if (lInp && lInp->lpRam && lInp->Sizes)
     {
     unsigned long ByteOffsr = BitN / 8;
     unsigned char BitOffs = BitN % 8;
     unsigned char Mask = 128;
     Mask = Mask >> BitOffs;
-    if (lInp->sizes > ByteOffsr)
+    if (lInp->Sizes > ByteOffsr)
         {
         unsigned char *lRam = (unsigned char*)lInp->lpRam;
         rv = true;
@@ -212,13 +212,13 @@ return rv;
 bool SetBitMasiv (TEX::BUFPAR *lDst, unsigned long BitN, bool valdat)
 {
 bool rv = false;
-if (lDst && lDst->lpRam && lDst->sizes)
+if (lDst && lDst->lpRam && lDst->Sizes)
     {
     unsigned long ByteOffsr = BitN / 8;
     unsigned char BitOffs = BitN % 8;
     unsigned char Mask = 128;
     Mask = Mask >> BitOffs;
-    if (lDst->sizes > ByteOffsr)
+    if (lDst->Sizes > ByteOffsr)
         {
         unsigned char *lRam = (unsigned char*)lDst->lpRam;
         rv = true;
@@ -381,7 +381,7 @@ if (rv == 3)
         Dig = ConvertStringToInt ((char*)OutStr.c_str());
         if (Dig < 0) Dig = 0;
         if (Dig > 255) Dig = 255;
-        Dsst->IPADR[IndxDst] = Dig;
+        Dsst->ip.IPADR [IndxDst] = Dig;
         IndxDst++;
         }
     }
@@ -692,7 +692,7 @@ if (Sizes)
         {
         if (BuferDirNames[Sizes] != '\\') BuferDirNames[Sizes] = '\\';
         BuferDirNames[Sizes+1] = 0;
-        rv = BuferDirNames;
+        rv = (TDString)BuferDirNames;
         }
 
 return rv;
@@ -870,7 +870,7 @@ outstr = outstr + IntToStr(lpIPAdr[3]).c_str();
 
 void GetIPAdress (TDString &outstr, TEX::IPDIGSTRING *Inp)
 {
-GetIPAdress (outstr, Inp->IPADR);
+GetIPAdress (outstr, Inp->ip.IPADR);
 }
 
 
@@ -995,11 +995,11 @@ char *lpRv = 0;
 if (lpDst && lpInStr)
     {
     char *lpDstChar = (char*)lpDst->lpRam;
-    unsigned long sz = lpDst->sizes;
+    unsigned long sz = lpDst->Sizes;
     char dt;
     if (lpDstChar && sz)
         {
-        lpDstChar[lpDst->sizes - 1] = 0;
+        lpDstChar[lpDst->Sizes - 1] = 0;
         while (sz)
             {
             dt = lpInStr[0];
@@ -1440,24 +1440,6 @@ while (1)
         if (tmpb==0x2c)
                 {
                 lpAdr[0]=0x2e;
-                break;
-                }
-        lpAdr++;
-        }
-}
-
-
-
-void ChangeComaPoint_char (char *lpAdr)
-{
-char tmpb;
-while (true)
-        {
-        tmpb = *lpAdr;
-        if (!tmpb) break;
-        if (tmpb == 0x2c)
-                {
-                *lpAdr = 0x2e;
                 break;
                 }
         lpAdr++;
@@ -2474,6 +2456,80 @@ return rv;
 
 
 
+bool GetTagStringDelimIndx (TBUFPARAM *lInput, TBUFPARAM *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField) // char **lDest,
+{
+bool rv = false;
+char *lpLinetxt = (char*)lInput->lRam;
+unsigned long sz = lInput->sizes;
+if (lpLinetxt)
+		{
+		unsigned long size = 0;
+		unsigned long lcinx = 0;
+		unsigned long countfield = 0;
+		char *lFistInp = 0;
+		char tmpb;
+		bool f_fist_input = false;
+		while (sz)
+				{
+				tmpb = lpLinetxt[0];
+				if (tmpb == 9) tmpb = 32;
+				if (!tmpb || tmpb == 13 || tmpb == 10)
+					{
+					if (Indxx != lcinx) f_fist_input = false;
+					countfield++;
+					break;
+					}
+				else
+					{
+					if (tmpb == delimc)
+						{
+						countfield++;
+						if (Indxx == lcinx) 
+							{
+							rv = true;
+							break; // tag finded
+							}
+						lcinx++;
+						f_fist_input = false;
+						lFistInp = 0;
+						size = 0;
+						}
+					else
+						{
+						if (f_fist_input == false)
+							{
+							lFistInp = lpLinetxt;
+							f_fist_input = true;
+							}
+						size++;
+						}
+					}
+				lpLinetxt++;
+				sz--;
+				}
+		if (!sz)
+			{
+			countfield++;
+			if (Indxx == lcinx) rv = true;
+			}
+		if (!f_fist_input)
+			{
+			size = 0;
+			lFistInp = 0;
+			}
+		if (lPCountField) *lPCountField = countfield;   
+		if (lOutput)
+			{
+			lOutput->lRam = (char*)lFistInp;
+			lOutput->sizes = size;
+			}
+		}
+return rv;
+}
+
+
+
+
 // подсчитывает количество слов в строке или извлекает слово по его индекс-номеру (поиск идет с 0)
 long CreateWordStringFromIndxLineAndCF (char *lpLinetxt, TDString &outstr,unsigned long Indxx,char delimc)
 {
@@ -3221,7 +3277,7 @@ if (lpRamData && cntdat && cntdat < (CMAXBUF-1))
     long DatOut;
     TEX::BUFPAR Dpar;
     Dpar.lpRam = BufIn;
-    Dpar.sizes = cntdat;
+    Dpar.Sizes = cntdat;
 
     lrv = CopyStrTo (&Dpar, (char*)lrv);
     if (lrv)
@@ -3314,7 +3370,7 @@ if (lInStr && cntdat && cntdat < (CMAXBUF-1))
     int64_t DatOut;
     TEX::BUFPAR Dpar;
     Dpar.lpRam = BufIn;
-    Dpar.sizes = cntdat;
+    Dpar.Sizes = cntdat;
 
     lInStr = CopyStrTo (&Dpar, (char*)lInStr);
     if (lInStr)
@@ -4034,9 +4090,9 @@ unsigned long rv = 0;
 if (InBf && OutBuf)
         {
 		char *lpLinetxt = (char*) InBf->lpRam;
-		unsigned long SizeInBuf = InBf->sizes;
+		unsigned long SizeInBuf = InBf->Sizes;
 
-		unsigned long CntOutBuf = OutBuf->sizes;	// && lpoutstr
+		unsigned long CntOutBuf = OutBuf->Sizes;	// && lpoutstr
 		char *lpoutstr = (char*)OutBuf->lpRam;
 
         bool Fdat = 0;
@@ -4097,7 +4153,7 @@ if (lpDest && lpTxtIn)
 	TEX::BUFPAR InpBuf;
 	unsigned long Sizes = GetLenStr (lpTxtIn);
 	InpBuf.lpRam = lpTxtIn;
-	InpBuf.sizes = Sizes;
+	InpBuf.Sizes = Sizes;
 	if (Sizes && Sizes < 32)
 		{
 		char rsltOk = 0;
@@ -4109,7 +4165,7 @@ if (lpDest && lpTxtIn)
 		char Buf[32];
 		TEX::BUFPAR OtPBf;
 		OtPBf.lpRam = &Buf;
-		OtPBf.sizes = sizeof(Buf);
+		OtPBf.Sizes = sizeof(Buf);
 		unsigned long rslt = CreateWordStringFromIndxLine (&InpBuf,&OtPBf,100,'.');
 		switch (rslt)
 			{
@@ -4497,7 +4553,7 @@ unsigned long rv_cnt = 0;
 if (InRaw && OutCode && InRaw->lpRam && OutCode->lpRam)
     {
     //unsigned long MaxOutBuf = OutCode->Sizes;
-    unsigned long MaxInBuf = InRaw->sizes;
+    unsigned long MaxInBuf = InRaw->Sizes;
     unsigned char *lpInp = (unsigned char*)InRaw->lpRam;
     unsigned char *lpOutp = (unsigned char*)OutCode->lpRam;
     if (MaxInBuf)
@@ -4611,8 +4667,8 @@ unsigned long RLE_Decoding_A (TEX::BUFPAR *InCode, TEX::BUFPAR *OutRaw)
 unsigned long rv_cnt = 0;
 if (InCode && OutRaw)
     {
-    unsigned long MaxOutBuf = OutRaw->sizes;
-    unsigned long MaxInBuf = InCode->sizes;
+    unsigned long MaxOutBuf = OutRaw->Sizes;
+    unsigned long MaxInBuf = InCode->Sizes;
     unsigned char *lpInp = (unsigned char*)InCode->lpRam;
     unsigned char *lpOutp = (unsigned char*)OutRaw->lpRam;
     if (MaxInBuf && MaxOutBuf)
@@ -5021,11 +5077,11 @@ unsigned long rv = 0;
 if (lpInput && lpOut)
 	{
 	unsigned long rvcnt = 0;
-	unsigned long InSize = lpInput->sizes;
+	unsigned long InSize = lpInput->Sizes;
 	unsigned char datin6;
 	unsigned char *lpIn = (unsigned char*)lpInput->lpRam;
 	unsigned char *lpOutData = (unsigned char*)lpOut->lpRam;
-	unsigned long SizeOutDat = lpOut->sizes;
+	unsigned long SizeOutDat = lpOut->Sizes;
 	unsigned char MaskOut8 = 128;
 	unsigned char datout8 = 0;
 	unsigned char inBcnt6;
@@ -5073,13 +5129,13 @@ if (lpInput && lpOutput)
 	{
 	unsigned long rvcnt = 0;
 	unsigned char *lpIn = (unsigned char*)lpInput->lpRam;
-	unsigned long SizeIn = lpInput->sizes;
+	unsigned long SizeIn = lpInput->Sizes;
 	unsigned char datain8;
 	unsigned char datBcnt8;
 	unsigned char dataout6 = 0;
 	unsigned char MaskOut6 = 32;
 	unsigned char *lpOut = (unsigned char*)lpOutput->lpRam;
-	unsigned long SizeOut = lpOutput->sizes;
+	unsigned long SizeOut = lpOutput->Sizes;
 	unsigned long MidleCount = (SizeIn/4 + SizeIn) / 2;
 	char F_EndOutSize = 0;
 	char F_fisttata = 1;
@@ -5154,13 +5210,13 @@ if (lpInput && lpOutput)
 	{
 	unsigned long rvcnt = 0;
 	unsigned char *lpIn = (unsigned char*)lpInput->lpRam;
-	unsigned long SizeIn = lpInput->sizes;
+	unsigned long SizeIn = lpInput->Sizes;
 	unsigned char datain8;
 	unsigned char datBcnt8;
 	unsigned char dataout7 = 0;
 	unsigned char MaskOut7 = C_StrartBit;
 	unsigned char *lpOut = (unsigned char*)lpOutput->lpRam;
-	unsigned long SizeOut = lpOutput->sizes;
+	unsigned long SizeOut = lpOutput->Sizes;
 	char F_EndOutSize = 0;
 	while (SizeIn && !F_EndOutSize)
 		{
@@ -5212,11 +5268,11 @@ unsigned long rv = 0;
 if (lpInput && lpOut)
 	{
 	unsigned long rvcnt = 0;
-	unsigned long InSize = lpInput->sizes;
+	unsigned long InSize = lpInput->Sizes;
 	unsigned char datin7;
 	unsigned char *lpIn = (unsigned char*)lpInput->lpRam;
 	unsigned char *lpOutData = (unsigned char*)lpOut->lpRam;
-	unsigned long SizeOutDat = lpOut->sizes;
+	unsigned long SizeOutDat = lpOut->Sizes;
 	unsigned char MaskOut8 = 128;
 	unsigned char datout8 = 0;
 	unsigned char inBcnt7;
@@ -5265,11 +5321,11 @@ unsigned long rv = 0;
 if (lpInput && lpOut)
 	{
 	unsigned long rvcnt = 0;
-	unsigned long InSize = lpInput->sizes;
+	unsigned long InSize = lpInput->Sizes;
 	unsigned char datin7;
 	unsigned char *lpIn = (unsigned char*)lpInput->lpRam;
 	unsigned char *lpOutData = (unsigned char*)lpOut->lpRam;
-	unsigned long SizeOutDat = lpOut->sizes;
+	unsigned long SizeOutDat = lpOut->Sizes;
 	unsigned char MaskOut8 = 128;
 	unsigned char datout8 = 0;
 	unsigned char inBcnt7;
@@ -5323,13 +5379,13 @@ if (lpInput && lpOutput)
 	{
 	unsigned long rvcnt = 0;
 	unsigned char *lpIn = (unsigned char*)lpInput->lpRam;
-	unsigned long SizeIn = lpInput->sizes;
+	unsigned long SizeIn = lpInput->Sizes;
 	unsigned char datain8;
 	unsigned char datBcnt8;
 	unsigned char dataout7 = 128;
 	unsigned char MaskOut7 = C_StrartBit;
 	unsigned char *lpOut = (unsigned char*)lpOutput->lpRam;
-	unsigned long SizeOut = lpOutput->sizes;
+	unsigned long SizeOut = lpOutput->Sizes;
 	char F_EndOutSize = 0;
     unsigned char XorData = 1;
 	while (SizeIn && !F_EndOutSize)
@@ -7046,6 +7102,47 @@ return lpDest;
 
 
 
+void I64ToStr (int64_t datas, TDString &dst)
+{
+unsigned char flagnz = 0, resd;
+uint64_t delmt = 10000000000000000000;
+
+if (datas < 0)
+    {
+    dst = "-";
+    datas = abs64 (datas);
+    }
+else
+    {
+    dst = "";
+    }
+
+
+while (true)
+	{
+	if (datas>=delmt)
+		{
+		flagnz=1;
+		resd=(datas/delmt);
+		datas=datas % delmt;
+		}
+	else
+		{
+		resd=0;
+		}
+	if (flagnz) dst += (resd+48);
+
+	delmt=delmt/10;
+
+	if (delmt<=1)
+		{
+        dst += (datas+48);
+		break;
+		}
+	}
+}
+
+
 
 TDString UTF8To1251 (TDString utf8_str)
 {
@@ -7098,6 +7195,27 @@ return rv;
 
 
 
+long find_data_array_ul (unsigned long *arr, unsigned long ixcnt, unsigned long data)
+{
+long rv = -1;
+if (arr)
+    {
+    unsigned long ix = 0;
+    while (ix < ixcnt)
+        {
+        if (arr[ix] == data)
+            {
+            rv = ix;
+            break;
+            }
+        ix++;
+        }
+    }
+return rv;
+}
+
+
+
 bool subtimeout (unsigned long &tmr, unsigned long dt)
 {
 bool rv = false;
@@ -7117,4 +7235,93 @@ return rv;
 }
 
 
+
+static const short utf[ 256 ] = {
+    0,1,2,3,4,5,6,7,8,9,0xa,0xb,0xc,0xd,0xe,0xf,0x10,0x11,0x12,0x13,0x14,0x15,0x16,
+    0x17,0x18,0x19,0x1a,0x1b,0x1c,0x1d,0x1e,0x1f,0x20,0x21,0x22,0x23,0x24,0x25,0x26,
+    0x27,0x28,0x29,0x2a,0x2b,0x2c,0x2d,0x2e,0x2f,0x30,0x31,0x32,0x33,0x34,0x35,0x36,
+    0x37,0x38,0x39,0x3a,0x3b,0x3c,0x3d,0x3e,0x3f,0x40,0x41,0x42,0x43,0x44,0x45,0x46,
+    0x47,0x48,0x49,0x4a,0x4b,0x4c,0x4d,0x4e,0x4f,0x50,0x51,0x52,0x53,0x54,0x55,0x56,
+    0x57,0x58,0x59,0x5a,0x5b,0x5c,0x5d,0x5e,0x5f,0x60,0x61,0x62,0x63,0x64,0x65,0x66,
+    0x67,0x68,0x69,0x6a,0x6b,0x6c,0x6d,0x6e,0x6f,0x70,0x71,0x72,0x73,0x74,0x75,0x76,
+    0x77,0x78,0x79,0x7a,0x7b,0x7c,0x7d,0x7e,0x7f,0x402,0x403,0x201a,0x453,0x201e,
+    0x2026,0x2020,0x2021,0x20ac,0x2030,0x409,0x2039,0x40a,0x40c,0x40b,0x40f,0x452,
+    0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,0,0x2122,0x459,0x203a,0x45a,
+    0x45c,0x45b,0x45f,0xa0,0x40e,0x45e,0x408,0xa4,0x490,0xa6,0xa7,0x401,0xa9,0x404,
+    0xab,0xac,0xad,0xae,0x407,0xb0,0xb1,0x406,0x456,0x491,0xb5,0xb6,0xb7,0x451,
+    0x2116,0x454,0xbb,0x458,0x405,0x455,0x457,0x410,0x411,0x412,0x413,0x414,0x415,
+    0x416,0x417,0x418,0x419,0x41a,0x41b,0x41c,0x41d,0x41e,0x41f,0x420,0x421,0x422,
+    0x423,0x424,0x425,0x426,0x427,0x428,0x429,0x42a,0x42b,0x42c,0x42d,0x42e,0x42f,
+    0x430,0x431,0x432,0x433,0x434,0x435,0x436,0x437,0x438,0x439,0x43a,0x43b,0x43c,
+    0x43d,0x43e,0x43f,0x440,0x441,0x442,0x443,0x444,0x445,0x446,0x447,0x448,0x449,
+    0x44a,0x44b,0x44c,0x44d,0x44e,0x44f
+};
+
+
+unsigned char W1251ToUTF8b (unsigned char dat, unsigned char dst[2])
+{
+unsigned char rv = 1;
+unsigned short c = utf[ dat];
+    if( c < 0x80 ) {
+        dst[0] = c;
+    }
+    else if( c < 0x800 ) {
+        dst[ 0] =  c >> 6 | 0xc0;
+        dst[ 1 ] = c & 0x3f | 0x80;
+        rv++;
+    }
+return rv;
+}
+
+
+
+unsigned long GN_CRC32 (void *ldata, unsigned long size)
+{
+const unsigned long one_sig = 0x724169A3;
+const unsigned long zero_sig = 0x28181277;
+const unsigned char mask_sig = 0x18;
+unsigned long crc = 0;
+if (ldata && size)
+    {
+    unsigned char *src = (char*)ldata;
+    unsigned char dat;
+    while (size)
+        {
+        dat = *src++;
+        if (dat & mask_sig)
+            {
+            crc += one_sig;
+            }
+        else
+            {
+            crc += zero_sig;
+            }
+        crc <<= 1;
+        crc += dat;
+        size--;
+        }
+    }
+return crc;
+}
+
+
+
+
+bool subtimer (long &timerr, unsigned long ms)
+{
+bool rv = false;
+if (timerr)
+    {
+    if (timerr > ms)
+        {
+        timerr -= ms;
+        }
+    else
+        {
+        timerr = 0;
+        rv = true;
+        }
+    }
+return rv;
+}
 

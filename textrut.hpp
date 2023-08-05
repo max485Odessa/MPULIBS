@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include <string>
 
-#ifdef IS_WINDOWS_OS
+#ifdef ISWINDOWS
     #include "windows.h"
     #include "stdlib.h"
     //#include "vcl.h"
@@ -12,6 +12,11 @@
 #else
     #define TDString std::string
 #endif
+
+typedef struct {
+	void *lRam;
+	unsigned long sizes;
+}TBUFPARAM;
 
 
 namespace TEX {
@@ -24,26 +29,23 @@ namespace TEX {
 
 
 typedef struct {
-    unsigned char IPADR[4];
+    union {
+        unsigned char IPADR[4];
+        unsigned long l;
+        }ip;
 } IPDIGSTRING;
 
 
 
 typedef struct {
 	void *lpRam;
-	unsigned long sizes;
+	unsigned long Sizes;
 }BUFPAR;
-
-
-typedef struct {
-	void *lRam;
-	unsigned long sizes;
-} TBUFPARAM;
 
 }
 
 
-#include "trawbitmap.hpp"
+//#include "trawbitmap.hpp"
 
 
 typedef struct {
@@ -74,7 +76,6 @@ unsigned char SubAsciiHex_DecimalValue (char ASCIIHex, unsigned char val);      
 void DatasToHexs_Str (unsigned char *lpRamData,unsigned int sizesdat, TDString &outptsstr);
 bool CheckHexShortAdr (TDString str1);
 long GetNBitmsk (unsigned long btmsk);
-TDString GetSysTimeString (SYSTEMTIME *lpSysTime,char delims);
 TDString GetSysTimeString_File (SYSTEMTIME *lpSysTime);
 TDString GetSysDayString (SYSTEMTIME *lpSysTime, char delims);
 bool CheckHexVal (unsigned char datas);
@@ -128,7 +129,6 @@ char *lpCompareRam (char *lpStrBase, char *lpString, unsigned long sizess);
 TDString GetStringWord (TDString Str1, int numbword);
 float StrConvToFloat(TDString str1);
 void ChangeComaPoint(TDString &str1);
-void ChangeComaPoint_char (char *lpAdr);
 void ChangeComaPoint(TDString &str1);
 TDString CutExtFileName (TDString str1);
 void ChangeFileName_Ext (TDString &InpStr, TDString ExtName);       // сменить расширение имени файла на новое
@@ -235,6 +235,7 @@ TDString Convert_maToStr (unsigned short mavalue);
 TDString Convert_celsium_char (char ctemp);
 unsigned long abs32 (long datas);
 uint64_t abs64 (int64_t datas);
+void I64ToStr (int64_t datas, TDString &dst);
 unsigned char *Uint64ToStr (unsigned char *lpDest, uint64_t datas);
 unsigned char *I64ToStr (unsigned char *lpDest, int64_t datas);
 bool ParseHDR (TDString inp_str, GETHDR *lparse_out);
@@ -242,6 +243,8 @@ TDString Header_GetValue (TDString hdr_txt, TDString name_param, char delimtr);
 unsigned char *LongToStr (unsigned char *lpDest, long datas);
 TDString ToUpperCase (TDString sstr);
 TDString ToLowerCase (TDString sstr);
+
+long find_data_array_ul (unsigned long *arr, unsigned long ixcnt, unsigned long data);
 
 
 // ---- JSON !!!
@@ -268,9 +271,13 @@ TDString ToLowerCase (TDString sstr);
 
 
 unsigned long GetTagStringDelimIndx (char *lpLinetxt, unsigned long Indxx, char delimc, char **lDest, unsigned long *lPCountField);
+bool GetTagStringDelimIndx (TBUFPARAM *lInput, TBUFPARAM *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField) ;
 bool TxtToFloat (float *lpDest, char *lpTxtIn, unsigned long Sizes);
 TDString UTF8To1251 (TDString utf8_str);
 TDString F1251ToUTF8 (TDString uc1251_str);
+unsigned char W1251ToUTF8b (unsigned char dat, unsigned char dst[2]);
+unsigned long GN_CRC32 (void *ldata, unsigned long size);
+bool subtimer (long &timerr, unsigned long ms);
 unsigned long CreateValueFromBitMassive32out (unsigned char *lInp,  unsigned long CurOffset, unsigned char databitsize);
 unsigned long CreateValueFromBitMassive (unsigned char *lInp,  unsigned long CurOffset, unsigned char databitsize);
 unsigned char SWAPBits (unsigned char datas);

@@ -3,12 +3,12 @@
 
 #include "windows.h"
 #include "vcl.h"
-#include "textrut.hpp"
 #include "filerut.hpp"
+#include "textrut.hpp"
 
 class TMFindFiles{
     private:
-        TDString BaseSearchName;
+        TDString BaseSearch;
         WIN32_FIND_DATA FDRaw;
         HANDLE HNDLSearchRaw;
     protected:
@@ -18,9 +18,12 @@ class TMFindFiles{
         bool FindNextRaw (TDString &OutFileName);
     public:
         TMFindFiles ();
+        static bool CreateDirPaths (const TDString &strpathe, bool f_open_cpath); // создает серии папок и устанавливает крайнюю созданную как текущюю
         char SetSearchPath (TDString strpathe);
         unsigned long DeleteAllFiles (TDString filterExt);
         static bool ReMove_File (TDString const &cur_file_name, TDString const &new_file_nm);
+        static void GetCurrentDirectory (TDString &dst_dname);
+        static bool SetCurrentDir (const TDString &dst_dname);
         bool FindFist_File (TDString &OutFileName);
         bool FindNext_File (TDString &OutFileName);
         bool FindFist_Dir (TDString &OutFileName);
