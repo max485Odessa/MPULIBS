@@ -22,6 +22,7 @@ void _pin_low_init_in ( S_GPIOPIN *lp_pin, unsigned char cnt);
 void _pin_low_init_adc ( S_GPIOPIN *lp_pin, unsigned char cnt);
 void _pin_low_init_af_o_pp (S_GPIOPIN *lp_pin, unsigned char cnt);
 void _pin_pp_to (S_GPIOPIN *lp_pin, bool val);
+bool _pin_get (S_GPIOPIN *lp_pin);
 
 
 

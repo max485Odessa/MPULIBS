@@ -2,8 +2,13 @@
 #define __SPI_COMON_CLASS_H_
 
 
+enum ESPISEL {ESPISEL_SPI1, ESPISEL_SPI2, ESPISEL_ENDENUM};
+
+
 #include "hard_rut.h"
 #include "interfaces.h"
+#include "spi_class_conf.h"
+
 
 //#ifdef __cplusplus
  //extern "C" {
@@ -19,8 +24,7 @@
 #include "stm32f10x_spi.h"
 #include "hard_rut.h"
 
-enum ESPISEL {ESPISEL_SPI1, ESPISEL_SPI2, ESPISEL_ENDENUM};
-enum ESPIPIN {ESPIPIN_CS = 0, ESPIPIN_MOSI = 1, ESPIPIN_SCK = 2, ESPIPIN_MISO = 3, ESPIPIN_ENDENUM = 4};
+
 
 
 class ISPI {
