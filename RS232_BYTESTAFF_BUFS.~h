@@ -8,7 +8,7 @@
 #include <vcl.h>
 #include "textrut.hpp"
 #include "typedefines.h"
-//#include "comonrut.h"
+
 
 const unsigned long C_USART_BUFSIZE = 1024;
 const unsigned char C_USART_MAXBUF_AMOUNT = 5;
@@ -19,10 +19,6 @@ typedef struct {
     bool f_full;                        // флаг что буфер заполнен
 } SUSARTBUFER;
 
-
-
-//const unsigned long C_CANRXBUF_SIZE = 32768;
-//const unsigned long C_CANTXBUF_SIZE = 32768;
 
 
 enum EUSRTRCON {EUSRTRCON_NONE = 0, EUSRTRCON_NEED, EUSRTRCON_ENDENUM};
@@ -99,11 +95,11 @@ class TUARTBSTAFBUF {
         bool CheckPort (char *lpNames);
         void ClosePort ();
 
-		bool SendData (char *lSrc, unsigned short sizes);
+        bool SendData (char *lSrc, unsigned short sizes);
         bool SendDataRXTime (char *lSrc, unsigned short sizes, unsigned long tcks);
 
-		unsigned short CheckReadData ();                                    // узнать сколько принятых данных
-		unsigned short ReadData (char *lDst, unsigned short sizes);         // прочитать данные
+        unsigned short CheckReadData ();                                    // узнать сколько принятых данных
+        unsigned short ReadData (char *lDst, unsigned short sizes);         // прочитать данные
 
         //unsigned long GetOrCheck (char *lDst, unsigned long maxsz);
         unsigned long GetRX_BPS ();

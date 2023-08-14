@@ -8,7 +8,7 @@
 #include <vcl.h>
 #include "textrut.hpp"
 #include "typedefines.h"
-//#include "comonrut.h"
+
 
 const unsigned long C_USART_BUFSIZE = 1024;
 const unsigned char C_USART_MAXBUF_AMOUNT = 5;
@@ -19,10 +19,6 @@ typedef struct {
     bool f_full;                        // флаг что буфер заполнен
 } SUSARTBUFER;
 
-
-
-//const unsigned long C_CANRXBUF_SIZE = 32768;
-//const unsigned long C_CANTXBUF_SIZE = 32768;
 
 
 enum EUSRTRCON {EUSRTRCON_NONE = 0, EUSRTRCON_NEED, EUSRTRCON_ENDENUM};

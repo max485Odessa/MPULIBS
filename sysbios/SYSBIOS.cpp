@@ -214,19 +214,18 @@ while (Indxs < STMR_INDX_S)
 
 
 
-void TIMER_RUTINE_I ()
+static void TIMER_RUTINE_I_DLT (uint32_t dlt)
 {
 unsigned char Indxs = 0;
 utimer_t *lpLNG;
 utimer_t DT;
-utimer_t DPTime = 1;
 while (Indxs < STMR_INDX_I)
 		{
 		lpLNG = TIMER_I[Indxs];
 		DT = lpLNG[0];
-		if (DT >= DPTime)
+		if (DT > dlt)
 			{
-			DT = DT - DPTime;
+			DT -= dlt;
 			}
 		else
 			{
@@ -546,7 +545,7 @@ return rv;
 
 
 
-void ExecutePeriodic_CBTimers_ISR ()
+static void ExecutePeriodic_CBTimers_ISR_DLT (uint32_t dlt)
 {
 if (INX_CBTIMER_ISR)
     {
@@ -559,8 +558,15 @@ if (INX_CBTIMER_ISR)
             utimer_t tmr = lpCTH->TimerCallBack[0];
             if (tmr)
                 {
-                tmr--;
-								lpCTH->TimerCallBack[0] = tmr;
+                if (tmr > dlt)
+                    {
+                    tmr -= dlt;
+                    }
+                else
+                    {
+                    tmr = 0;
+                    }
+                lpCTH->TimerCallBack[0] = tmr;
                 if (!tmr)
                     {
                     ExecuteClassStaticProc (&lpCTH->ParamStart);
@@ -571,6 +577,9 @@ if (INX_CBTIMER_ISR)
         }
     }
 }
+
+
+
 
 
 
@@ -623,7 +632,9 @@ if (!F_BlockPerThreCalls)
 
 
 
-void EXECUTE_PERIODIC_ISR ()
+
+
+void EXECUTE_PERIODIC_ISR (uint32_t delt)
 {
 if (INX_PPROC_ISR)
 		{
@@ -633,26 +644,27 @@ if (INX_PPROC_ISR)
 				PPTHREAD *lpCTH = (PPTHREAD*)&THREADsPeriodics_ISR[CINDX];
 				if (lpCTH->Status == 1)
 						{
-
-						if (lpCTH->tmpDT) lpCTH->tmpDT--;
-
-						if (!lpCTH->tmpDT)
-								{
-								ExecuteClassStaticProc (&lpCTH->ParamStart);
-								lpCTH->tmpDT = lpCTH->DelayTime;
-								}
+                        if (lpCTH->tmpDT > delt)
+                            {
+                            lpCTH->tmpDT -= delt;
+                            }
+                        else
+                            {
+                            ExecuteClassStaticProc (&lpCTH->ParamStart);
+                            lpCTH->tmpDT = lpCTH->DelayTime;
+                            }
 						}
 				CINDX++;
 				}
 		}
-ExecutePeriodic_CBTimers_ISR ();
-TIMER_RUTINE_I ();
-TickCount_Timer++;
+ExecutePeriodic_CBTimers_ISR_DLT (delt);
+TIMER_RUTINE_I_DLT (delt);
+TickCount_Timer += delt;
 }
 
 
 
-void ExecutePeriodic_CBTimers ()
+static void ExecutePeriodic_CBTimers_dlt (uint32_t delt)
 {
 if (INX_CBTIMER)
 	{
@@ -665,7 +677,14 @@ if (INX_CBTIMER)
 			utimer_t tmr = lpCTH->TimerCallBack[0];
 			if (tmr)
 				{
-				tmr--;
+                if (tmr > delt)
+                    {
+                    tmr -= delt;
+                    }
+                else
+                    {
+                    tmr = 0;
+                    }
 				lpCTH->TimerCallBack[0] = tmr;
 				if (!tmr)
 					{
@@ -720,7 +739,7 @@ void Timer::set (utimer_t v)
 }
 
 
-HPERIOD Periodic::add_timer_cb (Periodic *obj)
+HPERIOD Periodic::create_timer_ev (Periodic *obj)
 {
 	HPERIOD rv = 0;
 if (evdatacb_cnt < C_SBCPP_PERIODIC)
@@ -877,7 +896,7 @@ if (DltT)
 		PeriodicEvent_execute (DltT);
 	#endif
 	TIMER_RUTINE_S (DltT);
-	ExecutePeriodic_CBTimers ();
+	ExecutePeriodic_CBTimers_dlt (DltT);
 	}
 }
 

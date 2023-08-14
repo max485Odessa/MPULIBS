@@ -5,7 +5,7 @@
 #include "stdint.h"
 
 
-
+#define utimer_t uint32_t
 
 
 typedef struct {
@@ -51,7 +51,7 @@ class Periodic {
 		static bool check_handler (HPERIOD h);
 	
 	protected:
-		static HPERIOD add_timer_cb (Periodic *obj);
+		static HPERIOD create_timer_ev (Periodic *obj);
 		static void timer_start_one_shot (HPERIOD h, uint32_t period);
 		static void timer_start_periodic (HPERIOD h, uint32_t period);
 		static void timer_start_repeate (HPERIOD h, uint32_t period, uint32_t rep_cnt);
@@ -107,7 +107,7 @@ char DEL_TIMER_SYS (utimer_t *lpSTim);
 void Wait (utimer_t timee);
 void ExecuteClassStaticProc (CALLBK_CLASS_STATIC *lpSTparam);
 
-void EXECUTE_PERIODIC_ISR ();   // нужно поместить в 1 мс прерывания
+void EXECUTE_PERIODIC_ISR (uint32_t delt);  // нужно поместить в мс прерывания
 void EXECUTE_PERIODIC_SYS ();   // нужно поместить в системный поток для периодического вызова не реже пару милисекунд
 }
 

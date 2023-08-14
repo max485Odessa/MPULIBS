@@ -4,7 +4,7 @@
 #include "stdint.h"
 #include <string>
 
-#ifdef ISWINDOWS
+#ifdef IS_WINDOWS_OS
     #include "windows.h"
     #include "stdlib.h"
     //#include "vcl.h"
