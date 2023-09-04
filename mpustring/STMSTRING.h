@@ -38,7 +38,7 @@ public:
         explicit TSTMSTRING (void *lDRam, unsigned long size);
         explicit TSTMSTRING (const char *lstr);
         explicit TSTMSTRING (char datas, void *lDRam, unsigned long size);
-        explicit TSTMSTRING (TBUFPARAM *param);
+        explicit TSTMSTRING (BUFPAR *param);
 
         void set_space (void *lDRam, unsigned long size);
         void set_context (void *lDRam, unsigned long size);

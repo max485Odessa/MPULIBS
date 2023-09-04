@@ -69,7 +69,7 @@ return BuferSize;
 
 
 
-TSTMSTRING::TSTMSTRING (TBUFPARAM *param)
+TSTMSTRING::TSTMSTRING (BUFPAR *param)
 {
     clear_preconstructor ();
 	set_space (param->lRam, param->sizes);

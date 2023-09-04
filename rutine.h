@@ -2,18 +2,31 @@
 #define _h_rutine_lib_h_
 
 #include "stddef.h"
-#include "stdint.h"
+#include <stdint.h>
+
+#ifdef M_PI
+# undef M_PI
+#endif
+#define M_PI      (3.141592653589793f)
+
+#ifdef M_PI_2
+# undef M_PI_2
+#endif
+#define M_PI_2    (M_PI / 2)
+
+#define M_GOLDEN  1.6180339f
+
+#define M_2PI         (M_PI * 2)
+
+#define DEG_TO_RAD      (M_PI / 180.0f)
+#define RAD_TO_DEG      (180.0f / M_PI)
 
 typedef struct {
-	unsigned char *lRam;
-	unsigned short sizes;
-} TBUFPARAM;
-
-
-typedef struct {
-	unsigned char *lRam;
-	unsigned short sizes;
+	uint8_t *lRam;
+	uint16_t sizes;
 } BUFPAR;
+
+
 
 
 unsigned long lenstr (const char *lsrt);

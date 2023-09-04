@@ -105,6 +105,23 @@ void _pin_pp_to (S_GPIOPIN *lp_pin, bool val)
 
 
 
+bool _pin_get (S_GPIOPIN *lp_pin)
+{
+  bool bitstatus;
+
+  if ((lp_pin->port->IDR & lp_pin->pin) != (uint32_t)Bit_RESET)
+  {
+    bitstatus = true;
+  }
+  else
+  {
+    bitstatus = false;
+  }
+  return bitstatus;
+}
+
+
+
 void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;

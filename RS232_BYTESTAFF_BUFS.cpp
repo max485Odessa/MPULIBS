@@ -190,7 +190,7 @@ if (c_box)
     c_box->Clear();
     unsigned char Indx = 1;
     String str_prt;
-    while (Indx < 8)
+    while (Indx < 120)
         {
         str_prt = "COM" + IntToStr(Indx);
         if (CheckPort (str_prt.c_str()))

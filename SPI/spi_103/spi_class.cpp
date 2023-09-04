@@ -3,9 +3,8 @@
 #include "stm32f10x_gpio.h"
 #include "stm32f10x_rcc.h"
 
-static const S_GPIOPIN spi_1_initarr[ESPIPIN_ENDENUM] = {{GPIOA, GPIO_Pin_15, true}/*cs*/, {GPIOB, GPIO_Pin_5, true}/*mosi*/, {GPIOB, GPIO_Pin_3, true}/*sck*/, {GPIOB, GPIO_Pin_4, true}/*miso*/};
-static const S_GPIOPIN spi_2_initarr[ESPIPIN_ENDENUM] = {{GPIOB, GPIO_Pin_12, true}/*cs*/, {GPIOB, GPIO_Pin_15, true}/*mosi*/, {GPIOB, GPIO_Pin_13, true}/*sck*/, {GPIOB, GPIO_Pin_14, true}/*miso*/};
 
+	
 TSPIHARD::TSPIHARD (ESPISEL s)
 {
 e_spi = s;

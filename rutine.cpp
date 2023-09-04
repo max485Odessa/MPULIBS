@@ -707,12 +707,38 @@ return lrv;
 
 
 
+unsigned char *DrobaToStr (unsigned char *lpDest, float droba, unsigned char cntr)
+{
+unsigned char resd;
+float delmt = 0.1;
+while (cntr)
+	{
+	if (droba >= delmt)
+		{
+		resd = (droba / delmt);
+		droba = droba - (resd *delmt);
+		}
+	else
+		{
+		resd=0;
+		}
+
+        lpDest[0] = resd + 48;
+        lpDest++;
+	delmt = delmt / 10;
+        cntr--;
+	}
+return lpDest;
+}
+
+
+
 char *FloatToStr(float DataF, BUFPAR *OutBf, unsigned char DrobSize)
 {
 char *lpRv = 0;
-if (OutBf && OutBf->lpRam && OutBf->Sizes >= 2)
+if (OutBf && OutBf->lRam && OutBf->sizes >= 2)
 	{
-	unsigned long dstsz = OutBf->Sizes;
+	unsigned long dstsz = OutBf->sizes;
 	char Txt_Cel[16];
 	char Txt_Drob[16];
 	long len_cel = 0, len_drob = 0;
@@ -754,7 +780,7 @@ if (OutBf && OutBf->lpRam && OutBf->Sizes >= 2)
 	// формирование данных в выходном буфере
 	unsigned long lencopy = len_cel;
 	char Step = 0;
-	char *lpOut = (char*)OutBf->lpRam;
+	char *lpOut = (char*)OutBf->lRam;
 	do {
 		if (!dstsz) break;
 		// знак
@@ -798,7 +824,7 @@ if (OutBf && OutBf->lpRam && OutBf->Sizes >= 2)
 			}
 		else
 			{
-			((char*)OutBf->lpRam)[(OutBf->Sizes-1)] = 0;
+			((char*)OutBf->lRam)[(OutBf->sizes-1)] = 0;
 			}
 		}
 	lpRv = lpOut;
@@ -1097,7 +1123,7 @@ UDToHex_tmp (lpDest, datasl, 8);
 
 // Возвращает указатель вхождения на нужный стринг по указаному индексу, возвращает размер текстового поля по этому индексу.
 // Можно вычислить количество полей записи указав большой индекс поиска, количество полей возвращается по указателю lPCountField,
-bool GetTagStringDelimIndx (TBUFPARAM *lInput, TBUFPARAM *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField) // char **lDest,
+bool GetTagStringDelimIndx (BUFPAR *lInput, BUFPAR *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField) // char **lDest,
 {
 bool rv = false;
 char *lpLinetxt = (char*)lInput->lRam;
@@ -1161,7 +1187,7 @@ if (lpLinetxt)
 		if (lPCountField) *lPCountField = countfield;   
 		if (lOutput)
 			{
-			lOutput->lRam = (char*)lFistInp;
+			lOutput->lRam = (uint8_t*)lFistInp;
 			lOutput->sizes = size;
 			}
 		}
@@ -1326,12 +1352,12 @@ namespace RLECOD_A{
 unsigned long RLE_Coding_A (BUFPAR *InRaw, BUFPAR *OutCode)
 {
 unsigned long rv_cnt = 0;
-if (InRaw && OutCode && InRaw->lpRam && OutCode->lpRam)
+if (InRaw && OutCode && InRaw->lRam && OutCode->lRam)
     {
     //unsigned long MaxOutBuf = OutCode->Sizes;
-    unsigned long MaxInBuf = InRaw->Sizes;
-    unsigned char *lpInp = (unsigned char*)InRaw->lpRam;
-    unsigned char *lpOutp = (unsigned char*)OutCode->lpRam;
+    unsigned long MaxInBuf = InRaw->sizes;
+    unsigned char *lpInp = (unsigned char*)InRaw->lRam;
+    unsigned char *lpOutp = (unsigned char*)OutCode->lRam;
     if (MaxInBuf)
         {
         unsigned char Dt;			// Dt_prev
@@ -1443,10 +1469,10 @@ unsigned long RLE_Decoding_A (BUFPAR *InCode, BUFPAR *OutRaw)
 unsigned long rv_cnt = 0;
 if (InCode && OutRaw)
     {
-    unsigned long MaxOutBuf = OutRaw->Sizes;
-    unsigned long MaxInBuf = InCode->Sizes;
-    unsigned char *lpInp = (unsigned char*)InCode->lpRam;
-    unsigned char *lpOutp = (unsigned char*)OutRaw->lpRam;
+    unsigned long MaxOutBuf = OutRaw->sizes;
+    unsigned long MaxInBuf = InCode->sizes;
+    unsigned char *lpInp = (unsigned char*)InCode->lRam;
+    unsigned char *lpOutp = (unsigned char*)OutRaw->lRam;
     if (MaxInBuf && MaxOutBuf)
         {
         unsigned char Dt,Cod,F_StMem = 0;
@@ -1516,7 +1542,7 @@ return rv_cnt;
 }
 
 
-bool GetCRLFStringDelimIndx_HTTP (TBUFPARAM *lInput, TBUFPARAM *lOutput, unsigned long Indxx, unsigned long *lPCountField)  // char **lDest,
+bool GetCRLFStringDelimIndx_HTTP (BUFPAR *lInput, BUFPAR *lOutput, unsigned long Indxx, unsigned long *lPCountField)  // char **lDest,
 {
 bool rv = false;
 if (lInput)
@@ -1583,7 +1609,7 @@ if (lInput)
 			}
 		if (lOutput) 
 			{
-			lOutput->lRam = ( char*)lFistInp;
+			lOutput->lRam = ( uint8_t*)lFistInp;
 			lOutput->sizes = size;
 			}
 		if (lPCountField) *lPCountField = countfield;
@@ -1778,7 +1804,7 @@ if (In && Out && sizes)
 	{
 	
 	uint8_t curbyted, maskleft = 1, maskright = 0x80;
-	uint32_t pass_lenght = GetLenStr ((void*)lpPassCode);
+	uint32_t pass_lenght = lenstr (lpPassCode);
 	if (pass_lenght) lpPassCode += (pass_ofs % pass_lenght);
 	uint8_t *lpCurPassdata = (uint8_t*)lpPassCode;
 	uint8_t *In_c = (uint8_t*)In;
