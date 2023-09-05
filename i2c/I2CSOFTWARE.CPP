@@ -1,11 +1,85 @@
 #include "I2CSOFTWARE.H"
-#include "rutine.h"
+//#include "rutine.h"
 
+
+TI2CIFACE::TI2CIFACE (const S_GPIOPIN *p)
+{
+	pins = p;
+	_pin_low_init_out_od (const_cast<S_GPIOPIN*>(pins), EARRI2CPIN_ENDENUM);
+}
+
+
+
+void TI2CIFACE::I2C_INIT()
+{
+	pins[EARRI2CPIN_SCK].port->BSRR = pins[EARRI2CPIN_SCK].pin;
+	pins[EARRI2CPIN_SDA].port->BSRR = pins[EARRI2CPIN_SDA].pin;
+}
+
+
+
+void TI2CIFACE::I2C_SDA_1 ()
+{
+	pins[EARRI2CPIN_SDA].port->BSRR = pins[EARRI2CPIN_SDA].pin;
+}
+
+
+
+void TI2CIFACE::I2C_SDA_0 ()
+{
+	pins[EARRI2CPIN_SDA].port->BSRR = pins[EARRI2CPIN_SDA].pin << 16;
+}
+
+
+
+void TI2CIFACE::I2C_SCK_1 ()
+{
+	pins[EARRI2CPIN_SCK].port->BSRR = pins[EARRI2CPIN_SCK].pin;
+}
+
+
+
+void TI2CIFACE::I2C_SCK_0 ()
+{
+	pins[EARRI2CPIN_SCK].port->BSRR = pins[EARRI2CPIN_SCK].pin << 16;
+}
+
+
+
+void TI2CIFACE::I2C_SDA_OUT ()
+{
+	I2C_SDA_1 ();
+}
+
+
+
+void TI2CIFACE::I2C_SDA_IN ()
+{
+	I2C_SDA_1 ();
+}
+
+
+	
+bool TI2CIFACE::I2C_SDA_READ ()
+{
+	bool rv = false;
+	if ((pins[EARRI2CPIN_SDA].port->IDR & pins[EARRI2CPIN_SDA].pin)) rv = true;
+	return rv;
+}
+
+
+
+bool TI2CIFACE::I2C_SCL_READ ()
+{
+	bool rv = false;
+	if ((pins[EARRI2CPIN_SCK].port->IDR & pins[EARRI2CPIN_SCK].pin)) rv = true;
+	return rv;
+}
 
 
 void TI2CIFACE::Pause_I2C ()
 {
-volatile unsigned char cnt = 50;	// 50 3 текущая пауза на 330 кгц настроена  было 10
+volatile unsigned char cnt = c_i2c_wait;	// 50 3 текущая пауза на 330 кгц настроена  было 10
 while (cnt)
 	{
 	cnt--;

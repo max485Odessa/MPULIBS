@@ -1,183 +1,110 @@
 #include "BUSI2CIMPLEMENT.H"
-#include "stm32l4xx_hal.h"
-#include "hard_rut.h"
+#include "stm32f4xx_gpio.h"
+#include "stm32f10x_rcc.h"
+
+
+static TBUS2DEVIMPLEMB6B7 I2C_BusB6B7;
+// для смены линии по другой разводке платы меняются только нижние три параметра (и внимание на блок тактирования RCC_PeriphClockCmd, должен соответствовать порту)
+// текущий режим две линии с открытым колектором (хотя возможны вариации по энернгопотреблению, по переводу линии SCL в PUSH-PULL режим)
+static const unsigned short SDA_PIN = GPIO_Pin_9;
+static const unsigned short SCL_PIN = GPIO_Pin_8;
+static const GPIO_TypeDef *PORTPIN = GPIOB;
 
 
 
-// i2c2 
-static const S_GPIOPIN i2cport2[EARRI2CPIN_ENDENUM] = {{GPIOA, GPIO_PIN_9}, {GPIOA, GPIO_PIN_10}};
-// i2c3
-static const S_GPIOPIN i2cport3[EARRI2CPIN_ENDENUM] = {{GPIOC, GPIO_PIN_10}, {GPIOC, GPIO_PIN_12}};
 
-
-
-void TSMBUS::Hard_Init ()
+void TBUS2DEVIMPLEMB6B7::Hard_Init ()
 {
-		_pin_low_init_out_od ((S_GPIOPIN*)&i2cport2[EARRI2CPIN_SCK], 1);		// _pin_low_init_out_pp
-		_pin_low_init_out_od ((S_GPIOPIN*)&i2cport2[EARRI2CPIN_SDA], 1);	
-		I2C_INIT ();		// обе линии переводим в 1
-}
-
-
-
-TSMBUS::TSMBUS ()
-{
-Hard_Init ();
-}
-
-
-
-void TSMBUS::I2C_INIT()
-{
-	i2cport2[EARRI2CPIN_SCK].port->BSRR = i2cport2[EARRI2CPIN_SCK].pin;
-	i2cport2[EARRI2CPIN_SDA].port->BSRR = i2cport2[EARRI2CPIN_SDA].pin;
-}
-
-
-
-void TSMBUS::I2C_SDA_1 ()
-{
-	i2cport2[EARRI2CPIN_SDA].port->BSRR = i2cport2[EARRI2CPIN_SDA].pin;
-	//PORTPIN->BSRR = SDA_PIN;
-}
-
-
-
-void TSMBUS::I2C_SDA_0 ()
-{
-	i2cport2[EARRI2CPIN_SDA].port->BRR = i2cport2[EARRI2CPIN_SDA].pin;
-	//PORTPIN->BRR = SDA_PIN;
-}
-
-
-
-void TSMBUS::I2C_SCK_1 ()
-{
-i2cport2[EARRI2CPIN_SCK].port->BSRR = i2cport2[EARRI2CPIN_SCK].pin;
-}
-
-
-
-void TSMBUS::I2C_SCK_0 ()
-{
-	i2cport2[EARRI2CPIN_SCK].port->BRR = i2cport2[EARRI2CPIN_SCK].pin;
-	//PORTPIN->BRR = SCL_PIN;
-}
-
-
-
-void TSMBUS::I2C_SDA_OUT ()
-{
-	I2C_SDA_1 ();
-}
-
-
-
-void TSMBUS::I2C_SDA_IN ()
-{
-	I2C_SDA_1 ();
-}
-
-
-
-bool TSMBUS::I2C_SDA_READ ()
-{
-	bool rv = false;
-	if (i2cport2[EARRI2CPIN_SDA].port->IDR & i2cport2[EARRI2CPIN_SDA].pin) rv = true;			// GPIO_ReadInputDataBit(PORTPIN, SDA_PIN) == Bit_SET)
-	return rv;
-}
-
-
-
-bool TSMBUS::I2C_SCL_READ ()
-{
-	bool rv = false;
-	if (i2cport2[EARRI2CPIN_SCK].port->IDR & i2cport2[EARRI2CPIN_SCK].pin) rv = true;	
-	return rv;
-}
-
-
-
-// ---------------------------- bus 3
-
-
-
-void TBUSI2C_3::Hard_Init ()
-{
-
-		_pin_low_init_out_pp ((S_GPIOPIN*)&i2cport3[EARRI2CPIN_SCK], 1);
-		_pin_low_init_out_od ((S_GPIOPIN*)&i2cport3[EARRI2CPIN_SDA], 1);
+	if (!f_hard_init)
+		{
+		GPIO_InitTypeDef GPIO_InitStruct;
+		RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);
+		// SDA
+		GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_OD;
+		GPIO_InitStruct.GPIO_Pin = SDA_PIN;
+		GPIO_InitStruct.GPIO_Speed = GPIO_Speed_50MHz;
+		GPIO_Init((GPIO_TypeDef*)PORTPIN, &GPIO_InitStruct);
+		// SCL
+		GPIO_InitStruct.GPIO_Pin = SCL_PIN;
+		GPIO_InitStruct.GPIO_Mode = GPIO_Mode_Out_PP;
+		GPIO_Init((GPIO_TypeDef*)PORTPIN, &GPIO_InitStruct);
 
 		I2C_INIT ();		// обе линии переводим в 1
-
+		f_hard_init = true;
+		}
 }
 
 
 
-TBUSI2C_3::TBUSI2C_3 ()
+TBUS2DEVIMPLEMB6B7::TBUS2DEVIMPLEMB6B7 ()
 {
-
+	f_hard_init = false;
 }
 
 
 
-void TBUSI2C_3::I2C_INIT()
+void TBUS2DEVIMPLEMB6B7::I2C_INIT()
 {
-	i2cport3[EARRI2CPIN_SCK].port->BSRR = i2cport3[EARRI2CPIN_SCK].pin;
-	i2cport3[EARRI2CPIN_SDA].port->BSRR = i2cport3[EARRI2CPIN_SDA].pin;
+	((GPIO_TypeDef*)PORTPIN)->BSRR = SDA_PIN | SCL_PIN;
 }
 
 
 
-void TBUSI2C_3::I2C_SDA_1 ()
+void TBUS2DEVIMPLEMB6B7::I2C_SDA_1 ()
 {
-	i2cport3[EARRI2CPIN_SDA].port->BSRR = i2cport3[EARRI2CPIN_SDA].pin;
-	//PORTPIN->BSRR = SDA_PIN;
+	((GPIO_TypeDef*)PORTPIN)->BSRR = SDA_PIN;
 }
 
 
 
-void TBUSI2C_3::I2C_SDA_0 ()
+void TBUS2DEVIMPLEMB6B7::I2C_SDA_0 ()
 {
-	i2cport3[EARRI2CPIN_SDA].port->BRR = i2cport3[EARRI2CPIN_SDA].pin;
-	//PORTPIN->BRR = SDA_PIN;
+	((GPIO_TypeDef*)PORTPIN)->BRR = SDA_PIN;
 }
 
 
 
-void TBUSI2C_3::I2C_SCK_1 ()
+void TBUS2DEVIMPLEMB6B7::I2C_SCK_1 ()
 {
-i2cport3[EARRI2CPIN_SCK].port->BSRR = i2cport3[EARRI2CPIN_SCK].pin;
+	((GPIO_TypeDef*)PORTPIN)->BSRR = SCL_PIN;
 }
 
 
 
-void TBUSI2C_3::I2C_SCK_0 ()
+void TBUS2DEVIMPLEMB6B7::I2C_SCK_0 ()
 {
-	i2cport3[EARRI2CPIN_SCK].port->BRR = i2cport3[EARRI2CPIN_SCK].pin;
+	((GPIO_TypeDef*)PORTPIN)->BRR = SCL_PIN;
 }
 
 
 
-void TBUSI2C_3::I2C_SDA_OUT ()
+void TBUS2DEVIMPLEMB6B7::I2C_SDA_OUT ()
 {
 	I2C_SDA_1 ();
 }
 
 
 
-void TBUSI2C_3::I2C_SDA_IN ()
+void TBUS2DEVIMPLEMB6B7::I2C_SDA_IN ()
 {
 	I2C_SDA_1 ();
 }
 
 
-
-bool TBUSI2C_3::I2C_SDA_READ ()
+	
+bool TBUS2DEVIMPLEMB6B7::I2C_SDA_READ ()
 {
 	bool rv = false;
-	if (i2cport3[EARRI2CPIN_SDA].port->IDR & i2cport3[EARRI2CPIN_SDA].pin) rv = true;			// GPIO_ReadInputDataBit(PORTPIN, SDA_PIN) == Bit_SET)
+	if (GPIO_ReadInputDataBit((GPIO_TypeDef*)PORTPIN, SDA_PIN) == Bit_SET) rv = true;
 	return rv;
 }
 	
+
+
+TI2CIFACE *I2C_InitB6B7 ()
+{
+	I2C_BusB6B7.Hard_Init ();
+	return &I2C_BusB6B7;
+}
+
 

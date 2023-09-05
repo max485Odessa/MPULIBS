@@ -3,56 +3,44 @@
 
 #include <stdint.h>
 #include "SYSBIOS.H"
+#include "stm32f4xx_hal.h"
+#include "I2CSOFTWARE.H"
+#include "hard_rut.h"
 
-//extern unsigned short C_WaitToOneMks;		// 100 для 72 Мгц
-
-/*
-typedef void (*PROC_VV)(void);
-typedef int (*PROC_CV)(void);
-
-typedef struct {
-		PROC_VV INIT;
-		PROC_VV SDA_1;
-		PROC_VV SDA_0;
-		PROC_VV SCK_1;
-		PROC_VV SCK_0;
-		PROC_VV SDA_OUT;
-		PROC_VV SDA_IN;
-		PROC_CV SDA_READ;		
-} IFACELPCBI2C;
-*/
+enum EARRI2CPIN {EARRI2CPIN_SCK = 0, EARRI2CPIN_SDA = 1, EARRI2CPIN_ENDENUM = 2};
 
 
 #define C_SMBUS_TIMEOUT (25+1)
 
 class TI2CIFACE {
 	private:
+		uint8_t c_i2c_wait;
 		void Pause_I2C ();
 		void I2CPulse ();
-	
-	protected:
-		virtual void I2C_INIT() = 0;
-		virtual void I2C_SDA_1 () = 0;
-		virtual void I2C_SDA_0 () = 0;
-		virtual void I2C_SCK_1 () = 0;
-		virtual void I2C_SCK_0 () = 0;
-		virtual void I2C_SDA_OUT () = 0;
-		virtual void I2C_SDA_IN () = 0;
-		virtual bool I2C_SDA_READ () = 0;	
-		virtual bool I2C_SCL_READ () = 0;	
-	
+		const S_GPIOPIN *pins;
+		void Hard_Init ();
 		
-		//virtual bool SMBUS_SCK_READ () = 0;	
+	protected:
+		void I2C_INIT ();
+		void I2C_SDA_1 ();
+		void I2C_SDA_0 ();
+		void I2C_SCK_1 ();
+		void I2C_SCK_0 ();
+		void I2C_SDA_OUT ();
+		void I2C_SDA_IN ();
+		bool I2C_SDA_READ ();	
+		bool I2C_SCL_READ ();	
 	
 	public:
-		virtual void Hard_Init () = 0;
+		TI2CIFACE (const S_GPIOPIN *p);
+		
 		void Start_I2C();
 		void Stop_I2C ();
 		bool DataOut_I2C (unsigned char datas);
 		bool DataOut_SMBUS (unsigned char datas);
 		uint8_t DataIn_SMBUS (char RawHardAsk);
 		unsigned char DataIn_I2C (char RawHardAsk);
-		//void SetSlaveAdress (unsigned char dev_adr);
+
 		bool WriteFrame_i2c (unsigned char DEVADRESS, unsigned char DestReg, unsigned char *lTx, unsigned short tx_size);
 		bool ReadFrame_i2c (unsigned char DEVADRESS, unsigned char SrcReg, unsigned char *lRx, unsigned short rx_size);
 		bool ReadFrame_smbus (unsigned char DEVADRESS, unsigned char SrcReg, unsigned char *lDest, unsigned short rx_size);
@@ -60,6 +48,7 @@ class TI2CIFACE {
 		
 	
 };
+
 
 
 
