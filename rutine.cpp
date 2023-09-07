@@ -1841,3 +1841,44 @@ return rv;
 }
 
 
+uint32_t LittleEndian_get_n (const uint8_t *lInp, uint32_t CurOffset, uint8_t databitsize)
+{
+uint32_t rv = 0;
+if (lInp  && databitsize && databitsize <= 32)
+	{
+	uint32_t byte_ofs = CurOffset / 8;
+	uint8_t bit_msk_input = 1;
+	uint32_t bit_msk_output = 1;
+
+  bit_msk_input = bit_msk_input << (CurOffset % 8);
+  lInp += byte_ofs;
+
+	while (databitsize)
+		{
+		if (*lInp & bit_msk_input) rv |= bit_msk_output;
+		bit_msk_input = bit_msk_input << 1;
+		if (!bit_msk_input)
+			{
+			bit_msk_input = 1;
+			lInp++;
+			}
+		bit_msk_output = bit_msk_output << 1;
+		databitsize--;
+		}
+	}
+return rv;
+}
+
+
+
+bool quant_value (float base, float base_jit, float val)
+{
+	bool rv = false;
+	float min_v = base - base_jit;
+	float max_v = base + base_jit;
+	if (val >= min_v && val <= max_v) rv = true;
+	return rv;
+}
+
+
+
