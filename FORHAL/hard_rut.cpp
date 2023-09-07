@@ -148,6 +148,48 @@ return rv;
 }
 
 
+
+void _pin_low_init (S_GPMD_PIN_T *lp_pin, unsigned char cnt)
+{
+if (lp_pin) {
+	while (cnt)
+		{
+		if (lp_pin->pin.port)
+			{
+			switch (lp_pin->mod)
+				{
+				case EGPMD_OD:
+					{
+					_pin_low_init_out_od (&lp_pin->pin, 1);
+					_pin_set_to (&lp_pin->pin, lp_pin->out_mod_def_set);
+					break;
+					}
+				case EGPMD_PP:
+					{
+					_pin_low_init_out_pp (&lp_pin->pin, 1);
+					_pin_set_to (&lp_pin->pin, lp_pin->out_mod_def_set);
+					break;
+					}
+				case EGPMD_AIN:
+					{
+					_pin_low_init_adc (&lp_pin->pin, 1);
+					break;
+					}
+				case EGPMD_IN:
+				default:
+					{
+					_pin_low_init_in (&lp_pin->pin, 1);
+					break;
+					}
+				}
+			}
+		lp_pin++;
+		cnt--;
+		}
+	}
+}
+
+
 #ifdef STM32F446xx
 void _pin_output (S_GPIOPIN *lp_pin, bool val)
 {
