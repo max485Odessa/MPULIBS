@@ -1882,3 +1882,38 @@ bool quant_value (float base, float base_jit, float val)
 
 
 
+bool subval_u32 (uint32_t &v, uint32_t sb)
+{
+	bool rv = false;
+	uint32_t rslt = v - sb;
+	if (rslt <= v)
+		{
+		v = rslt;
+		rv = true;
+		}
+	else
+		{
+		v = 0;
+		}
+	return rv;
+}
+
+
+
+bool addval_u32 (uint32_t &v, uint32_t av)
+{
+	bool rv = false;
+	uint32_t rslt = v + av;
+	if (rslt >= v)
+		{
+		v = rslt;
+		rv = true;
+		}
+	else
+		{
+		v = 0xFFFFFFFF;
+		}
+	return rv;
+}
+
+

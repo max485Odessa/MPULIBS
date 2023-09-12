@@ -54,12 +54,8 @@ unsigned char SWAPBits (unsigned char datas);
 unsigned long SwapBitsLong (unsigned long val, unsigned char bitsize);
 uint32_t LittleEndian_get_n (const uint8_t *lInp, uint32_t CurOffset, uint8_t databitsize);
 bool quant_value (float base, float base_jit, float val);
-/*
-void swapByteOrder(void* data, size_t size);
-uint16_t crcAddByte(uint16_t crc_val, uint8_t byte);
-uint16_t crcAddSignature(uint16_t crc_val, uint64_t data_type_signature);
-uint16_t crcAdd(uint16_t crc_val, const uint8_t* bytes, size_t len);
-*/
+bool subval_u32 (uint32_t &v, uint32_t sb);
+bool addval_u32 (uint32_t &v, uint32_t av);
 
 #endif
 
