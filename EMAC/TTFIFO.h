@@ -1,25 +1,28 @@
 #ifndef _H_FIFO_TEMPLATE_H_
 #define _H_FIFO_TEMPLATE_H_
 
-
+#include <stdint.h>
 
 template<class Tp>
 class TTFIFO {
 	
-		const unsigned long c_alloc_frames;
-		unsigned long push_ix;
-		unsigned long pop_ix;
-		unsigned long fill_count;
-		unsigned long peack_count;
+		const uint32_t c_alloc_frames;
+		uint32_t push_ix;
+		uint32_t pop_ix;
+		uint32_t fill_count;
+		uint32_t peack_count;
 		Tp *circlbuffer;
 	
 	public:
-		TTFIFO (unsigned long el_count);	// елементный размер
-		unsigned long is_free_space ();
-		unsigned long frame_count ();
-		unsigned long statistic_peak ();
+		TTFIFO (uint32_t el_count);	// елементный размер
+		uint32_t is_free_space ();
+		uint32_t frame_count ();
+		uint32_t statistic_peak ();
 		bool push (const Tp *frm);
+		bool push (Tp frm);
+		bool push (const Tp *frm, uint32_t sz);
 		bool pop (Tp &frm);
+		uint32_t pop (Tp *frm, uint32_t maxsz);
 		bool peek (Tp &frm);
 		void clear ();
 		
@@ -28,7 +31,7 @@ class TTFIFO {
 
 
 template <class Tp>
-TTFIFO<Tp>::TTFIFO (unsigned long el_count) : c_alloc_frames (el_count)
+TTFIFO<Tp>::TTFIFO (uint32_t el_count) : c_alloc_frames (el_count)
 {
 circlbuffer = new Tp[el_count];
 clear();
@@ -37,7 +40,7 @@ peack_count = 0;
 
 
 template <class Tp>
-unsigned long TTFIFO<Tp>::statistic_peak ()
+uint32_t TTFIFO<Tp>::statistic_peak ()
 {
 	return peack_count;
 }
@@ -55,7 +58,7 @@ void TTFIFO<Tp>::clear ()
 
 
 template <class Tp>
-unsigned long TTFIFO<Tp>::frame_count ()
+uint32_t TTFIFO<Tp>::frame_count ()
 {
 	return fill_count;
 }
@@ -63,9 +66,9 @@ unsigned long TTFIFO<Tp>::frame_count ()
 
 
 template <class Tp>
-unsigned long TTFIFO<Tp>::is_free_space ()
+uint32_t TTFIFO<Tp>::is_free_space ()
 {
-unsigned long rv = 0;
+uint32_t rv = 0;
 if (fill_count < c_alloc_frames) rv = c_alloc_frames - fill_count;
 return rv;	
 }
@@ -86,6 +89,26 @@ bool TTFIFO<Tp>::push (const Tp *frm)
 }
 
 template <class Tp>
+bool TTFIFO<Tp>::push (Tp frm)
+{
+	return push (&frm);
+}
+
+template <class Tp>
+bool TTFIFO<Tp>::push (const Tp *frm, uint32_t sz)
+{
+	bool rv = false;
+	while (sz)
+		{
+		if (!push (frm)) break;
+		frm++;
+		sz--;
+		}
+	if (!sz) rv = true;
+	return rv;
+}
+
+template <class Tp>
 bool TTFIFO<Tp>::pop (Tp &frm)
 {
 bool rv = false;
@@ -98,6 +121,20 @@ if (fill_count)
 	}	
 return rv;	
 }
+
+template <class Tp>
+uint32_t TTFIFO<Tp>::pop (Tp *frm, uint32_t maxsz)
+{
+uint32_t rv = 0;
+while (maxsz)
+	{
+	if (!pop (*frm++)) break;
+	maxsz--;
+	rv++;
+	}
+return rv;
+}
+
 
 template <class Tp>
 bool TTFIFO<Tp>::peek (Tp &frm)

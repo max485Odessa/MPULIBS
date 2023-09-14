@@ -2,7 +2,7 @@
 
 
 
-enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B = 1, EGPIOIX_C = 2, EGPIOIX_ENDENUM = 3};
+enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0};
 
 
@@ -36,9 +36,103 @@ void hard_gpio_clock_enable (GPIO_TypeDef *port)
 					}
 				break;
 				}
+			if (port == GPIOD) 
+				{
+				if (!cur_clock_state[EGPIOIX_D]) 
+					{
+					__HAL_RCC_GPIOD_CLK_ENABLE();
+					cur_clock_state[EGPIOIX_D] = true;
+					}
+				break;
+				}
+			if (port == GPIOE) 
+				{
+				if (!cur_clock_state[EGPIOIX_E]) 
+					{
+					__HAL_RCC_GPIOE_CLK_ENABLE();
+					cur_clock_state[EGPIOIX_E] = true;
+					}
+				break;
+				}
+			if (port == GPIOF) 
+				{
+				if (!cur_clock_state[EGPIOIX_F]) 
+					{
+					__HAL_RCC_GPIOF_CLK_ENABLE();
+					cur_clock_state[EGPIOIX_F] = true;
+					}
+				break;
+				}
 			} while (false);
 }
 
+
+
+void hard_usart_clock_enable (USART_TypeDef *p)
+{
+	do	{
+			if (p == USART1)
+				{
+				static bool f_active = false;
+				if (!f_active)
+					{
+					__HAL_RCC_USART1_CLK_ENABLE ();
+					f_active = true;
+					}
+				break;
+				}
+			if (p == USART2)
+				{
+				static bool f_active = false;
+				if (!f_active)
+					{
+					__HAL_RCC_USART2_CLK_ENABLE ();
+					f_active = true;
+					}
+				break;
+				}
+			if (p == USART3)
+				{
+				static bool f_active = false;
+				if (!f_active)
+					{
+					__HAL_RCC_USART3_CLK_ENABLE ();
+					f_active = true;
+					}
+				break;
+				}
+			if (p == UART4)
+				{
+				static bool f_active = false;
+				if (!f_active)
+					{
+					__HAL_RCC_UART4_CLK_ENABLE ();
+					f_active = true;
+					}
+				break;
+				}
+			if (p == UART5)
+				{
+				static bool f_active = false;
+				if (!f_active)
+					{
+					__HAL_RCC_UART5_CLK_ENABLE ();
+					f_active = true;
+					}
+				break;
+				}
+			if (p == USART6)
+				{
+				static bool f_active = false;
+				if (!f_active)
+					{
+					__HAL_RCC_USART6_CLK_ENABLE ();
+					f_active = true;
+					}
+				break;
+				}
+			} while (false);
+}
 
 
 
@@ -53,6 +147,7 @@ static void hard_gpio_init_raw (GPIO_InitTypeDef *gpio, S_GPIOPIN *inarr, unsign
 		cnt--;
 		}
 }
+
 
 
 
@@ -72,6 +167,20 @@ void _pin_low_init_out_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
 		lp_pin++;
 		cnt--;
 		}		
+}
+
+
+
+void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin )
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+		hard_gpio_clock_enable (lp_pin->port);
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Alternate = af_codemux;
+		GPIO_InitStructure.Pin = lp_pin->pin;
+		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 }
 
 

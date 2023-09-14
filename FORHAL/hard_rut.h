@@ -20,10 +20,12 @@ typedef struct {
 } S_GPMD_PIN_T;
 
 
+void hard_usart_clock_enable (USART_TypeDef *p);
 void hard_gpio_clock_enable (GPIO_TypeDef *port);
 void _pin_low_init (S_GPMD_PIN_T *lp_pin, unsigned char cnt);
 void _pin_low_init_out_od ( S_GPIOPIN *lp_pin, uint8_t cnt );
 void _pin_low_init_out_pp ( S_GPIOPIN *lp_pin, uint8_t cnt );
+void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin );
 void _pin_low_init_in ( S_GPIOPIN *lp_pin, uint8_t cnt );
 void _pin_low_init_adc ( S_GPIOPIN *lp_pin, uint8_t cnt );
 bool _pin_input ( S_GPIOPIN *lp_pin );
