@@ -18,6 +18,7 @@ class TTFIFO {
 		uint32_t is_free_space ();
 		uint32_t frame_count ();
 		uint32_t statistic_peak ();
+		void statistic_peak_clear ();
 		bool push (const Tp *frm);
 		bool push (Tp frm);
 		bool push (const Tp *frm, uint32_t sz);
@@ -43,6 +44,14 @@ template <class Tp>
 uint32_t TTFIFO<Tp>::statistic_peak ()
 {
 	return peack_count;
+}
+
+
+
+template <class Tp>
+void TTFIFO<Tp>::statistic_peak_clear ()
+{
+	peack_count = 0;
 }
 
 
