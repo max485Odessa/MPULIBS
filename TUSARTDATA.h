@@ -51,7 +51,7 @@ class TSERIALUSR {
 		bool is_link ();
 		uint32_t tx_free_space ();
 		virtual bool Tx_status () = 0;
-	
+		void clear ();
 		bool pop (uint8_t &d);
 		virtual uint16_t Rx_check () = 0;
 		virtual uint16_t Rx (void *lDst, uint16_t max_size) = 0;

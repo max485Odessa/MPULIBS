@@ -16,7 +16,7 @@ class TFIFOLEN {
 		bool check_push_space (uint16_t sz);
 		bool push (void *s, uint16_t sz);
 		bool pop (void *d, uint16_t &sz);
-
+		void clear ();
 		uint32_t frame_count ();
 		uint32_t statistic_frame_peack ();
 		uint32_t statistic_bytes_peack ();

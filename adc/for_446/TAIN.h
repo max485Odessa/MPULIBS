@@ -12,6 +12,13 @@ enum EAINPIN {EAINPIN_VBUS1 = 0, EAINPIN_VBUS2 = 1, EAINPIN_VBAT = 2, EAINPIN_JX
 
 class TAIN: public TFFC {
 		virtual void Task () override;
+		SYSBIOS::Timer relax_timer;
+		float quant_calc ();
+		float vcc_calc ();
+	
+	protected:
+		float quant_value;
+		float vcc_value;
 		float voltage[EAINCH_ENDENUM];
 	
 	public:

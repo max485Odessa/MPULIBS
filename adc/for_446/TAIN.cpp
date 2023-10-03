@@ -12,8 +12,7 @@ TAIN::TAIN ()
 {
 	_pin_low_init_adc (const_cast<S_GPIOPIN*>(adcpinsarr), EAINPIN_ENDENUM);
 	ADC_ChannelConfTypeDef sConfig;
-  GPIO_InitTypeDef          GPIO_InitStruct;
-  static DMA_HandleTypeDef  hdma_adc;
+  DMA_HandleTypeDef  hdma_adc;
 
 	__HAL_RCC_ADC1_CLK_ENABLE ();
 	__HAL_RCC_DMA2_CLK_ENABLE();
@@ -23,8 +22,8 @@ TAIN::TAIN ()
   hdma_adc.Init.Direction = DMA_PERIPH_TO_MEMORY;
   hdma_adc.Init.PeriphInc = DMA_PINC_DISABLE;
   hdma_adc.Init.MemInc = DMA_MINC_ENABLE;
-  hdma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_WORD;
-  hdma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_WORD;
+  hdma_adc.Init.PeriphDataAlignment = DMA_PDATAALIGN_HALFWORD;		// DMA_PDATAALIGN_HALFWORD
+  hdma_adc.Init.MemDataAlignment = DMA_MDATAALIGN_HALFWORD;
   hdma_adc.Init.Mode = DMA_CIRCULAR;
   hdma_adc.Init.Priority = DMA_PRIORITY_HIGH;
   hdma_adc.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
@@ -39,12 +38,12 @@ TAIN::TAIN ()
   AdcHandle.Instance                   = ADC1;
   AdcHandle.Init.ClockPrescaler        = ADC_CLOCKPRESCALER_PCLK_DIV4;
   AdcHandle.Init.Resolution            = ADC_RESOLUTION_12B;
-  AdcHandle.Init.ScanConvMode          = DISABLE;                       /* Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1) */
+  AdcHandle.Init.ScanConvMode          = ENABLE;//DISABLE;                       /* Sequencer disabled (ADC conversion on only 1 channel: channel set on rank 1) */
   AdcHandle.Init.ContinuousConvMode    = ENABLE;                        /* Continuous mode disabled to have only 1 conversion at each conversion trig */
   AdcHandle.Init.DiscontinuousConvMode = DISABLE;                       /* Parameter discarded because sequencer is disabled */
   AdcHandle.Init.NbrOfDiscConversion   = 0;
   AdcHandle.Init.ExternalTrigConvEdge  = ADC_EXTERNALTRIGCONVEDGE_NONE;        /* Conversion start trigged at each external event */
-  AdcHandle.Init.ExternalTrigConv      = ADC_EXTERNALTRIGCONV_T1_CC1;
+  AdcHandle.Init.ExternalTrigConv      = ADC_SOFTWARE_START;//ADC_EXTERNALTRIGCONV_T1_CC1;
   AdcHandle.Init.DataAlign             = ADC_DATAALIGN_RIGHT;
   AdcHandle.Init.NbrOfConversion       = EAINCH_ENDENUM;
   AdcHandle.Init.DMAContinuousRequests = ENABLE;
@@ -52,7 +51,7 @@ TAIN::TAIN ()
 	
 	HAL_ADC_Init (&AdcHandle);
 	
-  sConfig.SamplingTime = ADC_SAMPLETIME_3CYCLES;
+  sConfig.SamplingTime = ADC_SAMPLETIME_144CYCLES;
   sConfig.Offset       = 0;
 	
 	uint8_t ix = 0;
@@ -64,6 +63,24 @@ TAIN::TAIN ()
 		ix++;
 		}
 	HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*)&uhADCxConvertedValue, EAINCH_ENDENUM);
+	quant_value = 0;
+}
+
+
+
+float TAIN::quant_calc ()
+{
+	uint16_t raw16 = uhADCxConvertedValue[EAINCH_VREF];
+	raw16 += uhADCxConvertedValue[EAINCH_VREF2];
+	raw16 /= 2;
+	return 1.20F / raw16;
+}
+
+
+
+float TAIN::vcc_calc ()
+{
+	return quant_value * 4096;
 }
 
 
@@ -77,9 +94,20 @@ float *TAIN::adr_voltage (EAINPIN ch)
 
 
 
-
 void TAIN::Task ()
 {
+	if (!relax_timer.get())
+		{
+		quant_value = quant_calc ();
+		vcc_value = vcc_calc ();
+		uint8_t ix = 0;
+		while (ix < EAINCH_ENDENUM)
+			{
+			voltage[ix] = quant_value * uhADCxConvertedValue[ix]; 
+			ix++;
+			}
+		relax_timer.set (20);
+		}
 }
 
 

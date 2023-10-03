@@ -20,6 +20,15 @@ bool TFIFOLEN::check_push_space (uint16_t sz)
 
 
 
+void TFIFOLEN::clear ()
+{
+	fifo->clear ();
+	item_cnt = 0;
+}
+
+
+
+
 bool TFIFOLEN::push (void *s, uint16_t sz)
 {
 	bool rv = check_push_space ( sz);

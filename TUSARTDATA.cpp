@@ -140,6 +140,14 @@ uint32_t TSERIALUSR::tx_free_space ()
 
 
 
+void TSERIALUSR::clear ()
+{
+	fifo_tx->clear ();
+	fifo_rx->clear ();
+}
+
+
+
 TUSARTOBJ::TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx)
 {
 	c_linkdetect_period = 2000;
