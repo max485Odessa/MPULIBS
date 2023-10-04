@@ -3,7 +3,7 @@
 
 
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
-static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0};
+static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
 
 
 void hard_gpio_clock_enable (GPIO_TypeDef *port)
@@ -36,6 +36,7 @@ void hard_gpio_clock_enable (GPIO_TypeDef *port)
 					}
 				break;
 				}
+			#ifdef GPIOD
 			if (port == GPIOD) 
 				{
 				if (!cur_clock_state[EGPIOIX_D]) 
@@ -45,6 +46,8 @@ void hard_gpio_clock_enable (GPIO_TypeDef *port)
 					}
 				break;
 				}
+			#endif
+			#ifdef GPIOE
 			if (port == GPIOE) 
 				{
 				if (!cur_clock_state[EGPIOIX_E]) 
@@ -54,6 +57,8 @@ void hard_gpio_clock_enable (GPIO_TypeDef *port)
 					}
 				break;
 				}
+			#endif
+			#ifdef GPIOF
 			if (port == GPIOF) 
 				{
 				if (!cur_clock_state[EGPIOIX_F]) 
@@ -63,6 +68,7 @@ void hard_gpio_clock_enable (GPIO_TypeDef *port)
 					}
 				break;
 				}
+			#endif
 			} while (false);
 }
 
@@ -91,6 +97,7 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 					}
 				break;
 				}
+			#ifdef USART3
 			if (p == USART3)
 				{
 				static bool f_active = false;
@@ -101,6 +108,8 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 					}
 				break;
 				}
+			#endif
+			#ifdef USART4
 			if (p == UART4)
 				{
 				static bool f_active = false;
@@ -111,6 +120,8 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 					}
 				break;
 				}
+			#endif
+			#ifdef UART5
 			if (p == UART5)
 				{
 				static bool f_active = false;
@@ -121,6 +132,8 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 					}
 				break;
 				}
+			#endif
+			#ifdef UART6
 			if (p == USART6)
 				{
 				static bool f_active = false;
@@ -131,6 +144,7 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 					}
 				break;
 				}
+			#endif
 			} while (false);
 }
 
@@ -298,8 +312,7 @@ if (lp_pin) {
 	}
 }
 
-
-#ifdef STM32F446xx
+#if defined(STM32F446xx) || defined(STM32F401xC)
 void _pin_output (S_GPIOPIN *lp_pin, bool val)
 {
   if (val)
