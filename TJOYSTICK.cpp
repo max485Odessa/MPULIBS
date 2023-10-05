@@ -10,7 +10,7 @@ TJOYSTIC::TJOYSTIC (S_GPIOPIN *p, const uint8_t pc, const float *x, const float 
 	last_pushed_mask = 0;
 	axiscalibr[EJSTCA_X].f_result_ok = false;
 	axiscalibr[EJSTCA_Y].f_result_ok = false;
-	c_volt_move_quant = 0.03F;		// величина для устранения джитера центрального положения стика
+	c_volt_move_quant = 0.03F;		// величина напряжения для устранения джитера центрального положения стика
 	while (ix < EJSTCPINS_ENDENUM) 
 		{
 		pins[ix].keypin = p[ix];
@@ -246,8 +246,6 @@ void TJOYSTIC::Task ()
 					if (pins[ix].block_time) messg = EJSTMSG_NONE;
 					}
 				pins[ix].messg = messg;
-				//pins[ix].pop_time = 0;
-				//pins[ix].push_time = 0;
 				pins[ix].pushstate_prev = pins[ix].pushstate_cur;
 				}
 			else
@@ -256,12 +254,10 @@ void TJOYSTIC::Task ()
 				if (pins[ix].pushstate_cur)
 					{
 					addval_u32 (pins[ix].push_time, c_dlt);
-					//pins[ix].pop_time = 0;
 					}
 				else
 					{
 					addval_u32 (pins[ix].pop_time, c_dlt);
-					//pins[ix].push_time = 0;
 					}
 				}
 
