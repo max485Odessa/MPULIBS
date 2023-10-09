@@ -6,6 +6,7 @@
 #include "stm32f4xx_hal.h"
 
 enum EGPMD {EGPMD_OD, EGPMD_PP, EGPMD_IN, EGPMD_AIN, EGPMD_ENDENUM};
+enum EGPINTMOD {EGPINTMOD_RISING = 0, EGPINTMOD_FALLING = 1, EGPINTMOD_RISING_FALLING = 2, EGPINTMOD_ENDENUM};
 
 typedef struct {
 	GPIO_TypeDef *port;
@@ -27,6 +28,7 @@ void _pin_low_init_out_od ( S_GPIOPIN *lp_pin, uint8_t cnt );
 void _pin_low_init_out_pp ( S_GPIOPIN *lp_pin, uint8_t cnt );
 void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin );
 void _pin_low_init_in ( S_GPIOPIN *lp_pin, uint8_t cnt );
+void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md);
 void _pin_low_init_adc ( S_GPIOPIN *lp_pin, uint8_t cnt );
 bool _pin_input ( S_GPIOPIN *lp_pin );
 void _pin_output ( S_GPIOPIN *lp_pin, bool val );

@@ -214,8 +214,7 @@ void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt)
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 		lp_pin++;
 		cnt--;
-		}
-		
+		}	
 }
 
 
@@ -241,6 +240,32 @@ void _pin_low_init_in (S_GPIOPIN *lp_pin, unsigned char cnt)
 
 	//hard_gpio_init_raw (&GPIO_InitStructure, lp_pin, cnt);
 }
+
+
+static const uint32_t modintarr[EGPINTMOD_ENDENUM] = {GPIO_MODE_IT_RISING, GPIO_MODE_IT_FALLING, GPIO_MODE_IT_RISING_FALLING};
+
+
+void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md)
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+	
+	while (cnt)
+		{
+		hard_gpio_clock_enable (lp_pin->port);
+		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Mode = modintarr[md];
+		GPIO_InitStructure.Pull = GPIO_NOPULL;//GPIO_NOPULL;
+		GPIO_InitStructure.Alternate = 0;
+		GPIO_InitStructure.Pin = lp_pin->pin;
+		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
+		lp_pin++;
+		cnt--;
+		}
+	
+
+	//hard_gpio_init_raw (&GPIO_InitStructure, lp_pin, cnt);
+}
+
 
 
 void _pin_low_init_adc (S_GPIOPIN *lp_pin, unsigned char cnt)
