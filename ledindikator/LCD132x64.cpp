@@ -1,5 +1,6 @@
 #include "LCD132x64.h"
 #include "SYSBIOS.H"
+#include "rutine.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -28,22 +29,10 @@ lastY = 0;
 PPointFloatCod = '.';
 LcdPrintMode = 0;
 F_FixXWStep = 0;
-ClearAddIndx ();
+
 }
 
 
-
-void TLCDCANVABW::ClearAddIndx ()
-{
-IndxStr = 0;
-}
-
-
-
-char *TLCDCANVABW::GetAddStrBufer ()
-{
-return BufStr;
-}
 
 
 
@@ -93,13 +82,13 @@ unsigned long rv = 0;
 if (IndxLine < CntVerticalLine && lpDst)
 	{
 	unsigned long rlsize = Canvas_Width;
-	if (lpDst->Sizes < rlsize) rlsize = lpDst->Sizes;
+	if (lpDst->sizes < rlsize) rlsize = lpDst->sizes;
 	unsigned long IdxB = 0;
 	unsigned long ofsbb = CntByteLine * 8;
 	ofsbb = ofsbb * IndxLine;
 	unsigned char *lpAdr = VideoBufer + ofsbb, *lpTmp;
 	unsigned char Dt,Hmask = 128, Vmask;
-	unsigned char *lpDest = (unsigned char *) lpDst->lpRam;
+	unsigned char *lpDest = (unsigned char *) lpDst->lRam;
 	unsigned long DstSize = rlsize;
 	while (IdxB < CntByteLine && DstSize)
 		{
@@ -142,8 +131,8 @@ unsigned long szline = CopyCanva_BLine (&tmpRLE,IndxLine);
 if (szline)
 	{
 	BUFPAR LOPR1;
-	LOPR1.lpRam = tmpRLE.lpRam;
-	LOPR1.Sizes = szline;
+	LOPR1.lRam = tmpRLE.lRam;
+	LOPR1.sizes = szline;
 	rv = RLE_Coding_A (&LOPR1,Dst);
 	}
 return rv;
@@ -181,8 +170,8 @@ if (Canvas_Height % 8) CntVerticalLine++;
 SizeCanvaBytes = Canvas_Height * CntByteLine;
 VideoBufer = &BuferLCD[0];
 
-tmpRLE.Sizes = LCD_RLEBUFSIZE;
-tmpRLE.lpRam = RLEBufLCD;
+tmpRLE.sizes = LCD_RLEBUFSIZE;
+tmpRLE.lRam = RLEBufLCD;
 }
 
 
@@ -1173,39 +1162,6 @@ return lpDest;
 
 
 
-void TLCDCANVABW::FloatToRam (char *lpDest, float datas, unsigned char pcnt)
-{
-	unsigned char *lpEnd;
-	float DrobOstat;
-	unsigned long Celie;
-	Celie = datas;
-	// печать целых значений
-	lpEnd = (unsigned char *)UlongToStr ((unsigned char*)lpDest,Celie);
-  CntCharF_Celie = (char*)lpEnd - lpDest;
-	if (pcnt)
-		{
-		if (pcnt > 6) pcnt = 6;
-		DrobOstat = datas - (float)Celie;
-		// печать дробной части
-		lpEnd[0] = PPointFloatCod;
-		lpEnd++;
-		lpEnd = FloatToStrDroba (lpEnd,DrobOstat,pcnt);
-		}
-    CntCharF_Droba = pcnt;
-	lpEnd[0]=0;
-}
-
-
-
-void TLCDCANVABW::Print_Float (float datas,unsigned char pcnt)
-{
-	char Bufrtv[32];
-    FloatToRam (Bufrtv, datas, pcnt);
-	PrintString ((const char *)Bufrtv);
-}
-
-
-
 
 
 void TLCDCANVABW::PrintStringCentrRect (const char *lpString, short Xk, short Yk, unsigned short widdtlc, char BlankMode)
@@ -1703,12 +1659,6 @@ if (lrct1)
 
 
 
-
-
-
-
-
-
 void TLCDCANVABW::ProgressBar_V (short Xk, short Yk, short WidV, unsigned long curVal, unsigned long maxVal)
 {
 // ( Sizes * 100 ) / ProgresBarBixels;
@@ -1813,7 +1763,8 @@ if (lDst)
 // перемещает текущюю таблицу контрольных сумм тайлов в старую таблицу
 void TLCDCANVABW::CRC_MoveToPrev ()
 {
-CopyMemory((char*)&CRCTILE_PREV, (char*)&CRCTILE, sizeof(CRCTILE_PREV));
+CopyMemorySDC ((char*)&CRCTILE, (char*)&CRCTILE_PREV, sizeof(CRCTILE_PREV));
+//CopyMemory((char*)&CRCTILE_PREV, (char*)&CRCTILE, sizeof(CRCTILE_PREV));
 }
 
 
@@ -1876,8 +1827,8 @@ if (!F_end && Col_cnt)
 	{
 	BUFPAR bout1;
 	unsigned long SzCrcDat = Canvas_Width / VID::C_SEGCOLCNT;			// скаолько байт в сегменте
-	bout1.lpRam = TAILLINE;
-	bout1.Sizes = sizeof(TAILLINE);										// размер целой строки
+	bout1.lRam = TAILLINE;
+	bout1.sizes = sizeof(TAILLINE);										// размер целой строки
 	unsigned long rawtailsize = Col_cnt * SzCrcDat;
 	unsigned long rvsize = CopyCanva_BLine (&bout1, InxGtChngSeg_Row);	// перенести байт-линию в буфер
 	if (rvsize)
@@ -1885,10 +1836,10 @@ if (!F_end && Col_cnt)
 		if (RleMod)
 			{
 			BUFPAR LOPR1, RLout;
-			LOPR1.lpRam = (((unsigned char*)bout1.lpRam) + Strt_Col*SzCrcDat);	// высчитать начальное смещение -
-			LOPR1.Sizes = rawtailsize;									// и текущий размер
-			RLout.lpRam = TAILLINE_RLE;									// параметры -
-			RLout.Sizes = sizeof(TAILLINE_RLE);							// выходного буфера
+			LOPR1.lRam = (((unsigned char*)bout1.lRam) + Strt_Col*SzCrcDat);	// высчитать начальное смещение -
+			LOPR1.sizes = rawtailsize;									// и текущий размер
+			RLout.lRam = TAILLINE_RLE;									// параметры -
+			RLout.sizes = sizeof(TAILLINE_RLE);							// выходного буфера
 			rvsize = RLE_Coding_A (&LOPR1, &RLout);						// RLE кодировка
 			if (rvsize)
 				{
@@ -1901,7 +1852,7 @@ if (!F_end && Col_cnt)
 			}
 		else
 			{
-			Ldest.lpBuf = (((char*)bout1.lpRam) + Strt_Col*SzCrcDat);
+			Ldest.lpBuf = (((char*)bout1.lRam) + Strt_Col*SzCrcDat);
 			Ldest.size = rawtailsize;
 			Ldest.NLine = InxGtChngSeg_Row;
 			Ldest.XOfs = Strt_Col*SzCrcDat;
@@ -2080,53 +2031,6 @@ if (steprout)
 
 
 
-bool TLCDCANVABW::AddChar (char dda)
-{
-bool rv = false;
-if (IndxStr < (sizeof(BufStr)-1))
-	{
-    BufStr[IndxStr] = dda;
-    IndxStr++;
-    BufStr[IndxStr] = 0;
-    rv = true;
-    }
-return rv;
-}
-
-
-
-bool TLCDCANVABW::AddString (char *lstr)
-{
-bool rv = true;
-if (lstr)
-	{
-    char dd;
-    while (true)
-    	{
-        dd = lstr[0];
-        if (!dd) break;
-        if (!AddChar (dd))
-        	{
-            rv = false;
-            break;
-            }
-        lstr++;
-        }
-    }
-return rv;
-}
-
-
-
-bool TLCDCANVABW::AddFloat (float datf, unsigned char drobcnt)
-{
-char Buf[32];
-FloatToRam (Buf, datf, drobcnt);
-return AddString (Buf);
-}
-
-
-
 
 void TLCDCANVABW::PrintString_W (char *lpString, unsigned short wddttpixels)
 {
@@ -2203,84 +2107,6 @@ if (lpString)
 }
 
 
-
-void TLCDCANVABW::Print_Float_WdthAlign (float datas, unsigned char pcnt, unsigned char wdthp, VID::ESTRALIGN allgn)
-{
-char Bufrtv[32];
-FloatToRam (Bufrtv, datas, pcnt);
-unsigned long wdth = GetDrawStringWidth (Bufrtv);
-//short Xk = lastX, Yk = lastY;
-if (wdth < wdthp)
-	{
-    // выполнение расчета выравнивания текста
-    switch (allgn)
-    	{
-        case VID::A_MIDLE:
-        	{
-            lastX = lastX + ((wdthp - wdth) / 2);
-        	break;
-            }
-        case VID::A_RIGHT:
-        	{
-            lastX = lastX + (wdthp - wdth);
-        	break;
-            }
-        }
-    }
-PrintString_W (Bufrtv, wdthp);
-}
-
-
-//  Целые 6,5,4,3,2,1,.,1,2,3,4,5,6 дробные
-void TLCDCANVABW::Print_Float_WdthAlign_Cursor (float datas, unsigned char pcnt, unsigned char wdthp, VID::ESTRALIGN allgn, unsigned char TetrCursor)
-{
-char Bufrtv[32];
-FloatToRam (Bufrtv, datas, pcnt);
-unsigned long wdth = GetDrawStringWidth (Bufrtv);
-//short Xk = lastX, Yk = lastY;
-unsigned char CursOfs = 0;
-//bool F_CursOn = false;
-if (wdth < wdthp)
-	{
-    // выполнение расчета выравнивания текста
-    switch (allgn)
-    	{
-        case VID::A_MIDLE:
-        	{
-            lastX = lastX + ((wdthp - wdth) / 2);
-        	break;
-            }
-        case VID::A_RIGHT:
-        	{
-            lastX = lastX + (wdthp - wdth);
-        	break;
-            }
-        }
-    }
-unsigned char DN_C = TetrCursor >> 4;    // если установлен курсор на целые
-unsigned char DN_D = TetrCursor & 0x0F;		// на дробные
-if (DN_C)
-	{
-    if (CntCharF_Celie >= DN_C)
-        {
-        //F_CursOn = true;
-        CursOfs = CntCharF_Celie - DN_C + 1;
-        }
-    }
-else
-	{
-    if (DN_D)
-    	{
-        if (CntCharF_Droba >= DN_D)
-        	{
-            //F_CursOn = true;
-            CursOfs = CntCharF_Celie + 1;	// размер целых + точка
-            CursOfs = CursOfs + DN_D - 1 + 1;
-            }
-        }
-    }
-PrintString_W_Cursor (Bufrtv, wdthp, CursOfs);
-}
 
 
 

@@ -1,13 +1,14 @@
 #include "ST7565R_SPI.H"
 
 
-const SGPIOPIN TST7565RSPI::rawpins[EST7565P_ENDENUM] = {/*EST7565P_CS*/GPIOB,1<<7, /*EST7565P_REST*/GPIOD, 1<<3, /*EST7565P_RS*/GPIOD, 1<<2,/*EST7565P_SCL*/ GPIOD, 1<<1, /*EST7565P_SI*/GPIOC, 1<<9};
-extern void Delay_Ms(unsigned short timss);
 
 
 
-TST7565RSPI::TST7565RSPI ()
+
+TST7565RSPI::TST7565RSPI (S_GPIOPIN *p)
 {
+	rawpins = p;
+	_pin_low_init_out_pp (rawpins, EST7565P_ENDENUM);
 }
 
 
@@ -17,14 +18,10 @@ void TST7565RSPI::SetDataTo (bool val)
 if (val)
 	{
 	rawpins[EST7565P_SI].port->BSRR = rawpins[EST7565P_SI].pin;	
-	//GPIOB->BSRR = GPIO_Pin_11;
-	//GPIO_WriteBit (GPIOB, GPIO_Pin_11, Bit_SET);
 	}
 else
 	{
 	rawpins[EST7565P_SI].port->BSRR = rawpins[EST7565P_SI].pin << 16;	
-	// GPIOB->BRR = GPIO_Pin_11;
-	//GPIO_WriteBit (GPIOB, GPIO_Pin_11, Bit_RESET);
 	}
 }
 
@@ -35,14 +32,10 @@ void TST7565RSPI::ResetTo (bool val)
 if (val)
 	{
 	rawpins[EST7565P_REST].port->BSRR = rawpins[EST7565P_REST].pin;	
-	//GPIOA->BSRR = GPIO_Pin_5;
-	//GPIO_WriteBit (GPIOA, GPIO_Pin_5, Bit_SET);
 	}
 else
 	{
 	rawpins[EST7565P_REST].port->BSRR = rawpins[EST7565P_REST].pin << 16;	
-	//GPIO_WriteBit (GPIOA, GPIO_Pin_5, Bit_RESET);
-	//GPIOA->BRR = GPIO_Pin_5;
 	}
 }
 
@@ -166,56 +159,16 @@ spi_cmd_single (bSend >> 2);
 
 void TST7565RSPI::SpiModeInit ()
 {
-	_pin_low_init_out ((SGPIOPIN*)&rawpins, EST7565P_ENDENUM);
-	
-	/*
-	GPIO_InitTypeDef GPIO_InitStructure;
-  RCC_APB2PeriphClockCmd (RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOA, ENABLE);
-	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_10 | GPIO_Pin_11;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-	GPIO_Init(GPIOB, &GPIO_InitStructure);
-	
-	GPIO_InitStructure.GPIO_Pin =  GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_7;
-	GPIO_Init(GPIOA, &GPIO_InitStructure);
-	*/
-	
-	
-	//GPIO_WriteBit (GPIOB, GPIO_Pin_10, Bit_RESET);		// clk
+	_pin_low_init_out_pp ((S_GPIOPIN*)&rawpins, EST7565P_ENDENUM);
+
 	rawpins[EST7565P_SCL].port->BSRR = rawpins[EST7565P_SCL].pin << 16;			// clk = 0
 	CSSetTo (1);
 	RS_To (1);
 	ResetTo (0);
 	SYSBIOS::Wait (50);
-	//Delay_us (50000);
 	ResetTo (1);
 	SYSBIOS::Wait (50);
-	//Delay_us (50000);
-
 }
-
-
-
- // U8X8_C(0x0e2),            			/* soft reset */
- // U8X8_C(0x0ae),		                /* display off */
-//  U8X8_C(0x040),		                /* set display start line to 0 */
-  
- // U8X8_C(0x0a1),		                /* ADC set to reverse */
- // U8X8_C(0x0c8),		                /* common output mode */
-
-  
-//  U8X8_C(0x0a6),		                /* display normal, bit val 0: LCD pixel off. */
-//  U8X8_C(0x0a2),		                /* LCD bias 1/9 */
-//  U8X8_C(0x02f),		                /* all power  control circuits on (regulator, booster and follower) */
-//  U8X8_CA(0x0f8, 0x000),		/* set booster ratio to 4x */
-//  U8X8_C(0x027),		                /* set V0 voltage resistor ratio to max  */
-//  U8X8_CA(0x081, 0x007),		/* set contrast, contrast value, EA default: 0x016 */
-  
-//  U8X8_C(0x0ae),		                /* display off */
- // U8X8_C(0x0a5),		                /* enter powersafe: all pixel on, issue 142 */
-  
-//  U8X8_END_TRANSFER(),             	/* disable chip */
-//  U8X8_END()             			/* end of sequence */
 
 
 
@@ -303,8 +256,8 @@ void TST7565RSPI::RefreshAllDisplay (TLCDCANVABW *lCanv)
 unsigned char Indx = 0;
 unsigned long sz;
 BUFPAR bpr;
-bpr.lpRam = (unsigned char*)DataBuf;
-bpr.Sizes = sizeof(DataBuf);
+bpr.lRam = (unsigned char*)DataBuf;
+bpr.sizes = sizeof(DataBuf);
 while (Indx < C_LCD_PAGE_AMOUNT)
 	{
 	sz = lCanv->CopyCanva_BLine (&bpr, Indx);
@@ -324,8 +277,8 @@ void TST7565RSPI::RefreshAllDisplay_L (TLCDCANVABW *lCanv)
 static unsigned char Indx = 0;
 unsigned long sz;
 BUFPAR bpr;
-bpr.lpRam = (unsigned char*)DataBuf;
-bpr.Sizes = sizeof(DataBuf);
+bpr.lRam = (unsigned char*)DataBuf;
+bpr.sizes = sizeof(DataBuf);
 
 	sz = lCanv->CopyCanva_BLine (&bpr, Indx);
 	if (sz)

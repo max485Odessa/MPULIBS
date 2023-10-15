@@ -79,11 +79,13 @@ const unsigned char MaskXLine_R[8] = {0,128,192,224,240,248,252,254};
 
 class TLCDCANVABW {
 	private:
+		/*
     	unsigned char CntCharF_Celie;
         unsigned char CntCharF_Droba;
     	char BufStr[64];
         unsigned char IndxStr;
         void FloatToRam (char *lpDest, float datf, unsigned char drobcnt);
+	*/
 
 	protected:
 		unsigned char BuferLCD[LCD_WIDTH_PIXELS * (LCD_HEIGHT_PIXELS / 8)];
@@ -112,7 +114,7 @@ class TLCDCANVABW {
 		long CRCTILE_PREV [VID::C_SEGROWCNT][VID::C_SEGCOLCNT];		// контрольные суммы тайлов экрана прошлые
 		long CRCTILE [VID::C_SEGROWCNT][VID::C_SEGCOLCNT];			// контрольные суммы тайлов экрана текущие
 		void GetGuteRect (VID::TMRect *inp_rct, VID::TMRect *out_rct);
-        void GetLineParam_msk (unsigned long Xk, unsigned long Wdth, VID::PRM_L1 *lDst);
+    void GetLineParam_msk (unsigned long Xk, unsigned long Wdth, VID::PRM_L1 *lDst);
 
 		long InxGtChngSeg_Row;
 		long InxGtChngSeg_Col;
@@ -167,13 +169,6 @@ class TLCDCANVABW {
 		void DrawVerticalBlank (unsigned char xk, unsigned char yk);
 		void DrawVerticalBlankCnt (unsigned char sizes);
 
-        // буферные операции со стрингами
-        bool AddString (char *lstr);
-        bool AddChar (char dda);
-        bool AddFloat (float datf, unsigned char drobcnt);
-				void ClearAddIndx ();
-				char *GetAddStrBufer ();
-
         // стринговые операции
         unsigned char GetFontHeight (void);
 		unsigned char GetDrawMaskWidth (unsigned char datas);
@@ -193,9 +188,8 @@ class TLCDCANVABW {
 
         // цифры
 		void Print_Long (long datas);
-		void Print_Float (float datas,unsigned char pcnt);
-    void Print_Float_WdthAlign (float datas, unsigned char pcnt, unsigned char wdthp, VID::ESTRALIGN allgn);
-    void Print_Float_WdthAlign_Cursor (float datas, unsigned char pcnt, unsigned char wdthp, VID::ESTRALIGN allgn, unsigned char TetrCursor);
+    //void Print_Float_WdthAlign (float datas, unsigned char pcnt, unsigned char wdthp, VID::ESTRALIGN allgn);
+    //void Print_Float_WdthAlign_Cursor (float datas, unsigned char pcnt, unsigned char wdthp, VID::ESTRALIGN allgn, unsigned char TetrCursor);
 		void Print_Hex (unsigned long datas);
 		void Print_Ulong (unsigned long datas);
 		void Print_Ulong_Cnt (unsigned long datas, unsigned char lendigs);

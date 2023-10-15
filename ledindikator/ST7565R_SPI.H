@@ -4,7 +4,7 @@
 
 
 #include "LCD132x64.h"
-#include "hardwaredef.h"
+#include "hard_rut.h"
 #include "SYSBIOS.H"
 
 
@@ -22,7 +22,8 @@ enum EST7565P {EST7565P_CS = 0, EST7565P_REST, EST7565P_RS, EST7565P_SCL, EST756
 
 class TST7565RSPI {
 	private:
-		static const SGPIOPIN rawpins[EST7565P_ENDENUM];
+		S_GPIOPIN *rawpins;
+		//static const S_GPIOPIN rawpins[EST7565P_ENDENUM];
 		void SpiModeInit ();
 		void spi_send (unsigned char bSend);
 		void BitStrobeTx (bool val);
@@ -38,7 +39,7 @@ class TST7565RSPI {
 		char DataBuf[LCD_WIDTH_PIXELS];
 		
 	public:
-		TST7565RSPI ();
+		TST7565RSPI (S_GPIOPIN *p);
 		void LCD_init (void);
 		void Contrast (unsigned char bSend);
 		void Set_Page (unsigned char page);
