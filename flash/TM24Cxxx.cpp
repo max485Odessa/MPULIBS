@@ -28,7 +28,7 @@ bool TM24CIF::write_page (uint16_t adr, uint8_t *src, uint16_t sz_wr, uint16_t &
 				rv = true;
 				while (sz_wr)
 					{
-					if (!i2c->DataOut_I2C (*src++)) 
+					if (i2c->DataOut_I2C (*src++)) 
 						{
 						rv = false;
 						break;
@@ -120,8 +120,8 @@ bool TM24C16::adress_tx ( uint32_t adr, bool f_read_bit)
 	bool rv = false;
 	uint8_t ah = (adr >> 7) & 0x0E;
 	do	{
-			if (!i2c->DataOut_I2C (chip_sel_adr | ah | f_read_bit)) break;
-			if (!i2c->DataOut_I2C (adr)) break;
+			if (i2c->DataOut_I2C (chip_sel_adr | ah | f_read_bit)) break;
+			if (i2c->DataOut_I2C (adr)) break;
 			rv = true;
 			} while (false);
 	
@@ -143,9 +143,9 @@ bool TM24C128::adress_tx (uint32_t adr, bool f_read_bit)
 	bool rv = false;
 
 	do	{
-			if (!i2c->DataOut_I2C (chip_sel_adr | f_read_bit)) break;
-			if (!i2c->DataOut_I2C (adr >> 8)) break;
-			if (!i2c->DataOut_I2C (adr)) break;
+			if (i2c->DataOut_I2C (chip_sel_adr | f_read_bit)) break;
+			if (i2c->DataOut_I2C (adr >> 8)) break;
+			if (i2c->DataOut_I2C (adr)) break;
 			rv = true;
 			} while (false);
 	
