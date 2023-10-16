@@ -33,6 +33,7 @@ unsigned long lenstr (const char *lsrt);
 unsigned short abs16 (short datas);
 unsigned long abs32 (long datas);
 void *memset (void *lDst, unsigned char dat, long sizes);
+void *fillmem (void *lDst, unsigned char dat, long sizes);
 //void *memcpy ( void * destination, const void * source, long num );
 //uint32_t HAL_GetTick ();
 //unsigned long HAL_RCC_GetPCLK1Freq ();
@@ -56,6 +57,12 @@ uint32_t LittleEndian_get_n (const uint8_t *lInp, uint32_t CurOffset, uint8_t da
 bool quant_value (float base, float base_jit, float val);
 bool subval_u32 (uint32_t &v, uint32_t sb);
 bool addval_u32 (uint32_t &v, uint32_t av);
+unsigned long RLE_Coding_A (BUFPAR *InRaw, BUFPAR *OutCode);
+unsigned char *UlongToStr_cnt (unsigned char *lpDest,unsigned long datas,unsigned char cntlens);
+void UlongToHex (unsigned char *lpDest, unsigned long datasl);
+uint32_t CalcCRC32Data (uint8_t *lSrc, uint32_t siz);
+uint32_t lenstr_max (const char *lsrt, uint32_t maxsz);
+
 
 #endif
 

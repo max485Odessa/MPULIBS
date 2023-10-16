@@ -4,18 +4,16 @@
 
 
 #include <stdint.h>
-#include "rfcmddefine.h"
+#include "TM24Cxxx.h"
 
 
-
-enum EPRMIX {EPRMIX_PRESS_PROFILE = 0, EPRMIX_PRESS_ON_A = 1, EPRMIX_PRESS_OFF_A = 2, EPRMIX_PRESS_ON_B = 3, EPRMIX_PRESS_OFF_B = 4, EPRMIX_TIME_RELAX = 5, EPRMIX_MODE = 6, EPRMIX_CALIBR_PRESS_ZERO = 7, \
-EPRMIX_CALIBR_PRESS_MAX = 8, EPRMIX_PRESS_BAR = 9, EPRMIX_ENDENUM = 10};
-
-
-
+#define C_SERIALNUMBER_SIZE 5
+#define C_PARAMCAPTION_SIZE 32
+#define C_MEAS_TXT_VAL_SIZE 8
+enum EPARAMTYPE {EPARAMTYPE_NONE = 0, EPARAMTYPE_BOOL = 1, EPARAMTYPE_I32 = 2, EPARAMTYPE_U32 = 3, EPARAMTYPE_I64 = 4, EPARAMTYPE_U64 = 5, EPARAMTYPE_RAW8 = 6, EPARAMTYPE_FLOAT = 7, EPARAMTYPE_STR32 = 8, EPARAMTYPE_ENDENUM = 9};
 
 
-
+#pragma pack (push,4)
 
 typedef struct {
 	const EPARAMTYPE type;
@@ -49,47 +47,96 @@ typedef struct {
 
 
 typedef struct {
+	union {
+		bool v_b;
+		uint8_t raw[4];
+		int64_t v_i64;
+		uint64_t v_u64;
+		int32_t v_i32;
+		uint32_t v_u32;
+		float v_f;
+	} u;
+} S_PARAMVALUE_T;
+
+
+#ifdef RFPARAM_SUPPORT
+typedef struct {
+	union {
+		struct {
+			S_PARAMVALUE_T min;
+			S_PARAMVALUE_T max;
+			S_PARAMVALUE_T def;
+			S_PARAMVALUE_T val;
+			} dig;
+		char txt[sizeof(S_PARAMVALUE_T) * 4];	// max size only 32 charsets
+		} u;
+} S_FULLPARAM_T;
+
+
+typedef struct {
+	uint8_t type;				// EPARAMTYPE
+	S_FULLPARAM_T param;
+} S_RFPARAMVALUE_T;
+#endif
+
+
+
+typedef struct {
+	char txt[C_PARAMCAPTION_SIZE];
+} S_PARAM_CAPTION_T;
+
+
+typedef struct {
 	uint8_t type;			// EPARAMTYPE
 	S_PARAMVALUE_T data;
 } S_DATAFLASH_T;
 
+#pragma pack (pop)
 
 
 class IRFPARAMS {
 	protected:
-		S_DATAFLASH_T data[EPRMIX_ENDENUM];
+		S_DATAFLASH_T *dloc;//[EPRMIX_ENDENUM];
+		TEEPROMIF *mem;
 		void clear_data_todef ();
 		void correct_all ();
-		static S_HDRPARAM_T *list[EPRMIX_ENDENUM];
-		static IRFPARAMS *singlobj;
+		const S_HDRPARAM_T *list;//[EPRMIX_ENDENUM];		// [EPRMIX_ENDENUM]
+		const uint16_t c_list_cnt;
+		//static IRFPARAMS *singlobj;
 		long find_param_to_name (const char *name);
+
+
+	
 	public:
-		bool get_papam_i32 (EPRMIX ix, long &dst);
-		long get_papam_i32 (EPRMIX ix);
+		IRFPARAMS (TEEPROMIF *m, S_HDRPARAM_T *l, uint16_t pcnt);
+		bool get_papam_i32 (uint32_t ix, long &dst);
+		long get_papam_i32 (uint32_t ix);
 	
-		bool get_papam_u32 (EPRMIX ix, uint32_t &dst);
-		uint32_t get_papam_u32 (EPRMIX ix);
+		bool get_papam_u32 (uint32_t ix, uint32_t &dst);
+		uint32_t get_papam_u32 (uint32_t ix);
 	
-		bool get_papam_f (EPRMIX ix, float &dst);
-		float get_papam_f (EPRMIX ix);
+		bool get_papam_f (uint32_t ix, float &dst);
+		float get_papam_f (uint32_t ix);
 	
-		bool get_papam_b (EPRMIX ix, bool &dst);
-		bool get_papam_b (EPRMIX ix);
+		bool get_papam_b (uint32_t ix, bool &dst);
+		bool get_papam_b (uint32_t ix);
 	
-		void set_papam_f (EPRMIX ix, float prm);
-		void set_papam_b (EPRMIX ix, bool prm);
-		void set_papam_u32 (EPRMIX ix, uint32_t prm);
-		void set_papam_i32 (EPRMIX ix, long prm);
-	
-		bool get_param (EPRMIX ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &dst);
-		bool set_param (EPRMIX ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src);
+		void set_papam_f (uint32_t ix, float prm);
+		void set_papam_b (uint32_t ix, bool prm);
+		void set_papam_u32 (uint32_t ix, uint32_t prm);
+		void set_papam_i32 (uint32_t ix, long prm);
 		 
 		 virtual void load ();
 		 virtual void save ();
-		 void correct_param (EPRMIX ix);
-		 void param_todef (EPRMIX ix);
-		 EPARAMTYPE gettype (EPRMIX ix);
-		 static IRFPARAMS *obj ();
+		 void correct_param (uint32_t ix);
+		 void param_todef (uint32_t ix);
+		 EPARAMTYPE gettype (uint32_t ix);
+		 
+		#ifdef RFPARAM_SUPPORT
+		bool get_param (EPRMIX ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &dst);
+		bool set_param (EPRMIX ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src);
+		#endif
+
 };
 
 
