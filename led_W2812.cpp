@@ -1,160 +1,5 @@
 #include "led_W2812.h"
 
-//extern void disable_irq ();
-//extern void enable_irq ();
-
-TLEDWIF::TLEDWIF ()
-{
-	ResPeriodControl = 0;
-	SYSBIOS::ADD_TIMER_SYS (&ResPeriodControl);
-	f_update_need = false;
-	AddObjectToExecuteManager ();
-}
-
-
-
-void TLEDWIF::Init ()
-{
-	
-	GPIO_InitTypeDef GPIO_InitStructure;
-	__HAL_RCC_GPIOA_CLK_ENABLE();
-
-  GPIO_InitStructure.Pin = C_LED_PIN;
-	GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;//GPIO_SPEED_FREQ_HIGH;
-  GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;  //GPIO_MODE_OUTPUT_PP;//GPIO_Mode_Out_PP;
-	GPIO_InitStructure.Pull = GPIO_PULLUP; 
-  HAL_GPIO_Init (C_LED_PORT, &GPIO_InitStructure);
-	C_LED_PORT->BSRR = C_LED_PIN << 16;	// линию в 0
-}
-
-
-
-void TLEDWIF::Set_RGB (uint8_t R, uint8_t G, uint8_t B)
-{
-	RGB_dat[0] = R; RGB_dat[1] = G; RGB_dat[2] = B;
-	if (ResPeriodControl)
-		{
-		f_update_need = true;	
-		}
-	else
-		{
-		Update ();
-		}
-}
-
-
-
-
-
-
-// no real update
-void TLEDWIF::Set_Color (EBASECOLOR enm_c)
-{
-	switch (enm_c)
-		{
-		case ECOLR_RED:
-			{
-			Set_RGB (C_MAXCOLOR_LEVEL, 0, 0);
-			break;
-			}
-		case ECOLR_GREEN:
-			{
-			Set_RGB (0, C_MAXCOLOR_LEVEL, 0);
-			break;
-			}
-		case ECOLR_BLUE:
-			{
-			Set_RGB (0, 0, C_MAXCOLOR_LEVEL);
-			break;
-			}
-		case ECOLR_BLACK:
-		default:
-			{
-			Set_RGB (0, 0, 0);
-			break;
-			}
-		}
-}
-
-
-// real update
-void TLEDWIF::Update ()
-{
-
-		__disable_irq ();
-		ByteColor_Tx (RGB_dat[1]);
-		__enable_irq ();
-		S_NOP();
-		__disable_irq ();
-		ByteColor_Tx (RGB_dat[0]);
-		__enable_irq ();
-		S_NOP();
-		__disable_irq ();
-		ByteColor_Tx (RGB_dat[2]);
-		__enable_irq ();
-	
-		ResPeriodControl = C_W2818_TRESETPERIOD;
-}
-
-
-
-void TLEDWIF::Task ()
-{
-	if (f_update_need)
-		{
-		if (!ResPeriodControl)
-			{
-			Set_RGB (RGB_dat[0], RGB_dat[1], RGB_dat[2]);
-			f_update_need = false;
-			}
-		}
-}
-
-
-
-void TLEDWIF::Wait_T (unsigned char val)
-{
-	while (val--)
-		{
-		S_NOP();
-		}
-}
-
-
-
-void TLEDWIF::Bit_Tx (bool val)
-{
-		C_LED_PORT->BSRR = C_LED_PIN;
-		S_NOP();
-		if (val)
-			{
-			S_NOP();
-			S_NOP();
-			S_NOP();
-			C_LED_PORT->BSRR = C_LED_PIN << 16;
-			}
-		else
-			{
-			C_LED_PORT->BSRR = C_LED_PIN << 16;
-			S_NOP();
-			}
-}
-
-
-
-void TLEDWIF::ByteColor_Tx (unsigned char colr)
-{
-unsigned char cntr = 0;
-__HAL_FLASH_INSTRUCTION_CACHE_DISABLE ();
-while (cntr < 8)
-	{
-	Bit_Tx (colr & 0x80);
-	colr <<=1;
-	cntr++;	
-	}
-__HAL_FLASH_INSTRUCTION_CACHE_ENABLE ();
-}
-
 
 
 TLED::TLED ()
@@ -164,9 +9,11 @@ TLED::TLED ()
 
 
 
-void TLED::set_bright (uint8_t val)
+void TLED::set_bright (float val)
 {
-	bright_mult = val / 255.0;
+	if (val > 1.0F) val = 1.0F;
+	if (val < 0) val = 0;
+	bright_mult = val;
 }
 
 
@@ -180,17 +27,45 @@ void TLED::color_rgb (uint8_t r, uint8_t g, uint8_t b)
 
 
 
+void TLED::color_rgb (const s_rgb_t &c)
+{
+	RGB_dat[0] = bright_mult * c.r;
+	RGB_dat[1] = bright_mult * c.g;
+	RGB_dat[2] = bright_mult * c.b;
+}
+
+
+
+
 static const s_rgb_t arrdefcolor[ECOLR_ENDENUM] = {{0,0,0},{0xFF,0,0},{0,0xFF,0},{0,0,0xFF}, {0xFF,0xFF,0}};
 void TLED::color (EBASECOLOR eclr)
+{
+	s_rgb_t ccolr;
+	color (eclr, ccolr, bright_mult);
+	RGB_dat[0] = ccolr.r;
+	RGB_dat[1] = ccolr.g;
+	RGB_dat[2] = ccolr.b;
+}
+
+
+
+void TLED::color (EBASECOLOR eclr, s_rgb_t &dst, float brlv)
 {
 	if (eclr < ECOLR_ENDENUM)
 		{
 		s_rgb_t *sc = const_cast<s_rgb_t*>(&arrdefcolor[eclr]);
-		RGB_dat[0] = bright_mult * sc->r;
-		RGB_dat[1] = bright_mult * sc->g;
-		RGB_dat[2] = bright_mult * sc->b;
+		dst.r = brlv * sc->r;
+		dst.g = brlv * sc->g;
+		dst.b = brlv * sc->b;
+		}
+	else
+		{
+		dst.r = 0;
+		dst.g = 0;
+		dst.b = 0;
 		}
 }
+
 
 
 
@@ -290,7 +165,14 @@ void TLEDS::all_color (uint8_t r, uint8_t g, uint8_t b)
 
 
 
-void TLEDS::all_bright (uint8_t val)
+void TLEDS::all_color (const s_rgb_t &c)
+{
+	all_color (c.r, c.g, c.b);
+}
+
+
+
+void TLEDS::all_bright (float val)
 {
 	uint8_t ix = 0;
 	while (ix < c_ar_cnt)
@@ -303,14 +185,34 @@ void TLEDS::all_bright (uint8_t val)
 
 
 
-
-void TLEDS::color (uint8_t ix, uint8_t r, uint8_t g, uint8_t b)
+void TLEDS::bright (uint8_t ix, float val)
 {
 	if (ix < c_ar_cnt) 
 		{
-		array[reixmx[ix]].color_rgb (r,g,b);
+		array[ix].set_bright (val);
+		f_need_update = true;
 		}
-	f_need_update = true;
+}
+
+
+
+void TLEDS::color (uint8_t ix, const s_rgb_t &c)
+{
+	if (ix < c_ar_cnt)  {
+		array[reixmx[ix]].color_rgb (c);
+		f_need_update = true;
+		}
+}
+
+
+
+void TLEDS::color (uint8_t ix, uint8_t r, uint8_t g, uint8_t b)
+{
+	if (ix < c_ar_cnt) {
+		array[reixmx[ix]].color_rgb (r,g,b);
+		f_need_update = true;
+		}
+	
 }
 
 

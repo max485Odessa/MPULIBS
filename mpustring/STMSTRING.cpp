@@ -46,7 +46,7 @@ void TSTMSTRING::set_context (void *lDRam, unsigned long size)
 if (size && lDRam)
     {
     BuferSize = size;
-    size_str = size;
+    size_str = lenstr ((char*)lDRam);
     lpStrRam = (char*)lDRam;
     }
 }
