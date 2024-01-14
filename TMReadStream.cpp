@@ -73,9 +73,9 @@ return rv;
 
 
 
-unsigned long TMCreateReadStream::GetStrings (TDString &Dest)
+uint32_t TMCreateReadStream::GetStrings (TDString &Dest)
 {
-unsigned long rvcnt = 0;
+uint32_t rvcnt = 0;
 char datab;
 Dest = "";
 while (!FlagEndBX)
@@ -596,12 +596,13 @@ if (BuferDataSize) FlagEndBX=0;
 
 
 
-unsigned int TMCreateReadStream::ReadData(unsigned char *lpAdr,int size)
+uint32_t TMCreateReadStream::ReadData (void *lp,uint32_t size)
 {
-if (!lpAdr || !size) return 0;
+if (!lp || !size) return 0;
 int lind=0;
 char data1;
-while(lind<size)
+uint8_t *lpAdr = (uint8_t*)lp;
+while(lind < size)
         {
         data1=ReadByteBX();
         if (FlagEndBX) break;

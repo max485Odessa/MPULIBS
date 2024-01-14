@@ -4,7 +4,7 @@
 
 
 #include <stdint.h>
-//#include "TM24Cxxx.h"
+#include "STORAGEIF.h"
 
 
 #define C_SERIALNUMBER_SIZE 5
@@ -16,40 +16,74 @@ enum EPARAMTYPE {EPARAMTYPE_NONE = 0, EPARAMTYPE_BOOL = 1, EPARAMTYPE_I32 = 2, E
 #pragma pack (push,4)
 
 typedef struct {
-	const EPARAMTYPE type;
-	const char *name;
+	EPARAMTYPE type;
+	char *name;
 } S_HDRPARAM_T;
-
 
 
 typedef struct {
 	S_HDRPARAM_T hdr;
-	const float min;
-	const float max;
-	const float def;
+    union {
+        int8_t c[8];
+        uint8_t u[8];
+    } u;
+} S_CONTROL_RAW8_T;
+
+
+typedef struct {
+	S_HDRPARAM_T hdr;
+    union {
+        int8_t c[32];
+        uint8_t u[32];
+    } u;
+} S_CONTROL_STR32_T;
+
+
+typedef struct {
+	S_HDRPARAM_T hdr;
+	 float min;
+	 float max;
+	 float def;
 } S_CONTROL_FLOAT_T;
 
 
 typedef struct {
 	S_HDRPARAM_T hdr;
-	const int64_t min;
-	const int64_t max;
-	const int64_t def;
+	 int64_t min;
+	 int64_t max;
+	 int64_t def;
 } S_CONTROL_INT64_T;
 
 
 typedef struct {
 	S_HDRPARAM_T hdr;
-	const uint32_t min;
-	const uint32_t max;
-	const uint32_t def;
+	 uint64_t min;
+	 uint64_t max;
+	 uint64_t def;
+} S_CONTROL_UINT64_T;
+
+
+typedef struct {
+	S_HDRPARAM_T hdr;
+	 int32_t min;
+	 int32_t max;
+	 int32_t def;
+} S_CONTROL_INT32_T;
+
+
+typedef struct {
+	S_HDRPARAM_T hdr;
+	 uint32_t min;
+	 uint32_t max;
+	 uint32_t def;
 } S_CONTROL_UINT32_T;
 
 
 typedef struct {
 	union {
 		bool v_b;
-		uint8_t raw[4];
+		uint8_t raw[8];
+        uint8_t str[32];
 		int64_t v_i64;
 		uint64_t v_u64;
 		int32_t v_i32;
@@ -96,19 +130,20 @@ typedef struct {
 
 class IRFPARAMS {
 	protected:
-		S_DATAFLASH_T *dloc;//[EPRMIX_ENDENUM];
-		TEEPROMIF *mem;
+		S_DATAFLASH_T *dloc;
+		IFSTORAGE *mem;
 		void clear_data_todef ();
 		void correct_all ();
-		const S_HDRPARAM_T *list;//[EPRMIX_ENDENUM];		// [EPRMIX_ENDENUM]
+		S_HDRPARAM_T **list;
 		const uint16_t c_list_cnt;
-		//static IRFPARAMS *singlobj;
 		long find_param_to_name (const char *name);
-
-
+        bool f_changed;
+        void clear ();
 	
 	public:
-		IRFPARAMS (TEEPROMIF *m, S_HDRPARAM_T *l, uint16_t pcnt);
+		IRFPARAMS (IFSTORAGE *m, S_HDRPARAM_T **l, uint16_t pcnt);
+        ~IRFPARAMS ();
+        static uint32_t paramlist_byte_size (S_HDRPARAM_T **l);
 		bool get_papam_i32 (uint32_t ix, long &dst);
 		long get_papam_i32 (uint32_t ix);
 	
@@ -125,9 +160,9 @@ class IRFPARAMS {
 		void set_papam_b (uint32_t ix, bool prm);
 		void set_papam_u32 (uint32_t ix, uint32_t prm);
 		void set_papam_i32 (uint32_t ix, long prm);
-		 
-		 virtual void load ();
-		 virtual void save ();
+
+
+		 void save ();
 		 void correct_param (uint32_t ix);
 		 void param_todef (uint32_t ix);
 		 EPARAMTYPE gettype (uint32_t ix);

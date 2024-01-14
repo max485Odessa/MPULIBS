@@ -190,11 +190,11 @@ return rv;
 
 
 
-unsigned char TMCreateWrireStream::SetOffsetBegin (unsigned long offsetlong)
+bool TMCreateWrireStream::SetOffsetBegin (uint32_t offsetlong)
 {
 WriteBufer();
 SeekFile_E (Handll,offsetlong,FILE_BEGIN);
-return 1;
+return true;
 }
 
 
@@ -207,9 +207,9 @@ CloseStream();
 
 
 
-unsigned char TMCreateWrireStream::OpenStream (TDString FileName)
+bool TMCreateWrireStream::OpenStream (TDString FileName)
 {
-unsigned char rv=0;
+bool rv = false;
 Handll=OpenFile_E((char*)FileName.c_str());
 flagdata=0;
 IndexDataBufer=0;
@@ -218,7 +218,7 @@ if (Handll!=INVALID_HANDLE_VALUE)
         {
         // Сдвинуть указатель записи в конец
         GlobalFileSize=SeekFile_E (Handll,0,FILE_END);
-        rv=1;
+        rv = true;
         }
 return rv;
 }
@@ -229,20 +229,15 @@ return rv;
 
 
 
-unsigned char TMCreateWrireStream::CreateStream (TDString Filename)
+bool TMCreateWrireStream::CreateStream (TDString Filename)
 {
+bool rv = false;
 Handll = CreateFile_E ((char*)Filename.c_str());
 flagdata=0;
 IndexDataBufer=0;
 GlobalFileSize=0;
-if (Handll==INVALID_HANDLE_VALUE)
-        {
-        return 0;
-        }
-else
-        {
-        return 1;
-        }
+if (Handll != INVALID_HANDLE_VALUE) rv = true;
+return rv;
 }
 
 
@@ -253,13 +248,13 @@ else
 
 
 
-unsigned char TMCreateWrireStream::CreateStream(char *lpFileName)
+bool TMCreateWrireStream::CreateStream(char *lpFileName)
 {
-char rv=0;
+bool rv = false;
 if (lpFileName)
 	{
-	Handll=CreateFile_E (lpFileName);
-        if (Handll!=INVALID_HANDLE_VALUE) rv=1;
+	Handll = CreateFile_E (lpFileName);
+    if (Handll != INVALID_HANDLE_VALUE) rv = true;
 	flagdata=0;
 	IndexDataBufer=0;
 	GlobalFileSize=0;
@@ -269,19 +264,25 @@ return rv;
 
 
 
-
-unsigned char TMCreateWrireStream::OpenOrCreateStream (TDString FileName)
+bool TMCreateWrireStream::OpenOrCreateStream (char* FileName)
 {
-unsigned char rv = OpenStream (FileName);
+bool rv = OpenStream (FileName);
 if (!rv) rv = CreateStream (FileName);
 return rv;
 }
 
 
 
-unsigned char TMCreateWrireStream::CreateStreamLen (char *lpFileName, unsigned long sizes)
+bool TMCreateWrireStream::OpenOrCreateStream (TDString &FileName)
 {
-unsigned char rv = false;
+return OpenOrCreateStream ((char*)FileName.c_str());
+}
+
+
+
+bool TMCreateWrireStream::CreateStreamLen (char *lpFileName, unsigned long sizes)
+{
+bool rv = false;
 if (CreateStream (lpFileName))
     {
     while (sizes)
@@ -350,9 +351,10 @@ return 1;
 
 
 
-unsigned int TMCreateWrireStream::WriteBlock (char *lpRam, int counterb)
+uint32_t TMCreateWrireStream::Write (void *lp, uint32_t counterb)
 {
-unsigned int rv=0;
+uint32_t rv = 0;
+uint8_t *lpRam = (uint8_t*)lp;
 if (lpRam && counterb)
         {
         while (counterb)
@@ -375,13 +377,13 @@ return rv;
 
 unsigned char TMCreateWrireStream::WriteShort(unsigned short datas)
 {
-return WriteBlock((char*)&datas,2);
+return Write((char*)&datas,2);
 }
 
 
 unsigned char TMCreateWrireStream::WriteLong(unsigned long datas)
 {
-return WriteBlock((char*)&datas,4);
+return Write((char*)&datas,4);
 }
 
 
@@ -560,6 +562,13 @@ if (lpNameVariable)
 			}
 		}
 	}
+return rv;
+}
+
+
+uint32_t TMCreateWrireStream::ReadData (void *lp,uint32_t size)
+{
+uint32_t rv = ReadFileE (lp, size,Handll);
 return rv;
 }
 

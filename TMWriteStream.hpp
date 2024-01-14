@@ -8,22 +8,23 @@ class TMCreateWrireStream{
 public:
         TMCreateWrireStream();
         ~TMCreateWrireStream();
-        unsigned char CreateStream (TDString FileName);
-        unsigned char CreateStream (char *lpFileName);
-        unsigned char CreateStreamLen (char *lpFileName, unsigned long sizes);
-        unsigned char OpenStream (TDString FileName);
-        unsigned char OpenOrCreateStream (TDString FileName);
+        bool CreateStream (TDString FileName);
+        bool CreateStream (char *lpFileName);
+        bool CreateStreamLen (char *lpFileName, unsigned long sizes);
+        bool OpenStream (TDString FileName);
+        bool OpenOrCreateStream (TDString &FileName);
+        bool OpenOrCreateStream (char* FileName);
         static unsigned long CopyFile (char *lpInputFN, char *lpOutFN);
-
-        unsigned char SetOffsetBegin (unsigned long offsetlong);
+        uint32_t ReadData (void *lp,uint32_t size);
+        bool SetOffsetBegin (uint32_t offsetlong);
 
         unsigned char WriteByte (unsigned char data);
         unsigned char WriteShort (unsigned short datas);
         unsigned char WriteLong (unsigned long datas);
         char WriteString (TDString mstr);
         char WriteASCIIZ (char *lpStr);
-	char WriteOnlyCharsetStringAddNM (char *lpmstr);
-	char WriteOnlyCharsetString (char *lpmstr);
+	    char WriteOnlyCharsetStringAddNM (char *lpmstr);
+	    char WriteOnlyCharsetString (char *lpmstr);
         unsigned char WriteHexByte(unsigned char data);
         char WriteTextIniStringParam (char *lpNameVariable,char *lpParam);
         char WriteTextIniIntParam (char *lpNameVariable,int paramint);
@@ -32,7 +33,7 @@ public:
         unsigned int WriteFileCodingPink (char *lpFileName,char *lpPassCode);
         
 		
-        unsigned int WriteBlock (char *lpRam, int counterb);
+        uint32_t Write (void *lpRam, uint32_t counterb);
         unsigned int WriteFileX (char *lpFileName);
 
         unsigned char CloseStream ();
