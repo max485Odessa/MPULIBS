@@ -135,15 +135,20 @@ class IRFPARAMS {
 		void clear_data_todef ();
 		void correct_all ();
 		S_HDRPARAM_T **list;
-		const uint16_t c_list_cnt;
+		const uint32_t c_list_cnt;
 		long find_param_to_name (const char *name);
+        uint32_t calculate_crc (uint8_t *d, uint32_t sz);
         bool f_changed;
+        bool f_load_ok;
+        bool f_is_data_corrected;
         void clear ();
-	
+        void fillmem (void *d, uint8_t dt, uint32_t sz);
+
 	public:
 		IRFPARAMS (IFSTORAGE *m, S_HDRPARAM_T **l, uint16_t pcnt);
         ~IRFPARAMS ();
-        static uint32_t paramlist_byte_size (S_HDRPARAM_T **l);
+        static uint32_t c_file_size (S_HDRPARAM_T **l);
+        //static uint32_t paramlist_byte_size (S_HDRPARAM_T **l);
 		bool get_papam_i32 (uint32_t ix, long &dst);
 		long get_papam_i32 (uint32_t ix);
 	

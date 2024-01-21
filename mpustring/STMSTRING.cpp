@@ -1,7 +1,7 @@
 #include "STMSTRING.h"
 
 #ifdef IS_WINDOWS_OS
-	using namespace TEX;
+	//using namespace TEX;
 #endif
 static const unsigned long C_MULTDV_L32_AMOUNT = 10;
 static const unsigned long tmpMultData[C_MULTDV_L32_AMOUNT] = {1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000};

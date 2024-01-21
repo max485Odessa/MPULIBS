@@ -1,6 +1,6 @@
 #include "TPARAMSPC.h"
 #include "STMSTRING.h"
-#include "rutine.h"
+
 
 // table size for EPARAMTYPE
 static const uint32_t typesize[EPARAMTYPE_ENDENUM] = {0, sizeof(S_HDRPARAM_T/*bool*/), sizeof(S_CONTROL_INT32_T), sizeof(S_CONTROL_UINT32_T), sizeof(S_CONTROL_INT64_T), sizeof(S_CONTROL_UINT64_T), \
@@ -10,9 +10,34 @@ sizeof(S_CONTROL_RAW8_T), sizeof(S_CONTROL_FLOAT_T), sizeof(S_CONTROL_STR32_T)};
 IRFPARAMS::IRFPARAMS (IFSTORAGE *m, S_HDRPARAM_T **l, uint16_t pcnt) : list (l), c_list_cnt (pcnt)
 {
 f_changed = false;
+f_load_ok = false;
+f_is_data_corrected = false;
 mem = m;
-dloc = new S_DATAFLASH_T[c_list_cnt];
-if (!mem->Read (0, (uint8_t*)dloc, sizeof(S_DATAFLASH_T)*c_list_cnt)) {
+uint32_t read_sz = sizeof(S_DATAFLASH_T)*c_list_cnt + sizeof(uint32_t);
+//dloc = new S_DATAFLASH_T[c_list_cnt + 1];
+dloc = (S_DATAFLASH_T*)new uint8_t[read_sz];
+if (mem->file_size() == read_sz)
+    {
+    if (!mem->Read (0, (uint8_t*)dloc, read_sz)) {
+        clear ();
+        }
+    else
+        {
+        uint32_t sz_calc = read_sz - sizeof(uint32_t);
+        uint32_t crc32 = calculate_crc ((uint8_t*)dloc, sz_calc);
+        uint32_t *lcrc32 = (uint32_t*)(((uint8_t*)dloc) + sz_calc);
+        if (crc32 != *lcrc32)
+            {
+            clear ();
+            }
+        else
+            {
+            f_load_ok = true;
+            }
+        }
+    }
+else
+    {
     clear ();
     }
 correct_all ();
@@ -20,10 +45,22 @@ correct_all ();
 
 
 
+void IRFPARAMS::fillmem (void *d, uint8_t dt, uint32_t sz)
+{
+uint8_t *dst = (uint8_t*)d;
+while (sz)
+    {
+    *dst++ = dt;
+    sz--;
+    }
+}
+
+
+
 IRFPARAMS::~IRFPARAMS ()
 {
 if (f_changed) save ();
-if (dloc) delete [] dloc;
+if (dloc) delete []dloc;
 }
 
 
@@ -37,6 +74,41 @@ while (sz)
     *dst++ = 0;
     sz--;
     }
+f_changed = true;
+}
+
+
+
+uint32_t IRFPARAMS::calculate_crc (uint8_t *src, uint32_t sz)
+{
+uint32_t crc = 0;
+if (src && sz)
+    {
+    uint8_t d8;
+    uint32_t d32;
+    while (sz)
+        {
+        d8 = *src++;
+        if (!d8)
+            {
+            d32 = 0xA1B82105;
+            }
+        else
+            {
+            if (d8 & 0x24)
+                {
+                d32 = 0x3128220E;
+                }
+            else
+                {
+                d32 = 0xB812E311;
+                }
+            }
+        crc += d32;
+        sz--;
+        }
+    }
+return crc;
 }
 
 
@@ -45,8 +117,10 @@ void IRFPARAMS::save ()
 {
 if (mem)
     {
-    uint32_t size = paramlist_byte_size (list);
-    mem->Write (0, (uint8_t*)dloc, sizeof(S_DATAFLASH_T)*c_list_cnt);
+    uint32_t wr_sz = sizeof(S_DATAFLASH_T)*c_list_cnt;
+    uint32_t crc32 = calculate_crc ((uint8_t*)dloc, wr_sz);
+    mem->Write (0, (uint8_t*)dloc, wr_sz);
+    mem->Write (wr_sz, (uint8_t*)&crc32, sizeof(crc32));
     }
 }
 
@@ -65,18 +139,22 @@ EPARAMTYPE IRFPARAMS::gettype (uint32_t ix)
 
 
 
-uint32_t IRFPARAMS::paramlist_byte_size (S_HDRPARAM_T **l)
+uint32_t IRFPARAMS::c_file_size (S_HDRPARAM_T **l)
 {
-uint32_t sz = 0, ix = 0;
-while (true)
+uint32_t sz = 0;
+if (l)
     {
-    S_HDRPARAM_T *hdr = const_cast<S_HDRPARAM_T*>(l[ix]);
-    if (!hdr) break;
-    if (hdr->type < EPARAMTYPE_ENDENUM) sz += typesize[hdr->type];
-    ix++;
+    uint32_t cnt = 0;
+    while (true)
+        {
+        if (!l[cnt]) break;
+        cnt++;
+        }
+    if (cnt) sz = sizeof(S_DATAFLASH_T)*cnt + sizeof(uint32_t);
     }
 return sz;
 }
+
 
 
 
@@ -93,17 +171,29 @@ if (ix < c_list_cnt)
 			if (dloc[ix].type == EPARAMTYPE_FLOAT)
 				{
 				float val = dloc[ix].data.u.v_f;
-				
-				if (val > dt->max) val = dt->max;
-				if (val < dt->min) val = dt->min;
+
+				if (val > dt->max)
+                    {
+                    val = dt->max;
+                    f_is_data_corrected = true;
+                    f_changed = true;
+                    }
+				if (val < dt->min)
+                    {
+                    val = dt->min;
+                    f_is_data_corrected = true;
+                    f_changed = true;
+                    }
 				dloc[ix].data.u.v_f = val;
 				}
 			else
 				{
 				dloc[ix].type = EPARAMTYPE_FLOAT;
 				dloc[ix].data.u.v_f = dt->def;
+                f_is_data_corrected = true;
+                f_changed = true;
 				}
-            f_changed = true;
+
 			break;
 			}
 		case EPARAMTYPE_U32:
@@ -111,15 +201,27 @@ if (ix < c_list_cnt)
 			S_CONTROL_UINT32_T *dt = (S_CONTROL_UINT32_T*)hdr;
 			if (dloc[ix].type == EPARAMTYPE_U32)
 				{
-				float val = dloc[ix].data.u.v_u32;
-				if (val > dt->max) val = dt->max;
-				if (val < dt->min) val = dt->min;
+				uint32_t val = dloc[ix].data.u.v_u32;
+				if (val > dt->max)
+                    {
+                    val = dt->max;
+                    f_is_data_corrected = true;
+                    f_changed = true;
+                    }
+				if (val < dt->min)
+                    {
+                    val = dt->min;
+                    f_is_data_corrected = true;
+                    f_changed = true;
+                    }
 				dloc[ix].data.u.v_u32 = val;
 				}
 			else
 				{
 				dloc[ix].type = EPARAMTYPE_U32;
 				dloc[ix].data.u.v_u32 = dt->def;
+                f_is_data_corrected = true;
+                f_changed = true;
 				}
             f_changed = true;
 			break;

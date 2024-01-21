@@ -6,9 +6,9 @@
 */
 
 #include <vcl.h>
-#include "textrut.hpp"
-#include "typedefines.h"
-
+#include <stdint.h>
+#include "rutine.h"
+enum E_STAFFCMDS {E_SFCMD_SYNC = 1, E_SFCMD_SYNC_STAFF = 2, E_SFCMD_DATA = 3, E_SFCMD_DATA_STAFF = 4};
 
 const unsigned long C_USART_BUFSIZE = 1024;
 const unsigned char C_USART_MAXBUF_AMOUNT = 5;

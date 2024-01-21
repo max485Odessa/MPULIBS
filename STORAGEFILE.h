@@ -14,10 +14,12 @@ class TSTORAGEFILE: public IFSTORAGE {
         const char *c_filename;
         void create_file_blank ();
         bool f_objok;
-        
+        uint32_t cur_file_size; 
+
     public:
         TSTORAGEFILE (char *filename, const uint32_t size);
         ~TSTORAGEFILE ();
+        virtual uint32_t file_size ();
         virtual bool Write (uint32_t adrix, uint8_t *src, uint32_t wr_size);
         virtual bool Read (uint32_t adrix, uint8_t *dst, uint32_t wr_size);
 };

@@ -2,6 +2,12 @@
 
 
 
+const static unsigned char C_BSTAFF = 0x08;
+const static unsigned char C_BST_START = 0x01;
+const static unsigned char C_BST_STOP = 0x02;
+
+
+
 TUARTBSTAFBUF::TUARTBSTAFBUF ()
 {
 HandleOpenPort = INVALID_HANDLE_VALUE;

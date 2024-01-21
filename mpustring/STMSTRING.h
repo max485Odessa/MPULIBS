@@ -4,13 +4,15 @@
 
 
 #include "stdint.h"
+/*
 #ifdef IS_WINDOWS_OS
     #include "textrut.hpp"
 		using namespace TEX;
 #else
 		#include "rutine.h"
 #endif
-
+*/
+#include "rutine.h"
 
 
 class TSTMSTRING {

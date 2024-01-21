@@ -207,7 +207,7 @@ void TRFMASTER::set_param_req (local_rf_id_t dvid, char *name, S_RFPARAMVALUE_T 
 		{
 		uint32_t lnstr = lenstr (name);
 		if (lnstr > sizeof(reqframe.name.txt)) lnstr = sizeof(reqframe.name.txt);
-		CopySDC_Data (name, reqframe.name.txt, lnstr);
+		CopyMemorySDC (name, reqframe.name.txt, lnstr);
 		}
 	else
 		{
@@ -231,7 +231,7 @@ void TRFMASTER::get_param_req (local_rf_id_t dvid, char *name, uint32_t tmot)
 		{
 		uint32_t lnstr = lenstr (name);
 		if (lnstr > sizeof(reqframe.name.txt)) lnstr = sizeof(reqframe.name.txt);
-		CopySDC_Data (name, reqframe.name.txt, lnstr);
+		CopyMemorySDC (name, reqframe.name.txt, lnstr);
 		}
 	else
 		{
@@ -292,7 +292,7 @@ void TRFMASTER::RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi)
 {
 if (sz <= c_rxbuf_size)
 	{
-	CopySDC_Data (data, rxbufer, sz);
+	CopyMemorySDC (data, rxbufer, sz);
 	S_RFHEADER_T *hdr = (S_RFHEADER_T*)rxbufer;
 	if (hdr->dst_id	== self_id)
 		{
@@ -375,7 +375,7 @@ void TRFSLAVE::RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi)
 {
 if (sz <= c_rxbuf_size)
 	{
-	CopySDC_Data (data, rxbufer, sz);
+	CopyMemorySDC (data, rxbufer, sz);
 	uint32_t tx_size = 0;
 	S_RFHEADER_T *hdr = (S_RFHEADER_T*)rxbufer;
 	if (hdr->dst_id	== self_id)
