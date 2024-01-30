@@ -14,12 +14,16 @@ enum ETRSSTAT {ETRS_SUCCESS = 0, ETRS_TIMEOUT = 1, ETRS_ERROR = 2};
 
 
 
+
+// от этого инфтерфейса должен наследоваться обьект анализирующий входной трафик
 class IFCRFRX {
 	public:
 		virtual void RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi) = 0;
 		virtual void RF_txend_cb (bool f_ok) = 0;
 };
 
+
+// интерфейс методов передачи
 class IFCRFTX {
 	protected:
 		IFCRFRX *eventsobj_cb;
@@ -84,14 +88,16 @@ class TRFMASTER: protected TRFBASECMD, public TFFC, public IFCRFRX {
 };
 
 
+
 class IUSERRFCB {
 	public:
 		virtual bool user_call_event_req_cb (local_rf_id_t dvid, uint32_t event_code, uint32_t ev_time) = 0;
 		virtual bool user_get_event_req_cb (local_rf_id_t dvid, uint16_t ix, S_EVENT_ITEM_T *evnt) = 0;
 		virtual bool user_get_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src) = 0;	// пользователь должен изьять параметр и передать его по ссылке
 		virtual bool user_set_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T *src) = 0;
-		virtual bool user_get_state_req_cb (local_rf_id_t dvid, S_DEVSTATE_T *src) = 0;	
+		virtual bool user_get_state_req_cb (local_rf_id_t dvid, S_DEVSTATE_T *src) = 0;
 };
+
 
 
 class TRFSLAVE: protected TRFBASECMD, public TFFC, public IFCRFRX {

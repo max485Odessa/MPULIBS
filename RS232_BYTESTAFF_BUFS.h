@@ -92,6 +92,7 @@ class TUARTBSTAFBUF {
         unsigned char GetListFreePorts (TComboBox *c_box);
         bool is_opened ();
         bool OpenPort (char *lpNames, unsigned long UarrSpeed);
+        bool OpenPort (uint16_t n, uint32_t UarrSpeed);
         bool CheckPort (char *lpNames);
         void ClosePort ();
 

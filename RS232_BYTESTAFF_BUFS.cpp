@@ -141,6 +141,14 @@ return rv;
 
 
 
+bool TUARTBSTAFBUF::OpenPort (uint16_t n, uint32_t UarrSpeed)
+{
+String str = "COM" + IntToStr(n);
+return OpenPort (str.c_str(), UarrSpeed);
+}
+
+
+
 bool TUARTBSTAFBUF::Reconnect ()
 {
 bool rv=false;
