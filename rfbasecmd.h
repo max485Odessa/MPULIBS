@@ -4,7 +4,7 @@
 
 
 #include "tftaskif.h"
-//#include "RFM69.h"
+#include "TCOMIFS.h"
 #include "SYSBIOS.H"
 #include "rutine.h"
 #include "rfcmddefine.h"

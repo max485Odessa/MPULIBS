@@ -61,7 +61,7 @@ return rv;
 }
 
 
-
+// определяет какой протокол обнаружен первым
 S_PODETECT_T *TTRANSPPARSE::getfist_frame ()
 {
 S_PODETECT_T *rv = 0;
@@ -135,6 +135,33 @@ if (ix_add_rx)
 
 
 
+uint32_t TTRANSPPARSE::is_free_space ()
+{
+uint32_t rv = 0;
+if (c_rx_alloc_size > ix_add_rx) rv = c_rx_alloc_size - ix_add_rx;
+return rv;
+}
+
+
+
+void TTRANSPPARSE::in (TRXIF *sobj)
+{
+uint32_t szrx = sobj->rxif_is_rx();
+if (szrx)
+    {
+    uint32_t szfree = is_free_space ();
+    if (szfree)
+        {
+        if (szrx > szfree) szrx = szfree;
+        uint8_t *dst_copy = &c_rx_buffer[ix_add_rx];
+        sobj->rxif_in (dst_copy, szrx);
+        ix_add_rx += szrx;
+        }
+    }
+}
+
+
+
 void TTRANSPPARSE::copymem_sdc (uint8_t *s, uint8_t *d, uint32_t sz)
 {
 while (sz)
@@ -142,6 +169,94 @@ while (sz)
     *d++ = *s++;
     sz--;
     }
+}
+
+
+
+TIOTCMD::TIOTCMD (TTXIF *t)
+{
+tx_obj = t;
+}
+
+
+
+bool TIOTCMD::find_protocol (void *s, uint32_t szsrc, uint32_t &find_ix, uint32_t &findsz)
+{
+bool rv = false;
+uint32_t ix = 0, datasize;
+uint8_t *src = (uint8_t*)s;
+S_CHANHDR_T *lhdr;
+while (ix < szsrc)
+    {
+    datasize = szsrc - ix;
+    lhdr = (S_CHANHDR_T*)&src[ix];
+    if (datasize > (sizeof(S_CHANHDR_T)))
+        {
+        if (lhdr->preamble_a == C_PREAMBLE_P1_A && lhdr->preamble_b == C_PREAMBLE_P1_B)
+            {
+            unsigned short full_len = sizeof(S_CHANHDR_T) + lhdr->size;
+            if (datasize >= full_len)
+                {
+                uint16_t svcrc = lhdr->crc16;
+                lhdr->crc16 = 0;
+                uint16_t clccrc = calculate_crc (src, full_len);
+                lhdr->crc16 = svcrc;
+                if (clccrc == svcrc)
+                    {
+                    find_ix = ix;
+                    findsz = full_len;
+                    rv = true;
+                    break;
+                    }
+                }
+            }
+        }
+    ix++;
+    }
+return rv;
+}
+
+
+
+uint16_t TIOTCMD::calculate_crc (uint8_t *src, uint32_t sz)
+{
+uint16_t crc = 0;
+uint8_t dat;
+while (sz)
+    {
+    dat = *src++;
+    if (!dat)
+        {
+        crc += 0x0201;
+        }
+    else
+        {
+        if (dat == 0xFF)
+            {
+            crc += 0x1014;
+            }
+        else
+            {
+            if (dat & 0x41)
+                {
+                crc += 0x25;
+                }
+            else
+                {
+                crc += dat;
+                }
+            }
+        }
+    sz--;
+    }
+return crc;
+}
+
+
+
+
+bool TIOTCMD::parse (void *src, uint32_t szsrc)
+{
 }
 
 
