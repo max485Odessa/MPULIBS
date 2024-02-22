@@ -1,32 +1,39 @@
 #include "TCDC.h"
+#include "TGlobalISR.h"
 
 
 extern "C" uint8_t tusbobj_tx_data (uint8_t *d);
 
+
 #ifdef __cplusplus
  extern "C" {
 #endif 
-	 
+
+//extern void sync_leds_output ();	 
 extern PCD_HandleTypeDef hpcd;
 USBD_HandleTypeDef USBD_Device;
 extern uint16_t cdc_tx_buffer_free_space ();
 	 
 void tusbobj_rx_data (uint8_t* Buf, uint32_t Len)
 {
-	TSERIALISR &usb = *TSERIALISR::ifc[ESYSUSB_1];
-	
+	TSERIALISR *usbobj = TSERIALISR::ifc[ESYSUSB_1];
+	//TGLOBISR::disable ();
 	while (Len)
 		{
-		usb.isr_rx (*Buf++);
+		usbobj->isr_rx (*Buf++);
 		Len--;
 		}
+	//TGLOBISR::enable ();
 }
 
 
 
 void OTG_FS_IRQHandler(void)
 {
+	//TGLOBISR::disable ();
   HAL_PCD_IRQHandler(&hpcd);
+	//sync_leds_output ();
+	//TGLOBISR::enable ();
 }
 
 
@@ -60,8 +67,8 @@ void tusbobj_baudrate (uint32_t br)
 #endif
 
 
-SYSBIOS::Timer TUSBSOME::link_timer;
-uint32_t TUSBSOME::c_link_period = 1000;
+//SYSBIOS::Timer TUSBSOME::link_timer;
+//uint32_t TUSBSOME::c_link_period = 1000;
 bool TUSBSOME::f_reconnect_flag = false;
 uint32_t TUSBSOME::baudrate_set = 0;
 bool TUSBSOME::f_config_flag = false;
@@ -87,7 +94,7 @@ TUSBOBJ::TUSBOBJ (uint32_t sz_b_tx, uint32_t sz_b_rx)
 	ifc[ESYSUSB_1] = this;
 	fifo_tx = new TTFIFO<uint8_t>(sz_b_tx);
 	fifo_rx = new TTFIFO<uint8_t>(sz_b_rx);
-	c_link_period = 1000;		// 1s
+	c_linkdetect_period = 1000;		// 1s
 
 	init_hardware ();
 }
@@ -112,17 +119,13 @@ bool TUSBOBJ::reconnect_detected ()
 
 
 
+
 bool TUSBOBJ::is_link ()
 {
-	return (link_timer.get())?true:false;
+	return (timer_link.get())?true:false;
 }
 
 
-
-void TUSBOBJ::set_link_period (uint32_t tm)
-{
-	c_link_period = tm;
-}
 
 
 
@@ -145,7 +148,7 @@ void TUSBOBJ::init_hardware ()
 
 void TUSBOBJ::isr_rx (uint8_t d)
 {
-	link_timer.set (c_link_period);		// link control
+	timer_link.set (c_linkdetect_period);		// link control
 	fifo_rx->push (d);
 }
 
@@ -153,7 +156,9 @@ void TUSBOBJ::isr_rx (uint8_t d)
 
 bool TUSBOBJ::isr_tx (uint8_t &d)
 {
+	
 	f_tx_status = fifo_tx->pop (d);
+	
 	return f_tx_status;
 }
 
@@ -161,7 +166,9 @@ bool TUSBOBJ::isr_tx (uint8_t &d)
 
 bool TUSBOBJ::Tx (void *lTx, uint16_t sz_tx)
 {
+	TGLOBISR::disable ();
 	bool rv = fifo_tx->push ((uint8_t *)lTx, sz_tx);
+	TGLOBISR::enable ();
 	if (rv) f_tx_status = true;
 	return rv;
 }

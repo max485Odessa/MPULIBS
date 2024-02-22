@@ -1,11 +1,13 @@
 #include "TDRV2605.h"
 
+#define C_SHOKINC 70
+
 static const S_VIBRPOINT_T itmlist_prg_1[] = {
-  0x40, 100, 0x40, 100, 
+  0x40 + C_SHOKINC, 100, 0x40 + C_SHOKINC, 100, 
   0x00, 100,
-  0x40, 50, 0x00, 100, 
-  0x40, 50, 0x00, 100, 
-  0x40, 50, 0x00, 100,
+  0x40 + C_SHOKINC, 50, 0x00, 100, 
+  0x40 + C_SHOKINC, 50, 0x00, 100, 
+  0x40 + C_SHOKINC, 50, 0x00, 100,
 	0,0
 };
 
@@ -60,7 +62,8 @@ bool rv = false;
 if (init_cmd_ix < C_DRVINIT_FUNCT_CNT)
 	{
 	init_tile_funct fnct = initarr[init_cmd_ix];
-	bool rslt = !(this->*fnct) ();
+	bool rslt = (this->*fnct) ();
+	if (rslt) init_ok_cntr++;
 	init_cmd_ix++;
 	if (init_cmd_ix >= C_DRVINIT_FUNCT_CNT) rv = true;
 	}
@@ -243,6 +246,7 @@ void TDRV2605::Task ()
 				_pin_output (en_pin, true);			// drv en - on
 				sw = ESHOCKSW_INIT;
 				init_cmd_ix = 0;
+				init_ok_cntr = 0;
 				}
 			else
 				{

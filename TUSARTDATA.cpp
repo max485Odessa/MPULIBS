@@ -100,6 +100,15 @@ bool TSERIALUSR::pop (uint8_t &d)
 }
 
 
+
+void TSERIALUSR::SetLinkDetectPeriod (uint32_t t)
+{
+	c_linkdetect_period = t;
+}
+
+
+
+
 #ifdef SERIALDEBAG
 uint32_t TSERIALUSR::debug_peak_tx ()
 {
@@ -126,10 +135,6 @@ void TSERIALUSR::debug_peak_clear ()
 #endif
 
 
-bool TSERIALUSR::is_link ()
-{
-	return (timer_link.get()?true:false);
-}
 
 
 
@@ -159,11 +164,6 @@ TUSARTOBJ::TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx)
 
 
 
-void TUSARTOBJ::SetLinkDetectPeriod (uint32_t t)
-{
-	c_linkdetect_period = t;
-}
-
 
 
 bool TUSARTOBJ::Tx_status ()
@@ -191,6 +191,14 @@ uint16_t TUSARTOBJ::Rx_check ()
 {
 	return fifo_rx->frame_count ();
 }
+
+
+
+bool TUSARTOBJ::is_link ()
+{
+	return (timer_link.get())?true:false;
+}
+
 
 
 
@@ -236,7 +244,7 @@ void TUSARTOBJ::Init ()
 	
 	//_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
 	_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
-	_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX]);
+	_pin_low_init_out_od_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX]);
 		
 	_IFCUSART_UART_DISABLE_IT (USARTPort, USART_IT_RXNE);
 	_IFCUSART_UART_CLEAR_FLAG (USARTPort, USART_IT_RXNE);

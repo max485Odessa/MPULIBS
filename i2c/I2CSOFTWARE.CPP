@@ -1,8 +1,7 @@
 #include "I2CSOFTWARE.H"
-//#include "rutine.h"
 
 
-TI2CIFACE::TI2CIFACE (const S_GPIOPIN *p)
+TI2CIFACE::TI2CIFACE (const S_GPIOPIN *p, uint8_t w) : c_i2c_wait (w)
 {
 	pins = p;
 	_pin_low_init_out_od (const_cast<S_GPIOPIN*>(pins), EARRI2CPIN_ENDENUM);
@@ -79,7 +78,7 @@ bool TI2CIFACE::I2C_SCL_READ ()
 
 void TI2CIFACE::Pause_I2C ()
 {
-volatile unsigned char cnt = c_i2c_wait;	// 50 3 текущая пауза на 330 кгц настроена  было 10
+volatile uint8_t cnt = c_i2c_wait;	// 50 3 текущая пауза на 330 кгц настроена  было 10
 while (cnt)
 	{
 	cnt--;
@@ -129,9 +128,9 @@ Pause_I2C ();
 
 
 
-bool TI2CIFACE::DataOut_I2C (unsigned char datas)
+bool TI2CIFACE::DataOut_I2C (uint8_t datas)
 {
-unsigned char cnwh=8;
+uint8_t cnwh = 8;
 I2C_SDA_OUT ();
 bool I2C_ASK = false;
 while (cnwh)
@@ -164,9 +163,9 @@ return I2C_ASK;
 
 
 
-bool TI2CIFACE::DataOut_SMBUS (unsigned char datas)
+bool TI2CIFACE::DataOut_SMBUS (uint8_t datas)
 {
-unsigned char cnwh=8;
+uint8_t cnwh=8;
 I2C_SDA_OUT ();
 bool I2C_ASK = false;
 while (cnwh)
@@ -286,10 +285,10 @@ return rv;
 
 
 
-unsigned char TI2CIFACE::DataIn_I2C (char RawHardAsk)
+uint8_t TI2CIFACE::DataIn_I2C (char RawHardAsk)
 {
-unsigned char rv = 0;
-unsigned char cnwh=8;
+uint8_t rv = 0;
+uint8_t cnwh=8;
 I2C_SDA_IN ();
 while (cnwh)
 	{
@@ -329,14 +328,14 @@ return rv;
 
 /*
 // без сдвига 8 бит
-void TI2CIFACE::SetSlaveAdress (unsigned char dev_adr)
+void TI2CIFACE::SetSlaveAdress (uint8_t dev_adr)
 {
 	DEVADRESS = dev_adr;
 }
 */
 
 
-bool TI2CIFACE::WriteFrame_i2c (unsigned char DEVADRESS, unsigned char DestReg, unsigned char *lTx, unsigned short tx_size)
+bool TI2CIFACE::WriteFrame_i2c (uint8_t DEVADRESS, uint8_t DestReg, uint8_t *lTx, unsigned short tx_size)
 {
 	bool rv = false;
 	if (tx_size)
@@ -361,7 +360,7 @@ bool TI2CIFACE::WriteFrame_i2c (unsigned char DEVADRESS, unsigned char DestReg, 
 
 
 
-bool TI2CIFACE::ReadFrame_i2c (unsigned char DEVADRESS, unsigned char SrcReg, unsigned char *lDest, unsigned short rx_size)
+bool TI2CIFACE::ReadFrame_i2c (uint8_t DEVADRESS, uint8_t SrcReg, uint8_t *lDest, unsigned short rx_size)
 {
 bool rv = false;
 	if (rx_size)
@@ -390,7 +389,7 @@ bool rv = false;
 
 
 
-bool TI2CIFACE::ReadFrame_smbus (unsigned char DEVADRESS, unsigned char SrcReg, unsigned char *lDest, unsigned short rx_size)
+bool TI2CIFACE::ReadFrame_smbus (uint8_t DEVADRESS, uint8_t SrcReg, uint8_t *lDest, unsigned short rx_size)
 {
 bool rv = false;
 	if (rx_size)
@@ -419,7 +418,7 @@ bool rv = false;
 
 
 
-bool TI2CIFACE::WriteFrame_smbus (unsigned char DEVADRESS, unsigned char DestReg, unsigned char *lTx, unsigned short tx_size)
+bool TI2CIFACE::WriteFrame_smbus (uint8_t DEVADRESS, uint8_t DestReg, uint8_t *lTx, unsigned short tx_size)
 {
 	bool rv = false;
 	if (tx_size)

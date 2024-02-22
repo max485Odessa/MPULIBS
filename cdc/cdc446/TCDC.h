@@ -17,8 +17,8 @@ extern USBD_CDC_ItfTypeDef USBD_CDC_fops;
 
 class TUSBSOME {
 	protected:
-		static SYSBIOS::Timer link_timer;
-		static uint32_t c_link_period;
+		//static SYSBIOS::Timer link_timer;
+		//static uint32_t c_link_period;
 		static bool f_reconnect_flag;
 		static bool f_config_flag;
 		static uint32_t baudrate_set;
@@ -27,6 +27,8 @@ class TUSBSOME {
 		static void reconnect_signal ();
 		static void set_baudrate (uint32_t br);
 };
+
+
 
 class TUSBOBJ: public TSERIALISR, public TSERIALUSR, protected TUSBSOME {
 		virtual void isr_rx (uint8_t d) override;
@@ -46,8 +48,8 @@ class TUSBOBJ: public TSERIALISR, public TSERIALUSR, protected TUSBSOME {
 		TUSBOBJ (uint32_t sz_b_tx, uint32_t sz_b_rx);
 		static bool reconnect_detected ();
 		static bool config_detect ();
-		static bool is_link ();
-		static void set_link_period (uint32_t tm);
+		virtual bool is_link () override;
+		//static void set_link_period (uint32_t tm);
 		static uint32_t get_baudrate ();
 		
 };
