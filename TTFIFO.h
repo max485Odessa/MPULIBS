@@ -77,7 +77,9 @@ uint32_t TTFIFO<Tp>::frame_count ()
 template <class Tp>
 uint32_t TTFIFO<Tp>::is_free_space ()
 {
-return c_alloc_frames - fill_count;	
+uint32_t rv = 0;
+if (fill_count < c_alloc_frames) rv = c_alloc_frames - fill_count;
+return rv;	
 }
 
 template <class Tp>
@@ -86,10 +88,11 @@ bool TTFIFO<Tp>::push (const Tp *frm)
 	bool rv = false;
 	if (is_free_space () && frm)
 		{
-		circlbuffer[push_ix++] = *frm;
 		if (push_ix >= c_alloc_frames) push_ix = 0;
+		circlbuffer[push_ix++] = *frm;
 		fill_count++;
-		if (fill_count > peack_count) peack_count = fill_count;		// statistick
+		if (fill_count > peack_count) peack_count = fill_count;
+
 		rv = true;
 		}
 	return rv;
@@ -121,8 +124,9 @@ bool TTFIFO<Tp>::pop (Tp &frm)
 bool rv = false;
 if (fill_count)
 	{
-	frm = circlbuffer[pop_ix++];
 	if (pop_ix >= c_alloc_frames) pop_ix = 0;
+	frm = circlbuffer[pop_ix++];
+
 	fill_count--;
 	rv = true;
 	}	
@@ -149,7 +153,8 @@ bool TTFIFO<Tp>::peek (Tp &frm)
 bool rv = false;
 if (fill_count)
 	{
-	//if (pop_ix >= c_alloc_frames) pop_ix = 0;
+	if (pop_ix >= c_alloc_frames) pop_ix = 0;
+
 	frm = circlbuffer[pop_ix];
 	rv = true;
 	}	
