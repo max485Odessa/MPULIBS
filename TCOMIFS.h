@@ -76,7 +76,7 @@ typedef struct {
 
 // Обьект транспортного уровня (функция add_parser реализует добавление нескольких протоколов транспортного уровня).
 // Пакует данные предназначенные для передачи в транспортный пакет.
-// При приеме извлекает транспортные данные и передает обьекту обработка TPARSEOBJ
+// При приеме извлекает транспортные данные и передает обьекту обработки TPARSEOBJ
 class TTRANSPPARSE {
         //TTFIFO<uint8_t> *fifo_tx;
         uint8_t *c_rx_buffer;
@@ -108,19 +108,23 @@ class TTRANSPPARSE {
 };
 
 
-
+/*
+enum ETXERROR {ETXERROR_NONE = 0, ETXERROR_ENDENUM};
 class TIOTCMD: public TPARSEOBJ {
         virtual bool find_protocol (void *src, uint32_t szsrc, uint32_t &find_ix, uint32_t &findsz);    // detect капсулы S_CHANHDR_T
         virtual bool parse (void *src, uint32_t szsrc);
         TTXIF *tx_obj;
 
         uint16_t calculate_crc (uint8_t *src, uint32_t sz);
-        
+      protected:
+
       public:
         TIOTCMD (TTXIF *t);
 
-};
 
+
+};
+*/
 
 
 

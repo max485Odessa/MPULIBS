@@ -16,33 +16,33 @@ enum EPARAMTYPE {EPARAMTYPE_NONE = 0, EPARAMTYPE_BOOL = 1, EPARAMTYPE_I32 = 2, E
 #pragma pack (push,4)
 
 typedef struct {
-	const EPARAMTYPE type;
-	const char *name;
+	EPARAMTYPE type;
+	char *name;
 } S_HDRPARAM_T;
 
 
 
 typedef struct {
 	S_HDRPARAM_T hdr;
-	const float min;
-	const float max;
-	const float def;
+	 float min;
+	 float max;
+	 float def;
 } S_CONTROL_FLOAT_T;
 
 
 typedef struct {
 	S_HDRPARAM_T hdr;
-	const int64_t min;
-	const int64_t max;
-	const int64_t def;
+	 int64_t min;
+	 int64_t max;
+	 int64_t def;
 } S_CONTROL_INT64_T;
 
 
 typedef struct {
 	S_HDRPARAM_T hdr;
-	const uint32_t min;
-	const uint32_t max;
-	const uint32_t def;
+	 uint32_t min;
+	 uint32_t max;
+	 uint32_t def;
 } S_CONTROL_UINT32_T;
 
 

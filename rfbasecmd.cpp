@@ -161,202 +161,6 @@ bool TRFBASECMD::is_free ()
 
 
 
-
-
-
-
-void TRFMASTER::get_param_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot)
-{
-	S_CMD_GET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_GET_PARAM_REQ;
-	reqframe.hdr.cmd_size = sizeof(S_CMD_GET_PARAM_REQ_T);
-	reqframe.hdr.dst_id = dvid;
-	reqframe.hdr.src_id = self_id;
-	reqframe.ix = ix;
-	reqframe.name.txt[0] = 0;
-	rawsend (&reqframe, sizeof(reqframe), tmot);
-}
-
-
-
-void TRFMASTER::set_param_req (local_rf_id_t dvid, uint16_t ix, S_RFPARAMVALUE_T prm, uint32_t tmot)
-{
-	S_CMD_SET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_SET_PARAM_REQ;
-	reqframe.hdr.cmd_size = sizeof(S_CMD_SET_PARAM_REQ_T);
-	reqframe.hdr.dst_id = dvid;
-	reqframe.hdr.src_id = self_id;
-	reqframe.ix = ix;
-	reqframe.name.txt[0] = 0;
-	reqframe.param = prm;
-	rawsend (&reqframe, sizeof(reqframe), tmot);
-}
-
-
-
-void TRFMASTER::set_param_req (local_rf_id_t dvid, char *name, S_RFPARAMVALUE_T prm, uint32_t tmot)
-{
-	S_CMD_SET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_SET_PARAM_REQ;
-	reqframe.hdr.cmd_size = sizeof(S_CMD_SET_PARAM_REQ_T);
-	reqframe.hdr.dst_id = dvid;
-	reqframe.hdr.src_id = self_id;
-	reqframe.ix = -1;
-	reqframe.param = prm;
-	if (name)
-		{
-		uint32_t lnstr = lenstr (name);
-		if (lnstr > sizeof(reqframe.name.txt)) lnstr = sizeof(reqframe.name.txt);
-		CopyMemorySDC (name, reqframe.name.txt, lnstr);
-		}
-	else
-		{
-		reqframe.name.txt[0] = 0;
-		}
-	rawsend (&reqframe, sizeof(reqframe), tmot);
-}
-
-
-
-void TRFMASTER::get_param_req (local_rf_id_t dvid, char *name, uint32_t tmot)
-{
-	S_CMD_GET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_GET_PARAM_REQ;
-	reqframe.hdr.cmd_size = sizeof(S_CMD_GET_PARAM_REQ_T);
-	reqframe.hdr.dst_id = dvid;
-	reqframe.hdr.src_id = self_id;
-	reqframe.ix = -1;
-
-	if (name)
-		{
-		uint32_t lnstr = lenstr (name);
-		if (lnstr > sizeof(reqframe.name.txt)) lnstr = sizeof(reqframe.name.txt);
-		CopyMemorySDC (name, reqframe.name.txt, lnstr);
-		}
-	else
-		{
-		reqframe.name.txt[0] = 0;
-		}
-	rawsend (&reqframe, sizeof(reqframe), tmot);
-}
-
-
-
-void TRFMASTER::get_event_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot)
-{
-	S_CMD_GET_EVENT_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_GET_EVENT_REQ;
-	reqframe.hdr.cmd_size = sizeof(S_CMD_GET_EVENT_REQ_T);
-	reqframe.hdr.dst_id = dvid;
-	reqframe.hdr.src_id = self_id;
-	reqframe.ix = ix;
-	rawsend (&reqframe, sizeof(reqframe), tmot);
-}
-
-
-
-void TRFMASTER::call_event_req (local_rf_id_t dvid, uint32_t event_code, uint32_t calltime, uint32_t tmot )
-{
-	S_CMD_CALL_EVENT_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_CALL_EVENT_REQ;
-	reqframe.hdr.cmd_size = sizeof(S_CMD_CALL_EVENT_REQ_T);
-	reqframe.hdr.dst_id = dvid;
-	reqframe.hdr.src_id = self_id;
-	reqframe.event_code = event_code;
-	reqframe.time_event_work = calltime;
-	rawsend (&reqframe, sizeof(reqframe), tmot);
-}
-
-
-void IFCRFTX::setrx_cb (IFCRFRX *obj)
-{
-	eventsobj_cb = obj;
-}
-
-
-
-TRFMASTER::TRFMASTER (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz): TRFBASECMD (objc, abcnt, rxalcsz)
-{
-	txobj->setrx_cb (this);
-}
-
-
-
-void TRFMASTER::Task ()
-{
-}
-
-
-
-void TRFMASTER::RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi)
-{
-if (sz <= c_rxbuf_size)
-	{
-	CopyMemorySDC (data, rxbufer, sz);
-	S_RFHEADER_T *hdr = (S_RFHEADER_T*)rxbufer;
-	if (hdr->dst_id	== self_id)
-		{
-		switch (hdr->cmd)
-			{
-			case ECMDLAN_GET_PARAM_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_GET_PARAM_RESP_T)) break;
-				S_CMD_GET_PARAM_RESP_T *in_req = (S_CMD_GET_PARAM_RESP_T*)rxbufer;
-
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
-				get_param_resp_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), in_req->param, rx_state);
-				break;
-				}
-			case ECMDLAN_SET_PARAM_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_SET_PARAM_RESP_T)) break;
-				S_CMD_SET_PARAM_RESP_T *in_req = (S_CMD_SET_PARAM_RESP_T*)rxbufer;
-					
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;	
-				set_param_resp_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), in_req->param, rx_state);
-
-				break;
-				}
-			case ECMDLAN_GET_EVENT_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_GET_EVENT_RESP_T)) break;
-				S_CMD_GET_EVENT_RESP_T *in_req = (S_CMD_GET_EVENT_RESP_T*)rxbufer;
-					
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;	
-				get_event_resp_cb (in_req->hdr.src_id, in_req->ix, &in_req->event, rx_state);
-				break;
-				}
-			case ECMDLAN_CALL_EVENT_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_CALL_EVENT_RESP_T)) break;
-				S_CMD_CALL_EVENT_RESP_T *in_req = (S_CMD_CALL_EVENT_RESP_T*)rxbufer;
-
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;	
-				call_event_resp_cb (in_req->hdr.src_id, in_req->event_code, rx_state);
-				break;
-				}
-			case ECMDLAN_GET_STATE_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_GET_STATE_RESP_T)) break;
-				S_CMD_GET_STATE_RESP_T *in_req = (S_CMD_GET_STATE_RESP_T*)rxbufer;
-
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;	
-				get_state_resp_cb (in_req->hdr.src_id, &in_req->state, rx_state);
-				break;
-				}
-			}
-		}
-	}
-}
-
-
-
-void TRFMASTER::RF_txend_cb (bool f_ok)
-{
-}
-
-
-
 TRFSLAVE::TRFSLAVE (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz, IUSERRFCB *us): TRFBASECMD (objc, abcnt, rxalcsz)
 {
 	user_cb = us;
@@ -394,7 +198,7 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 					
 
-				if (user_cb->user_get_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), userparam))
+				if (user_cb->user_get_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PRMF_CAPTION_T*>(&in_req->name), userparam))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					resp_frame->ix = in_req->ix;
@@ -420,7 +224,7 @@ if (sz <= c_rxbuf_size)
 				resp_frame->hdr.src_id = self_id;
 				resp_frame->hdr.dst_id = in_req->hdr.src_id;
 
-				if (user_cb->user_set_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PARAM_CAPTION_T*>(&in_req->name), &resp_frame->param))
+				if (user_cb->user_set_param_req_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PRMF_CAPTION_T*>(&in_req->name), &resp_frame->param))
 					{
 					resp_frame->resp_state = ERESPSTATE_OK;
 					resp_frame->ix = in_req->ix;

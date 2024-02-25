@@ -65,27 +65,6 @@ class TRFBASECMD {
 
 
 
-class TRFMASTER: protected TRFBASECMD, public TFFC, public IFCRFRX {
-		virtual void Task ();
-		virtual void RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi);
-		virtual void RF_txend_cb (bool f_ok);
-	protected:
-		virtual void get_param_resp_cb (local_rf_id_t svid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src, ERESPSTATE rx_state) = 0;
-		virtual void set_param_resp_cb (local_rf_id_t svid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src, ERESPSTATE rx_state) = 0;
-		virtual void get_state_resp_cb (local_rf_id_t svid, S_DEVSTATE_T *src, ERESPSTATE rx_state) = 0;
-		virtual void get_event_resp_cb (local_rf_id_t svid, uint16_t ix, S_EVENT_ITEM_T *evnt, ERESPSTATE rx_state) = 0;
-		virtual void call_event_resp_cb (local_rf_id_t svid, uint32_t event_code, ERESPSTATE rx_state) = 0;
-	
-	public:
-		TRFMASTER (IFCRFTX *objc, uint16_t abcnt, uint32_t rxalcsz);
-		void get_param_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot);
-		void get_param_req (local_rf_id_t dvid, char *name, uint32_t tmot);
-		void set_param_req (local_rf_id_t dvid, uint16_t ix, S_RFPARAMVALUE_T prm, uint32_t tmot);
-		void set_param_req (local_rf_id_t dvid, char *name, S_RFPARAMVALUE_T prm, uint32_t tmot);
-		void get_state_req (local_rf_id_t dvid, uint32_t tmot);
-		void get_event_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot);
-		void call_event_req (local_rf_id_t dvid, uint32_t event_code, uint32_t calltime, uint32_t tmot );		// тип event_code знает gui обработчик
-};
 
 
 
@@ -93,8 +72,8 @@ class IUSERRFCB {
 	public:
 		virtual bool user_call_event_req_cb (local_rf_id_t dvid, uint32_t event_code, uint32_t ev_time) = 0;
 		virtual bool user_get_event_req_cb (local_rf_id_t dvid, uint16_t ix, S_EVENT_ITEM_T *evnt) = 0;
-		virtual bool user_get_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T &src) = 0;	// пользователь должен изьять параметр и передать его по ссылке
-		virtual bool user_set_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PARAM_CAPTION_T *name, S_RFPARAMVALUE_T *src) = 0;
+		virtual bool user_get_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PRMF_CAPTION_T *name, S_RFPARAMVALUE_T &src) = 0;	// пользователь должен изьять параметр и передать его по ссылке
+		virtual bool user_set_param_req_cb (local_rf_id_t dvid, uint16_t ix, const S_PRMF_CAPTION_T *name, S_RFPARAMVALUE_T *src) = 0;
 		virtual bool user_get_state_req_cb (local_rf_id_t dvid, S_DEVSTATE_T *src) = 0;
 };
 
