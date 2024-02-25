@@ -14,7 +14,7 @@ enum EARRI2CPIN {EARRI2CPIN_SCK = 0, EARRI2CPIN_SDA = 1, EARRI2CPIN_ENDENUM = 2}
 
 class TI2CIFACE {
 	private:
-		uint8_t c_i2c_wait;
+		const uint8_t c_i2c_wait;
 		void Pause_I2C ();
 		void I2CPulse ();
 		const S_GPIOPIN *pins;
@@ -32,21 +32,20 @@ class TI2CIFACE {
 		bool I2C_SCL_READ ();	
 	
 	public:
-		TI2CIFACE (const S_GPIOPIN *p);
+		TI2CIFACE (const S_GPIOPIN *p, uint8_t w);
 		
 		void Start_I2C();
 		void Stop_I2C ();
-		bool DataOut_I2C (unsigned char datas);
-		bool DataOut_SMBUS (unsigned char datas);
+		bool DataOut_I2C (uint8_t datas);
+		bool DataOut_SMBUS (uint8_t datas);
 		uint8_t DataIn_SMBUS (char RawHardAsk);
-		unsigned char DataIn_I2C (char RawHardAsk);
+		uint8_t DataIn_I2C (char RawHardAsk);
 
-		bool WriteFrame_i2c (unsigned char DEVADRESS, unsigned char DestReg, unsigned char *lTx, unsigned short tx_size);
-		bool ReadFrame_i2c (unsigned char DEVADRESS, unsigned char SrcReg, unsigned char *lRx, unsigned short rx_size);
-		bool ReadFrame_smbus (unsigned char DEVADRESS, unsigned char SrcReg, unsigned char *lDest, unsigned short rx_size);
-		bool WriteFrame_smbus (unsigned char DEVADRESS, unsigned char DstReg, unsigned char *l_src, unsigned short tx_size);
+		bool WriteFrame_i2c (uint8_t DEVADRESS, uint8_t DestReg, uint8_t *lTx, unsigned short tx_size);
+		bool ReadFrame_i2c (uint8_t DEVADRESS, uint8_t SrcReg, uint8_t *lRx, unsigned short rx_size);
+		bool ReadFrame_smbus (uint8_t DEVADRESS, uint8_t SrcReg, uint8_t *lDest, unsigned short rx_size);
+		bool WriteFrame_smbus (uint8_t DEVADRESS, uint8_t DstReg, uint8_t *l_src, unsigned short tx_size);
 		
-	
 };
 
 

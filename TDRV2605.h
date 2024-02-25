@@ -117,6 +117,8 @@ class TDRV2605: public TFFC {
 	
 	protected:
 		
+		uint8_t init_ok_cntr;
+		
 	public:
 		TDRV2605 (TI2CIFACE *ifc, S_GPIOPIN *p);
 		void Effect (EERM ef);

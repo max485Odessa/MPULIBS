@@ -55,11 +55,11 @@ bool TFIFOLEN::pop (void *d, uint16_t &sz_inmax_outcur)
 	bool rv = false;
 	if (!item_cnt)
 		{
-		if (fifo->frame_count ()) fifo->clear ();
+		if (fifo->frame_count ()) clear ();
 		}
 	else
 		{
-		if (fifo->frame_count () >= 3 && sz_inmax_outcur)
+		if (fifo->frame_count () && sz_inmax_outcur)		// >= 3
 			{
 			uint8_t *dst8 = (uint8_t*)d;
 			uint16_t sz_tag = 0;
@@ -70,13 +70,7 @@ bool TFIFOLEN::pop (void *d, uint16_t &sz_inmax_outcur)
 					sz_tag = data; sz_tag <<= 8;
 					if (!fifo->pop (data)) break;
 					sz_tag |= data;
-					if (sz_tag > fifo->frame_count () || !sz_tag || sz_tag > sz_inmax_outcur)
-						{
-						// critical error - fifo corupted
-						fifo->clear ();
-						item_cnt = 0;
-						break;
-						}
+					if (sz_tag > fifo->frame_count () || !sz_tag || sz_tag > sz_inmax_outcur) break;
 					rslt_sz = sz_tag;
 					while (sz_tag)
 						{
@@ -84,7 +78,7 @@ bool TFIFOLEN::pop (void *d, uint16_t &sz_inmax_outcur)
 						*dst8++ = data;
 						sz_tag--;
 						}
-					if (!sz_tag && rslt_sz) 
+					if (!sz_tag) 
 						{
 						item_cnt--;
 						sz_inmax_outcur = rslt_sz;
@@ -92,6 +86,7 @@ bool TFIFOLEN::pop (void *d, uint16_t &sz_inmax_outcur)
 						}
 					} while (false);
 			}
+		if (!rv) clear ();
 		}
 	return rv;
 }

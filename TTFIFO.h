@@ -36,7 +36,7 @@ TTFIFO<Tp>::TTFIFO (uint32_t el_count) : c_alloc_frames (el_count)
 {
 circlbuffer = new Tp[el_count];
 clear();
-peack_count = 0;
+statistic_peak_clear ();
 }
 
 
@@ -92,6 +92,7 @@ bool TTFIFO<Tp>::push (const Tp *frm)
 		circlbuffer[push_ix++] = *frm;
 		fill_count++;
 		if (fill_count > peack_count) peack_count = fill_count;
+
 		rv = true;
 		}
 	return rv;
@@ -125,6 +126,7 @@ if (fill_count)
 	{
 	if (pop_ix >= c_alloc_frames) pop_ix = 0;
 	frm = circlbuffer[pop_ix++];
+
 	fill_count--;
 	rv = true;
 	}	
@@ -152,6 +154,7 @@ bool rv = false;
 if (fill_count)
 	{
 	if (pop_ix >= c_alloc_frames) pop_ix = 0;
+
 	frm = circlbuffer[pop_ix];
 	rv = true;
 	}	

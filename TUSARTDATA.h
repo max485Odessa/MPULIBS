@@ -44,17 +44,19 @@ class TSERIALUSR {
 		TTFIFO<uint8_t> *fifo_tx;
 		TTFIFO<uint8_t> *fifo_rx;
 		SYSBIOS::Timer timer_link;
+		uint32_t c_linkdetect_period;
 	
 	public:
 		virtual bool Tx (void *lTx, uint16_t sz_tx) = 0;
 		bool push (uint8_t d);
-		bool is_link ();
+		virtual bool is_link () = 0;
 		uint32_t tx_free_space ();
 		virtual bool Tx_status () = 0;
 		void clear ();
 		bool pop (uint8_t &d);
 		virtual uint16_t Rx_check () = 0;
 		virtual uint16_t Rx (void *lDst, uint16_t max_size) = 0;
+		void SetLinkDetectPeriod (uint32_t t);
 	
 		#ifdef SERIALDEBAG
 			uint32_t debug_peak_tx ();
@@ -72,16 +74,14 @@ class TUSARTOBJ: public TSERIALISR, public TSERIALUSR {
 		UART_HandleTypeDef UartHandle;
 		void rx_clear ();
 		bool f_tx_status;
-		uint32_t c_linkdetect_period;
-		
 		
 		void Init ();
 		
 	public:
 		TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx);
 		void SetSpeed (uint32_t c_speed);
-		void SetLinkDetectPeriod (uint32_t t);
 		
+		virtual bool is_link () override;
 		virtual bool Tx (void *lTx, uint16_t sz_tx) override;
 		virtual bool Tx_status () override;
 		virtual uint16_t Rx_check () override;

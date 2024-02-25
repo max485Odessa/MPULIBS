@@ -64,6 +64,7 @@ TAIN::TAIN ()
 		}
 	HAL_ADC_Start_DMA(&AdcHandle, (uint32_t*)&uhADCxConvertedValue, EAINCH_ENDENUM);
 	quant_value = 0;
+	relax_timer.set (500);		// в работу через 0.5 секунд после старта
 }
 
 
@@ -94,6 +95,7 @@ float *TAIN::adr_voltage (EAINPIN ch)
 
 
 
+// 200 hz task
 void TAIN::Task ()
 {
 	if (!relax_timer.get())
@@ -106,7 +108,7 @@ void TAIN::Task ()
 			voltage[ix] = quant_value * uhADCxConvertedValue[ix]; 
 			ix++;
 			}
-		relax_timer.set (20);
+		relax_timer.set (5);
 		}
 }
 
