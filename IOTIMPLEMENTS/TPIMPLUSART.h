@@ -5,22 +5,34 @@
 #include "tcomifs.h"
 #include "rfcmddefine.h"
 #include "TFTASKIF.h"
+#include "TUSARTSTREAMDEF.H"
+
+typedef struct {
+    local_rf_id_t dst;
+    uint32_t timeout;
+    bool f_timeout;
+    bool f_active;
+} S_ACTIVE_TRANSACTION_SLOT_T;
+
+
+#define C_CHANID_DEF 1
 
 
 class TUSARTMASTER: public TFFC, public TPARSEOBJ  {
 		virtual void Task ();
-		virtual void RF_recv_cb (uint8_t *data, uint16_t sz, uint16_t rssi);
-		virtual void RF_txend_cb (bool f_ok);
-
         virtual bool find_protocol (void *src, uint32_t szsrc, uint32_t &find_ix, uint32_t &findsz);    // detect капсулы S_CHANHDR_T
         virtual bool parse (void *src, uint32_t szsrc);
 
         void rawsend (void *src, uint32_t sz, uint32_t tmot);
+        uint8_t cur_trid;
         uint8_t *txbufer;
         uint32_t c_txbufer_size;
 
         uint32_t lenstr (void *s);
         void CopyMemorySDC (void *s, void *d, uint32_t sz);
+
+        S_ACTIVE_TRANSACTION_SLOT_T *reqslots;
+        void clear_actslots ();
 
 	protected:
 		virtual void get_param_resp_cb (local_rf_id_t svid, uint16_t ix, const S_PRMF_CAPTION_T *name, S_RFPARAMVALUE_T &src, ERESPSTATE rx_state);
@@ -29,10 +41,10 @@ class TUSARTMASTER: public TFFC, public TPARSEOBJ  {
 		virtual void get_event_resp_cb (local_rf_id_t svid, uint16_t ix, S_EVENT_ITEM_T *evnt, ERESPSTATE rx_state);
 		virtual void call_event_resp_cb (local_rf_id_t svid, uint32_t event_code, ERESPSTATE rx_state);
 
+
         TTXIF *tx_obj;
         uint16_t calculate_crc (uint8_t *src, uint32_t sz);
         local_rf_id_t self_id;
-
 
 	public:
         TUSARTMASTER (TTXIF *objc, local_rf_id_t sa);

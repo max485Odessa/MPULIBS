@@ -93,6 +93,7 @@ typedef struct {
 
 #pragma pack (push,1)
 
+/*
 enum ECMDLAN {ECMDLAN_NONE = 0, \
 ECMDLAN_GET_PARAM_REQ = 1, ECMDLAN_GET_PARAM_RESP = 2, \
 ECMDLAN_SET_PARAM_REQ = 3, ECMDLAN_SET_PARAM_RESP = 4, \
@@ -100,12 +101,34 @@ ECMDLAN_GET_EVENT_REQ = 5, ECMDLAN_GET_EVENT_RESP = 6, \
 ECMDLAN_CALL_EVENT_REQ = 7, ECMDLAN_CALL_EVENT_RESP = 8, \
 ECMDLAN_GET_STATE_REQ = 9, ECMDLAN_GET_STATE_RESP = 10, \
 ECMDLAN_ENDENUM = 11};
+*/
+
+enum ECMDLAN {ECMDLAN_NONE = 0, \
+ECMDLAN_GET_PARAM_REQ = 1,  \
+ECMDLAN_SET_PARAM_REQ = 2,  \
+ECMDLAN_GET_EVENT_REQ = 3,  \
+ECMDLAN_CALL_EVENT_REQ = 4,  \
+ECMDLAN_GET_STATE_REQ = 5,  \
+ECMDLAN_ENDENUM = 6};
 
 
 
 typedef struct {
-	uint16_t cmd;
-	uint16_t cmd_size;
+    uint8_t pack_info;      // 7-6 bits (00 - midle payload, 01 - stop frame, 10 - start frame, 11 - start and stop frame), 5 - bit (1 - master tx, 0 - slave tx), 4-0 (transaction id)
+    uint8_t size;           // local size
+    uint8_t payload[60];
+} S_RFCAPSULA_T;
+
+
+
+enum ERFRESPSTAT  {ERFRESPSTAT_OK = 0, ERFRESPSTAT_PROGRESS = 1, ERFRESPSTAT_ERROR = 2};
+
+
+typedef struct {
+	uint8_t cmd;            // cmd
+    uint8_t trid;           // (7 - (1 = req, 0 = resp), 6-5 (ERFRESPSTAT), 4-0 (5 bit transaction id))
+	uint8_t cmd_size;      // if cmd not support
+    uint8_t crc; 
 	local_rf_id_t src_id;
 	local_rf_id_t dst_id;
 } S_RFHEADER_T;

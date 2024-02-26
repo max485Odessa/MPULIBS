@@ -5,6 +5,25 @@
 #include <stdint.h>
 
 
+
+#define C_PREAMBLE_P1_A 0x55
+#define C_PREAMBLE_P1_B 0x12
+
+
+#pragma pack (push,1)
+
+typedef struct {
+    uint8_t preamble_a;
+    uint8_t preamble_b;
+    uint8_t chan;
+    uint8_t trid;
+    uint16_t size;
+    uint16_t crc16;
+} S_CHANHDR_T;
+
+#pragma pack (pop)
+
+
 // интерфейс для обьекта который буферезирует приемные данные
 class TRXIF {
     public:
