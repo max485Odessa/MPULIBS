@@ -6,7 +6,7 @@ enum ESPISEL {ESPISEL_SPI1, ESPISEL_SPI2, ESPISEL_ENDENUM};
 
 
 #include "hard_rut.h"
-#include "interfaces.h"
+//#include "interfaces.h"
 #include "spi_class_conf.h"
 
 
@@ -14,15 +14,12 @@ enum ESPISEL {ESPISEL_SPI1, ESPISEL_SPI2, ESPISEL_ENDENUM};
  //extern "C" {
 //#endif
 
-/* Includes ------------------------------------------------------------------*/
-#include "stm32f10x.h"
 
 //#ifdef __cplusplus
 //}
 //#endif
 
-#include "stm32f10x_spi.h"
-#include "hard_rut.h"
+
 
 
 
@@ -38,12 +35,19 @@ class ISPI {
 };
 
 
-class TSPIHARD: public ISPI {
+
+class TSPI1HARD: public ISPI {
 	private:
 		bool F_Transaction;
-		ESPISEL e_spi;
-		S_GPIOPIN *initpinsar;
-		SPI_TypeDef* SPI_p;
+
+		const S_SPIGPIO_T *spigpio;
+		SPI_HandleTypeDef SpiHandle;
+	
+		virtual void cs_0 ();
+		virtual void cs_1 ();
+		virtual uint8_t txrx (uint8_t byte);
+		virtual void init ();
+		virtual void deinit ();
 	
 	protected:
 		
@@ -51,15 +55,11 @@ class TSPIHARD: public ISPI {
 		unsigned char Tech_wait_s, Tech_wait_p;
 	
 	public:
-		TSPIHARD (ESPISEL s);
+		TSPI1HARD (S_SPIGPIO_T *g);
 		void csp_spi_read_fast (uint8_t reg_addr_len, uint8_t *reg_addr, uint16_t data_len, uint8_t *data);
 		void csp_spi_write_fast (uint8_t reg_addr_len, uint8_t *reg_addr, uint16_t data_len, uint8_t *data);
 	
-		virtual void cs_0 ();
-		virtual void cs_1 ();
-		virtual uint8_t txrx (uint8_t byte);
-		virtual void init ();
-		virtual void deinit ();
+
 };
 
 

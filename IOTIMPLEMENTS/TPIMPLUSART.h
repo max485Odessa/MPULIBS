@@ -34,6 +34,10 @@ class TUSARTMASTER: public TFFC, public TPARSEOBJ  {
         S_ACTIVE_TRANSACTION_SLOT_T *reqslots;
         void clear_actslots ();
 
+        S_RFHEADER_T *capsule_open (void *s, uint32_t srcsz, uint32_t &capsz);
+        bool check_rf_frame (S_RFHEADER_T *s, uint32_t srcsz);
+        //bool check_capsule (S_CHANHDR_T *s, uint32_t srcsz);
+
 	protected:
 		virtual void get_param_resp_cb (local_rf_id_t svid, uint16_t ix, const S_PRMF_CAPTION_T *name, S_RFPARAMVALUE_T &src, ERESPSTATE rx_state);
 		virtual void set_param_resp_cb (local_rf_id_t svid, uint16_t ix, const S_PRMF_CAPTION_T *name, S_RFPARAMVALUE_T &src, ERESPSTATE rx_state);
@@ -43,7 +47,8 @@ class TUSARTMASTER: public TFFC, public TPARSEOBJ  {
 
 
         TTXIF *tx_obj;
-        uint16_t calculate_crc (uint8_t *src, uint32_t sz);
+        uint16_t calculate_crc16cap (uint8_t *src, uint32_t sz);
+        
         local_rf_id_t self_id;
 
 	public:

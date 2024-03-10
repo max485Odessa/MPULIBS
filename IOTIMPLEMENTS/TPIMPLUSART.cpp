@@ -81,7 +81,7 @@ while (ix < szsrc)
                 {
                 uint16_t svcrc = lhdr->crc16;
                 lhdr->crc16 = 0;
-                uint16_t clccrc = calculate_crc (src, full_len);
+                uint16_t clccrc = calculate_crc16cap (src, full_len);
                 lhdr->crc16 = svcrc;
                 if (clccrc == svcrc)
                     {
@@ -100,7 +100,7 @@ return rv;
 
 
 
-uint16_t TUSARTMASTER::calculate_crc (uint8_t *src, uint32_t sz)
+uint16_t TUSARTMASTER::calculate_crc16cap (uint8_t *src, uint32_t sz)
 {
 uint16_t crc = 0;
 uint8_t dat;
@@ -138,7 +138,6 @@ return crc;
 
 
 
-
 void TUSARTMASTER::rawsend (void *s, uint32_t sz, uint32_t tmot)
 {
 S_CHANHDR_T *capsl = (S_CHANHDR_T*)txbufer;
@@ -148,10 +147,10 @@ CopyMemorySDC (s, dst_payload, sz);
 capsl->preamble_a = C_PREAMBLE_P1_A;
 capsl->preamble_b = C_PREAMBLE_P1_B;
 capsl->chan = C_CHANID_DEF;
-capsl->trid = cur_trid++;
+//capsl->trid = cur_trid++;
 capsl->size = sz;
 capsl->crc16 = 0;
-capsl->crc16 = calculate_crc (txbufer, full_size);
+capsl->crc16 = calculate_crc16cap (txbufer, full_size);
 tx_obj->txif_out (txbufer, full_size);
 }
 
@@ -160,7 +159,8 @@ tx_obj->txif_out (txbufer, full_size);
 void TUSARTMASTER::get_param_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot)
 {
 	S_CMD_GET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_GET_PARAM_REQ;
+	reqframe.hdr.cmd = ECMDLAN_GET_PARAM;
+    reqframe.hdr.trid = encode_trid (ERFDTYPE_REQ, ERFRESPSTAT_OK, cur_trid++);
 	reqframe.hdr.cmd_size = sizeof(S_CMD_GET_PARAM_REQ_T);
 	reqframe.hdr.dst_id = dvid;
 	reqframe.hdr.src_id = self_id;
@@ -174,7 +174,8 @@ void TUSARTMASTER::get_param_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot
 void TUSARTMASTER::set_param_req (local_rf_id_t dvid, uint16_t ix, S_RFPARAMVALUE_T prm, uint32_t tmot)
 {
 	S_CMD_SET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_SET_PARAM_REQ;
+	reqframe.hdr.cmd = ECMDLAN_SET_PARAM;
+    reqframe.hdr.trid = encode_trid (ERFDTYPE_REQ, ERFRESPSTAT_OK, cur_trid++);
 	reqframe.hdr.cmd_size = sizeof(S_CMD_SET_PARAM_REQ_T);
 	reqframe.hdr.dst_id = dvid;
 	reqframe.hdr.src_id = self_id;
@@ -189,7 +190,8 @@ void TUSARTMASTER::set_param_req (local_rf_id_t dvid, uint16_t ix, S_RFPARAMVALU
 void TUSARTMASTER::set_param_req (local_rf_id_t dvid, char *name, S_RFPARAMVALUE_T prm, uint32_t tmot)
 {
 	S_CMD_SET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_SET_PARAM_REQ;
+	reqframe.hdr.cmd = ECMDLAN_SET_PARAM;
+    reqframe.hdr.trid = encode_trid (ERFDTYPE_REQ, ERFRESPSTAT_OK, cur_trid++);
 	reqframe.hdr.cmd_size = sizeof(S_CMD_SET_PARAM_REQ_T);
 	reqframe.hdr.dst_id = dvid;
 	reqframe.hdr.src_id = self_id;
@@ -213,7 +215,8 @@ void TUSARTMASTER::set_param_req (local_rf_id_t dvid, char *name, S_RFPARAMVALUE
 void TUSARTMASTER::get_param_req (local_rf_id_t dvid, char *name, uint32_t tmot)
 {
 	S_CMD_GET_PARAM_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_GET_PARAM_REQ;
+	reqframe.hdr.cmd = ECMDLAN_GET_PARAM;
+    reqframe.hdr.trid = encode_trid (ERFDTYPE_REQ, ERFRESPSTAT_OK, cur_trid++);
 	reqframe.hdr.cmd_size = sizeof(S_CMD_GET_PARAM_REQ_T);
 	reqframe.hdr.dst_id = dvid;
 	reqframe.hdr.src_id = self_id;
@@ -237,7 +240,8 @@ void TUSARTMASTER::get_param_req (local_rf_id_t dvid, char *name, uint32_t tmot)
 void TUSARTMASTER::get_event_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot)
 {
 	S_CMD_GET_EVENT_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_GET_EVENT_REQ;
+	reqframe.hdr.cmd = ECMDLAN_GET_EVENT;
+    reqframe.hdr.trid = encode_trid (ERFDTYPE_REQ, ERFRESPSTAT_OK, cur_trid++);
 	reqframe.hdr.cmd_size = sizeof(S_CMD_GET_EVENT_REQ_T);
 	reqframe.hdr.dst_id = dvid;
 	reqframe.hdr.src_id = self_id;
@@ -250,7 +254,8 @@ void TUSARTMASTER::get_event_req (local_rf_id_t dvid, uint16_t ix, uint32_t tmot
 void TUSARTMASTER::call_event_req (local_rf_id_t dvid, uint32_t event_code, uint32_t calltime, uint32_t tmot )
 {
 	S_CMD_CALL_EVENT_REQ_T reqframe;
-	reqframe.hdr.cmd = ECMDLAN_CALL_EVENT_REQ;
+	reqframe.hdr.cmd = ECMDLAN_CALL_EVENT;
+    reqframe.hdr.trid = encode_trid (ERFDTYPE_REQ, ERFRESPSTAT_OK, cur_trid++);
 	reqframe.hdr.cmd_size = sizeof(S_CMD_CALL_EVENT_REQ_T);
 	reqframe.hdr.dst_id = dvid;
 	reqframe.hdr.src_id = self_id;
@@ -269,67 +274,113 @@ void TUSARTMASTER::Task ()
 
 
 
+bool TUSARTMASTER::check_rf_frame (S_RFHEADER_T *rf_frm, uint32_t srcsz)
+{
+bool rv = false;
+if (rf_frm) {
+    if (srcsz && rf_frm->cmd_size <= srcsz) rv = calculate_crc8rf ((uint8_t*)rf_frm, rf_frm->cmd_size);
+    }
+return rv;
+}
+
+
+
+
+S_RFHEADER_T *TUSARTMASTER::capsule_open (void *s, uint32_t szsrc, uint32_t &capsz)
+{
+S_RFHEADER_T *rv = 0;
+if (szsrc >= sizeof(S_CHANHDR_T) && szsrc <= (sizeof(S_RFCMDS_SIZES_UNION_T) + sizeof(S_CHANHDR_T)))
+    {
+    S_CHANHDR_T *caps = (S_CHANHDR_T*)s;
+    uint8_t *src = (uint8_t*)s;
+    src += sizeof(S_CHANHDR_T);
+    S_RFHEADER_T *hdr = (S_RFHEADER_T*)src;
+    if (caps->size < szsrc)
+        {
+        uint32_t incap_size = szsrc - caps->size;
+        if (incap_size == hdr->cmd_size)
+            {
+            capsz = incap_size;
+            rv = hdr;
+            }
+        }
+    }
+return rv;
+}
+
+
+
 
 bool TUSARTMASTER::parse (void *s, uint32_t szsrc)
 {
 bool rv = false;
-if (szsrc <= sizeof(S_RFCMDS_SIZES_UNION_T))
+uint32_t frsz = 0;
+S_RFHEADER_T *rf_frame = capsule_open (s, szsrc, frsz);
+if (rf_frame)
 	{
-    uint8_t *src = (uint8_t*)s;
-    src += sizeof(S_CHANHDR_T);
-	S_RFHEADER_T *hdr = (S_RFHEADER_T*)src;
-	if (hdr->dst_id	== self_id)
-		{
-		switch (hdr->cmd)
-			{
-			case ECMDLAN_GET_PARAM_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_GET_PARAM_RESP_T)) break;
-				S_CMD_GET_PARAM_RESP_T *in_req = (S_CMD_GET_PARAM_RESP_T*)src;
+    if (check_rf_frame (rf_frame, frsz))
+        {
+        if (rf_frame->dst_id == self_id)
+            {
+            ERFDTYPE tp;
+            ERFRESPSTAT rslt;
+            uint8_t tridn;
+            decode_trid (rf_frame->trid,  &tp, &rslt, &tridn);
 
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
-				get_param_resp_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PRMF_CAPTION_T*>(&in_req->name), in_req->param, rx_state);
-				break;
-				}
-			case ECMDLAN_SET_PARAM_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_SET_PARAM_RESP_T)) break;
-				S_CMD_SET_PARAM_RESP_T *in_req = (S_CMD_SET_PARAM_RESP_T*)src;
+            if (tp == ERFDTYPE_REQ) return false;
 
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
-				set_param_resp_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PRMF_CAPTION_T*>(&in_req->name), in_req->param, rx_state);
 
-				break;
-				}
-			case ECMDLAN_GET_EVENT_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_GET_EVENT_RESP_T)) break;
-				S_CMD_GET_EVENT_RESP_T *in_req = (S_CMD_GET_EVENT_RESP_T*)src;
-					
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
-				get_event_resp_cb (in_req->hdr.src_id, in_req->ix, &in_req->event, rx_state);
-				break;
-				}
-			case ECMDLAN_CALL_EVENT_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_CALL_EVENT_RESP_T)) break;
-				S_CMD_CALL_EVENT_RESP_T *in_req = (S_CMD_CALL_EVENT_RESP_T*)src;
+            switch (rf_frame->cmd)
+                {
+                case ECMDLAN_GET_PARAM:
+                    {
+                    if (rf_frame->cmd_size != sizeof(S_CMD_GET_PARAM_RESP_T)) break;
+                    S_CMD_GET_PARAM_RESP_T *in_req = (S_CMD_GET_PARAM_RESP_T*)rf_frame;
 
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
-				call_event_resp_cb (in_req->hdr.src_id, in_req->event_code, rx_state);
-				break;
-				}
-			case ECMDLAN_GET_STATE_RESP:
-				{
-				if (hdr->cmd_size != sizeof(S_CMD_GET_STATE_RESP_T)) break;
-				S_CMD_GET_STATE_RESP_T *in_req = (S_CMD_GET_STATE_RESP_T*)src;
+                    ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
+                    get_param_resp_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PRMF_CAPTION_T*>(&in_req->name), in_req->param, rx_state);
+                    break;
+                    }
+                case ECMDLAN_SET_PARAM:
+                    {
+                    if (rf_frame->cmd_size != sizeof(S_CMD_SET_PARAM_RESP_T)) break;
+                    S_CMD_SET_PARAM_RESP_T *in_req = (S_CMD_SET_PARAM_RESP_T*)rf_frame;
 
-				ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
-				get_state_resp_cb (in_req->hdr.src_id, &in_req->state, rx_state);
-				break;
-				}
-			}
-		}
+                    ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
+                    set_param_resp_cb (in_req->hdr.src_id, in_req->ix, const_cast<S_PRMF_CAPTION_T*>(&in_req->name), in_req->param, rx_state);
+
+                    break;
+                    }
+                case ECMDLAN_GET_EVENT:
+                    {
+                    if (rf_frame->cmd_size != sizeof(S_CMD_GET_EVENT_RESP_T)) break;
+                    S_CMD_GET_EVENT_RESP_T *in_req = (S_CMD_GET_EVENT_RESP_T*)rf_frame;
+
+                    ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
+                    get_event_resp_cb (in_req->hdr.src_id, in_req->ix, &in_req->event, rx_state);
+                    break;
+                    }
+                case ECMDLAN_CALL_EVENT:
+                    {
+                    if (rf_frame->cmd_size != sizeof(S_CMD_CALL_EVENT_RESP_T)) break;
+                    S_CMD_CALL_EVENT_RESP_T *in_req = (S_CMD_CALL_EVENT_RESP_T*)rf_frame;
+
+                    ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
+                    call_event_resp_cb (in_req->hdr.src_id, in_req->event_code, rx_state);
+                    break;
+                    }
+                case ECMDLAN_GET_STATE:
+                    {
+                    if (rf_frame->cmd_size != sizeof(S_CMD_GET_STATE_RESP_T)) break;
+                    S_CMD_GET_STATE_RESP_T *in_req = (S_CMD_GET_STATE_RESP_T*)rf_frame;
+
+                    ERESPSTATE rx_state = (ERESPSTATE)in_req->resp_state;
+                    get_state_resp_cb (in_req->hdr.src_id, &in_req->state, rx_state);
+                    break;
+                    }
+                }
+            }
+        }
 	}
 return rv;
 }

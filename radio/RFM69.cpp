@@ -1,8 +1,8 @@
 #include "RFM69.h"
-#include "comonrut.h"
-#include "stm32f10x_gpio.h"
-#include "misc.h"
-#include "stm32f10x_exti.h"
+//#include "comonrut.h"
+//#include "stm32f10x_gpio.h"
+//#include "misc.h"
+//#include "stm32f10x_exti.h"
 #include "hard_rut.h"
 
 
@@ -22,8 +22,8 @@ SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_rx);
 SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_tx);
 //F_EndTx = true;
 //SYSBIOS::DEL_TIMER_ISR (&Timer_RxOn);
-_pin_low_init_out_pp (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), 1);
-_pin_low_init_in (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_ISR]), 1);
+_pin_low_init_out_pp (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), 1, EHRTGPIOSPEED_MID);
+_pin_low_init_in (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_ISR]), 1, EHRTGPIOSPEED_MID, EHRTGPIOPULL_UP);
 AddObjectToExecuteManager ();
 Init ();
 }
@@ -46,7 +46,7 @@ bool TRFM69::get_isr_pin ()
 
 void TRFM69::ResetPinTo (bool vals_set)
 {
-	_pin_pp_to (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), vals_set);
+	_pin_output (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), vals_set);
 }
 
 
@@ -603,7 +603,7 @@ bool TRFM69::copy_to_frame_bufer (uint8_t *src, uint8_t sz)
 			{
 			if (sz <= rxemptysize)
 				{
-				CopySDC_Data (src, &framebuffer[data_rx_ix], sz);
+				CopyMemorySDC (src, &framebuffer[data_rx_ix], sz);
 				data_rx_ix += sz;
 				rv = true;
 				}
@@ -624,7 +624,7 @@ bool TRFM69::copy_from_frame_bufer (uint8_t *dst, uint8_t sz)
 			{
 			if (sz <= txsize)
 				{
-				CopySDC_Data (&framebuffer[data_tx_ix], dst , sz);
+				CopyMemorySDC (&framebuffer[data_tx_ix], dst , sz);
 				data_tx_ix += sz;
 				rv = true;
 				}
@@ -865,7 +865,7 @@ bool TRFM69::send (uint8_t *src, uint16_t sz)
 	if (src && sz)
 		{
 		if ((sz + C_FRAMECRC_SIZEOF) > c_trnsm_bufer_sizes) return false;
-		CopySDC_Data (src, framebuffer, sz);
+		CopyMemorySDC (src, framebuffer, sz);
 		uint16_t crc16 = calculate_crc (framebuffer, sz);
 		c_full_size_tx = sz;
 		*((uint16_t*)&framebuffer[c_full_size_tx]) = crc16;

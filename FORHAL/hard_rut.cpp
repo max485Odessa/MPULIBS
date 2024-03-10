@@ -2,6 +2,7 @@
 
 
 
+
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
 
@@ -165,17 +166,20 @@ static void hard_gpio_init_raw (GPIO_InitTypeDef *gpio, S_GPIOPIN *inarr, unsign
 
 
 
-void _pin_low_init_out_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
+void _pin_low_init_out_pp (S_GPIOPIN *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = sp;
+
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_PP;
 		GPIO_InitStructure.Pull = GPIO_NOPULL;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = 0;
+	#endif
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 		lp_pin++;
@@ -184,32 +188,39 @@ void _pin_low_init_out_pp (S_GPIOPIN *lp_pin, unsigned char cnt)
 }
 
 
-
-void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin )
+#if (HRDCPU == 1)
+void _pin_low_init_out_pp_af (S_GPIOPIN *lp_pin, EHRTGPIOSPEED sp )
+#else
+void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSPEED sp )
+#endif
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;
+		GPIO_InitStructure.Speed = sp;
 		GPIO_InitStructure.Mode = GPIO_MODE_AF_PP;
-		GPIO_InitStructure.Pull = GPIO_NOPULL;
+		GPIO_InitStructure.Pull = GPIO_PULLDOWN;//GPIO_NOPULL;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = af_codemux;
+	#endif
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 }
 
 
 
-void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt)
+void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_HIGH;//GPIO_SPEED_FREQ_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = sp;
 		GPIO_InitStructure.Mode = GPIO_MODE_OUTPUT_OD;
 		GPIO_InitStructure.Pull = GPIO_NOPULL;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = 0;
+	#endif
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 		lp_pin++;
@@ -219,16 +230,18 @@ void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt)
 
 
 
-void _pin_low_init_in_pull (S_GPIOPIN *lp_pin, uint8_t cnt, bool vl)
+void _pin_low_init_in (S_GPIOPIN *lp_pin, uint8_t cnt, EHRTGPIOSPEED sp, EHRTGPIOPULL pl)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_LOW;
+		GPIO_InitStructure.Speed = sp;
 		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-		GPIO_InitStructure.Pull = (vl)?GPIO_PULLUP:GPIO_PULLDOWN;
+		GPIO_InitStructure.Pull = pl;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = 0;
+	#endif
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 		lp_pin++;
@@ -238,39 +251,44 @@ void _pin_low_init_in_pull (S_GPIOPIN *lp_pin, uint8_t cnt, bool vl)
 
 
 
-
-void _pin_low_init_in (S_GPIOPIN *lp_pin, unsigned char cnt)
+/*
+void _pin_low_init_in (S_GPIOPIN *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = sp;
 		GPIO_InitStructure.Mode = GPIO_MODE_INPUT;
-		GPIO_InitStructure.Pull = GPIO_NOPULL;//GPIO_NOPULL;
+		GPIO_InitStructure.Pull = GPIO_NOPULL;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = 0;
+	#endif
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 		lp_pin++;
 		cnt--;
 		}
 }
+*/
 
 
 static const uint32_t modintarr[EGPINTMOD_ENDENUM] = {GPIO_MODE_IT_RISING, GPIO_MODE_IT_FALLING, GPIO_MODE_IT_RISING_FALLING};
 
-void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md)
+void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md, EHRTGPIOSPEED sp)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
 	
 	while (cnt)
 		{
 		hard_gpio_clock_enable (lp_pin->port);
-		GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;// GPIO_SPEED_FREQ_VERY_HIGH;
+		GPIO_InitStructure.Speed = sp;
 		GPIO_InitStructure.Mode = modintarr[md];
-		GPIO_InitStructure.Pull = GPIO_NOPULL;//GPIO_NOPULL;
+		GPIO_InitStructure.Pull = C_HRDGPIO_NOPULL;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 		GPIO_InitStructure.Alternate = 0;
+	#endif
 		GPIO_InitStructure.Pin = lp_pin->pin;
 		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
 		lp_pin++;
@@ -280,13 +298,15 @@ void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md)
 
 
 
-void _pin_low_init_adc (S_GPIOPIN *lp_pin, unsigned char cnt)
+void _pin_low_init_adc (S_GPIOPIN *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+	GPIO_InitStructure.Speed = sp;
 	GPIO_InitStructure.Mode = GPIO_MODE_ANALOG;
-	GPIO_InitStructure.Pull = GPIO_NOPULL;
+	GPIO_InitStructure.Pull = C_HRDGPIO_NOPULL;
+#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 	GPIO_InitStructure.Alternate = 0;
+#endif
 	
 	hard_gpio_init_raw (&GPIO_InitStructure, lp_pin, cnt);
 }
@@ -309,7 +329,7 @@ return rv;
 
 
 
-void _pin_low_init (S_GPMD_PIN_T *lp_pin, unsigned char cnt)
+void _pin_low_init (S_GPMD_PIN_T *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp, EHRTGPIOPULL pl)
 {
 if (lp_pin) {
 	while (cnt)
@@ -320,25 +340,25 @@ if (lp_pin) {
 				{
 				case EGPMD_OD:
 					{
-					_pin_low_init_out_od (&lp_pin->pin, 1);
+					_pin_low_init_out_od (&lp_pin->pin, 1, sp);
 					_pin_set_to (&lp_pin->pin, lp_pin->out_mod_def_set);
 					break;
 					}
 				case EGPMD_PP:
 					{
-					_pin_low_init_out_pp (&lp_pin->pin, 1);
+					_pin_low_init_out_pp (&lp_pin->pin, 1, sp);
 					_pin_set_to (&lp_pin->pin, lp_pin->out_mod_def_set);
 					break;
 					}
 				case EGPMD_AIN:
 					{
-					_pin_low_init_adc (&lp_pin->pin, 1);
+					_pin_low_init_adc (&lp_pin->pin, 1, sp);
 					break;
 					}
 				case EGPMD_IN:
 				default:
 					{
-					_pin_low_init_in (&lp_pin->pin, 1);
+					_pin_low_init_in (&lp_pin->pin, 1, sp, pl);
 					break;
 					}
 				}
@@ -349,18 +369,27 @@ if (lp_pin) {
 	}
 }
 
-#if defined(STM32F446xx) || defined(STM32F401xC)
+
 void _pin_output (S_GPIOPIN *lp_pin, bool val)
 {
   if (val)
 		{
+		#if (HRDCPU == 4 || HRDCPU == 1)
     lp_pin->port->BSRR = (uint32_t)lp_pin->pin;
+		#else
+			#error need cpu class deffine
+		#endif
 		}
   else
   {
+
+		#if (HRDCPU == 4 || HRDCPU == 1)
 		lp_pin->port->BSRR = (uint32_t)lp_pin->pin << 16;
+		#else
+			#error need cpu class deffine
+		#endif
   }
 
 }
-#endif
+
 

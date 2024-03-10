@@ -1,7 +1,10 @@
 #ifndef _h_rfcmd_defines_h_
 #define _h_rfcmd_defines_h_
 
+
+
 #include <stdint.h>
+
 
 
 #define C_SERIALNUMBER_SIZE 5
@@ -104,11 +107,11 @@ ECMDLAN_ENDENUM = 11};
 */
 
 enum ECMDLAN {ECMDLAN_NONE = 0, \
-ECMDLAN_GET_PARAM_REQ = 1,  \
-ECMDLAN_SET_PARAM_REQ = 2,  \
-ECMDLAN_GET_EVENT_REQ = 3,  \
-ECMDLAN_CALL_EVENT_REQ = 4,  \
-ECMDLAN_GET_STATE_REQ = 5,  \
+ECMDLAN_GET_PARAM = 1,  \
+ECMDLAN_SET_PARAM = 2,  \
+ECMDLAN_GET_EVENT = 3,  \
+ECMDLAN_CALL_EVENT = 4,  \
+ECMDLAN_GET_STATE = 5,  \
 ECMDLAN_ENDENUM = 6};
 
 
@@ -119,14 +122,16 @@ typedef struct {
     uint8_t payload[60];
 } S_RFCAPSULA_T;
 
-
+typedef uint8_t trid_t;
 
 enum ERFRESPSTAT  {ERFRESPSTAT_OK = 0, ERFRESPSTAT_PROGRESS = 1, ERFRESPSTAT_ERROR = 2};
+enum ERFDTYPE {ERFDTYPE_RESP = 0, ERFDTYPE_REQ = 1, ERFDTYPE_ENDENUM};
+
 
 
 typedef struct {
 	uint8_t cmd;            // cmd
-    uint8_t trid;           // (7 - (1 = req, 0 = resp), 6-5 (ERFRESPSTAT), 4-0 (5 bit transaction id))
+    trid_t trid;           // (7 - (1 = req, 0 = resp), 6-5 (ERFRESPSTAT), 4-0 (5 bit transaction id))
 	uint8_t cmd_size;      // if cmd not support
     uint8_t crc; 
 	local_rf_id_t src_id;
@@ -254,5 +259,9 @@ typedef struct {
 
 #pragma pack (pop)
 
+
+uint8_t calculate_crc8rf (uint8_t *src, uint32_t sz);
+void decode_trid (trid_t d,  ERFDTYPE *tp, ERFRESPSTAT *srslt, uint8_t *trid );
+trid_t encode_trid (ERFDTYPE tp, ERFRESPSTAT srs, uint8_t trid);
 
 #endif

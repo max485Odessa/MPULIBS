@@ -121,7 +121,7 @@ if (ix_add_rx)
             if (last_ix < ix_add_rx)
                 {
                 uint32_t tailsize = ix_add_rx - last_ix;
-                copymem_sdc ((char*)&c_rx_buffer[last_ix], (char*)c_rx_buffer, tailsize);
+                copymem_sdc (&c_rx_buffer[last_ix], c_rx_buffer, tailsize);
                 ix_add_rx = tailsize;
                 }
             else

@@ -1,15 +1,12 @@
 #include "spi_class.h"
-#include "stm32f10x_spi.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
+
 
 
 	
-TSPIHARD::TSPIHARD (ESPISEL s)
+TSPI1HARD::TSPI1HARD (S_SPIGPIO_T *g): spigpio (g)
 {
-e_spi = s;
-SPI_p = 0;
-initpinsar = 0;
+SpiHandle.Instance = SPI1;
+
 
 F_Transaction = false;
 Tech_wait_s = 0; 
@@ -17,93 +14,96 @@ Tech_wait_p = 0;
 }
 
 
+/*
+GPIO_InitTypeDef  GPIO_InitStruct;
 
-void TSPIHARD::init ()
+  if(hspi->Instance == SPIx)
+  {     
+
+    SPIx_SCK_GPIO_CLK_ENABLE();
+    SPIx_MISO_GPIO_CLK_ENABLE();
+    SPIx_MOSI_GPIO_CLK_ENABLE();
+
+    SPIx_CLK_ENABLE(); __HAL_RCC_SPI1_CLK_ENABLE
+    
+
+    GPIO_InitStruct.Pin       = SPIx_SCK_PIN;
+    GPIO_InitStruct.Mode      = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull      = GPIO_PULLDOWN;
+    GPIO_InitStruct.Speed     = GPIO_SPEED_LOW;
+    HAL_GPIO_Init(SPIx_SCK_GPIO_PORT, &GPIO_InitStruct);
+
+
+    GPIO_InitStruct.Pin = SPIx_MISO_PIN;
+    HAL_GPIO_Init(SPIx_MISO_GPIO_PORT, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = SPIx_MOSI_PIN;
+    HAL_GPIO_Init(SPIx_MOSI_GPIO_PORT, &GPIO_InitStruct);
+  }
+*/
+
+
+void TSPI1HARD::init ()
 {
 	SPI_InitTypeDef SPI_InitStructure;
-
-	RCC_PCLK2Config(RCC_HCLK_Div1);
-	SPI_p = 0;
-	switch (e_spi)
-		{
-		case ESPISEL_SPI1:
-			{
-			SPI_p = SPI1;
-			initpinsar = const_cast<S_GPIOPIN*>(spi_1_initarr);
-			RCC_APB2PeriphClockCmd (RCC_APB2Periph_SPI1, ENABLE);
-			break;
-			}
-		case ESPISEL_SPI2:
-			{
-			SPI_p = SPI2;
-			initpinsar = const_cast<S_GPIOPIN*>(spi_2_initarr);
-			RCC_APB1PeriphClockCmd (RCC_APB1Periph_SPI2, ENABLE);
-			break;
-			}
-			default: break;
-		}
-
-	if (SPI_p)
-		{
-		_pin_low_init_af_o_pp (&initpinsar[ESPIPIN_MOSI], 2);		// mosi + sck
-		_pin_low_init_out_pp (&initpinsar[ESPIPIN_CS], 1);		// cs
-		_pin_low_init_in (&initpinsar[ESPIPIN_MISO], 1);		// miso
-			
-		SPI_InitStructure.SPI_Direction = SPI_Direction_2Lines_FullDuplex;
-		SPI_InitStructure.SPI_Mode = SPI_Mode_Master;
-		SPI_InitStructure.SPI_DataSize = SPI_DataSize_8b;
-		SPI_InitStructure.SPI_CPOL = SPI_CPOL_Low; // SPI_CPOL_Low; // SPI_CPOL_Low; // SPI_CPOL_Low; //SPI_CPOL_High; // SPI_CPOL_Low;
-		SPI_InitStructure.SPI_CPHA = SPI_CPHA_1Edge ; // SPI_CPHA_2Edge;  // SPI_CPHA_2Edge
-		SPI_InitStructure.SPI_NSS = SPI_NSS_Soft;
-		SPI_InitStructure.SPI_FirstBit = SPI_FirstBit_MSB;//SPI_FirstBit_LSB;
-		SPI_InitStructure.SPI_CRCPolynomial = 7;
-		SPI_InitStructure.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_2;		// 4
-		SPI_Init(SPI_p, &SPI_InitStructure);
-		SPI_Cmd(SPI_p, ENABLE);
-		}
 	
+		_pin_low_init_out_pp_af (const_cast<S_GPIOPIN*>(&spigpio->mosi), EHRTGPIOSPEED_MID);		// mosi
+		_pin_low_init_out_pp_af (const_cast<S_GPIOPIN*>(&spigpio->sck), EHRTGPIOSPEED_MID);		// sck
+		_pin_low_init_out_pp_af (const_cast<S_GPIOPIN*>(&spigpio->miso), EHRTGPIOSPEED_MID);		// sck
+		_pin_low_init_out_pp (const_cast<S_GPIOPIN*>(&spigpio->cs),1, EHRTGPIOSPEED_MID);		// cs
+
+	
+	__HAL_RCC_SPI1_CLK_ENABLE ();
+  SpiHandle.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_64;
+  SpiHandle.Init.Direction         = SPI_DIRECTION_2LINES;
+  SpiHandle.Init.CLKPhase          = SPI_PHASE_1EDGE;
+  SpiHandle.Init.CLKPolarity       = SPI_POLARITY_LOW;
+  SpiHandle.Init.DataSize          = SPI_DATASIZE_8BIT;
+  SpiHandle.Init.FirstBit          = SPI_FIRSTBIT_MSB;
+  SpiHandle.Init.TIMode            = SPI_TIMODE_DISABLE;
+  SpiHandle.Init.CRCCalculation    = SPI_CRCCALCULATION_DISABLE;
+  SpiHandle.Init.CRCPolynomial     = 7;
+  SpiHandle.Init.NSS               = SPI_NSS_SOFT;
+	SpiHandle.Init.Mode = SPI_MODE_MASTER;
+	HAL_SPI_Init(&SpiHandle);
+	__HAL_SPI_ENABLE(&SpiHandle);
+	
+
 }
 
 
 
-void TSPIHARD::deinit ()
+void TSPI1HARD::deinit ()
 {
-	GPIO_InitTypeDef GPIO_InitStructure;
-	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_12 | GPIO_Pin_15 | GPIO_Pin_13;
-	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;//GPIO_Mode_AF_PP;// GPIO_Mode_IN_FLOATING;
-	GPIO_Init (GPIOB, &GPIO_InitStructure);
-	SPI_Cmd (SPI2, DISABLE);
-	RCC_APB1PeriphClockCmd (RCC_APB1Periph_SPI2, DISABLE);
 
 }
 
 
 
-void TSPIHARD::cs_0 ()
+void TSPI1HARD::cs_0 ()
 {
-_pin_pp_to (&initpinsar[ESPIPIN_CS], false);
-//GPIO_ResetBits (GPIOB, GPIO_Pin_12);
+_pin_output (const_cast<S_GPIOPIN*>(&spigpio->cs), false);
 }
 
 
 
-void TSPIHARD::cs_1 ()
+void TSPI1HARD::cs_1 ()
 {
-_pin_pp_to (&initpinsar[ESPIPIN_CS], true);
+_pin_output (const_cast<S_GPIOPIN*>(&spigpio->cs), true);
 }
 
 
-uint8_t TSPIHARD::txrx (uint8_t byte)
+uint8_t TSPI1HARD::txrx (uint8_t byte)
 {
-while (SPI_I2S_GetFlagStatus(SPI_p, SPI_I2S_FLAG_TXE) == RESET);
-SPI_I2S_SendData(SPI_p, byte);
-while (SPI_I2S_GetFlagStatus(SPI_p, SPI_I2S_FLAG_RXNE) == RESET);
-return SPI_I2S_ReceiveData(SPI_p);
+while (__HAL_SPI_GET_FLAG(&SpiHandle, SPI_FLAG_TXE) == RESET);
+SpiHandle.Instance->DR = byte; 
+while (__HAL_SPI_GET_FLAG(&SpiHandle, SPI_FLAG_RXNE) == RESET);
+return SpiHandle.Instance->DR;
 }
 
 
 
-void TSPIHARD::Wait_cs (unsigned char wt_time)
+void TSPI1HARD::Wait_cs (unsigned char wt_time)
 {
 while (wt_time)
 	{
@@ -113,7 +113,7 @@ while (wt_time)
 
 
 
-void TSPIHARD::csp_spi_read_fast (uint8_t reg_addr_len, uint8_t *reg_addr, uint16_t data_len, uint8_t *data)
+void TSPI1HARD::csp_spi_read_fast (uint8_t reg_addr_len, uint8_t *reg_addr, uint16_t data_len, uint8_t *data)
 {
 //	uint8_t data_tmp;
 	uint16_t i;
@@ -133,7 +133,7 @@ void TSPIHARD::csp_spi_read_fast (uint8_t reg_addr_len, uint8_t *reg_addr, uint1
 
 
 
-void TSPIHARD::csp_spi_write_fast(uint8_t reg_addr_len, uint8_t *reg_addr, uint16_t data_len, uint8_t *data)
+void TSPI1HARD::csp_spi_write_fast (uint8_t reg_addr_len, uint8_t *reg_addr, uint16_t data_len, uint8_t *data)
 {
 	uint8_t data_tmp;
 	uint16_t i;

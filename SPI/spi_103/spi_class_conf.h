@@ -4,8 +4,8 @@
 #include "hard_rut.h"
 enum ESPIPIN {ESPIPIN_CS = 0, ESPIPIN_MOSI = 1, ESPIPIN_SCK = 2, ESPIPIN_MISO = 3, ESPIPIN_ENDENUM = 4};
 
-static const S_GPIOPIN spi_1_initarr[ESPIPIN_ENDENUM] = {{GPIOA, GPIO_Pin_15, true}/*cs*/, {GPIOB, GPIO_Pin_5, true}/*mosi*/, {GPIOB, GPIO_Pin_3, true}/*sck*/, {GPIOB, GPIO_Pin_4, true}/*miso*/};
-static const S_GPIOPIN spi_2_initarr[ESPIPIN_ENDENUM] = {{GPIOB, GPIO_Pin_12, true}/*cs*/, {GPIOB, GPIO_Pin_15, true}/*mosi*/, {GPIOB, GPIO_Pin_13, true}/*sck*/, {GPIOB, GPIO_Pin_14, true}/*miso*/};
+static const S_GPIOPIN spi_1_initarr[ESPIPIN_ENDENUM] = {{GPIOA, GPIO_PIN_15}/*cs*/, {GPIOB, GPIO_PIN_5}/*mosi*/, {GPIOB, GPIO_PIN_3}/*sck*/, {GPIOB, GPIO_PIN_4}/*miso*/};
+static const S_GPIOPIN spi_2_initarr[ESPIPIN_ENDENUM] = {{GPIOB, GPIO_PIN_12}/*cs*/, {GPIOB, GPIO_PIN_15}/*mosi*/, {GPIOB, GPIO_PIN_13}/*sck*/, {GPIOB, GPIO_PIN_14}/*miso*/};
 
 	
 

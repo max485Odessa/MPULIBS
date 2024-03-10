@@ -3,11 +3,8 @@
 
 
 
-//#include "stm32f10x_gpio.h"
-//#include "stm32f10x_rcc.h"
-//#include "stm32f10x_usart.h"
+
 #include "stm32l4xx_hal.h"
-//#include "misc.h"
 #include "rutine.h"
 #include "resources.h"
 
