@@ -15,7 +15,7 @@ TM24CIF::TM24CIF (TI2CIFACE *i2, uint8_t csa, E24MEM m) : chip_sel_adr (0xA0 | (
 
 
 
-bool TM24CIF::write_page (uint16_t adr, uint8_t *src, uint16_t sz_wr, uint16_t &rslt_wr)
+bool TM24CIF::write_page (uint32_t adr, uint8_t *src, uint16_t sz_wr, uint32_t &rslt_wr)
 {
 	bool rv = false;
 	uint16_t wr_cnt = 0, adr_chng = adr & page_contrl_mask;
@@ -52,10 +52,10 @@ bool TM24CIF::write_page (uint16_t adr, uint8_t *src, uint16_t sz_wr, uint16_t &
 
 
 
-bool TM24CIF::write (uint16_t adr, uint8_t *src, uint16_t sz)
+bool TM24CIF::write (uint32_t adr, uint8_t *src, uint32_t sz)
 {
 	bool rv = false;
-	uint16_t szwr_rslt;
+	uint32_t szwr_rslt;
 	while (sz)
 		{
 		if (!write_page (adr, src, sz, szwr_rslt)) break;
@@ -74,10 +74,10 @@ bool TM24CIF::write (uint16_t adr, uint8_t *src, uint16_t sz)
 
 
 
-bool TM24CIF::read (uint16_t adr, uint8_t *dst, uint16_t sz_rd)
+bool TM24CIF::read (uint32_t adr, uint8_t *dst, uint32_t sz_rd)
 {
 	bool rv = false;
-	uint16_t wr_cnt = 0, adr_chng = adr & page_contrl_mask;
+	uint32_t wr_cnt = 0, adr_chng = adr & page_contrl_mask;
 	bool rslt = false;
 	if (sz_rd)
 		{

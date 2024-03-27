@@ -124,16 +124,16 @@ typedef struct {
 
 typedef uint8_t trid_t;
 
-enum ERFRESPSTAT  {ERFRESPSTAT_OK = 0, ERFRESPSTAT_PROGRESS = 1, ERFRESPSTAT_ERROR = 2};
+//enum ERFRESPSTAT  {ERFRESPSTAT_OK = 0, ERFRESPSTAT_PROGRESS = 1, ERFRESPSTAT_ERROR = 2};
 enum ERFDTYPE {ERFDTYPE_RESP = 0, ERFDTYPE_REQ = 1, ERFDTYPE_ENDENUM};
 
 
 
 typedef struct {
 	uint8_t cmd;            // cmd
-    trid_t trid;           // (7 - (1 = req, 0 = resp), 6-5 (ERFRESPSTAT), 4-0 (5 bit transaction id))
+  trid_t trid;           // (7 - (1 = req, 0 = resp), 6-5 (ERFRESPSTAT), 4-0 (5 bit transaction id))
 	uint8_t cmd_size;      // if cmd not support
-    uint8_t crc; 
+  uint8_t crc; 
 	local_rf_id_t src_id;
 	local_rf_id_t dst_id;
 } S_RFHEADER_T;
@@ -219,6 +219,7 @@ typedef struct {
 } S_CMD_CALL_EVENT_RESP_T;
 
 
+
 // ------------------ GET_STATE ----------------
 typedef struct {
 	S_RFHEADER_T hdr;
@@ -261,7 +262,7 @@ typedef struct {
 
 
 uint8_t calculate_crc8rf (uint8_t *src, uint32_t sz);
-void decode_trid (trid_t d,  ERFDTYPE *tp, ERFRESPSTAT *srslt, uint8_t *trid );
-trid_t encode_trid (ERFDTYPE tp, ERFRESPSTAT srs, uint8_t trid);
+void decode_trid (trid_t d,  ERFDTYPE *tp, ERESPSTATE *srslt, uint8_t *trid );
+trid_t encode_trid (ERFDTYPE tp, ERESPSTATE srs, uint8_t trid);
 
 #endif

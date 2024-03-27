@@ -3,9 +3,8 @@
 
 
 #include <stdint.h>
-#include "TM24Cxxx.h"
 #include "STMSTRING.h"
-#include "TM24Cxxx.h"
+#include "STORAGEIF.h"
 
 typedef enum MAV_PARAM_TYPE
 {
@@ -92,7 +91,6 @@ typedef struct {
 
 #pragma pack (pop)
 
-
 class TPARAMCONTRL {
 	protected:
 		bool f_need_save;
@@ -103,7 +101,7 @@ class TPARAMCONTRL {
 		uint32_t param_ext_max_alocate;
 		uint32_t param_ext_count;
 	
-		TEEPROMIF *flashmem;
+		IFSTORAGE *flashmem;
 		const uint32_t c_startflash_adr;
 		const uint32_t c_sizeflash;	
 
@@ -114,9 +112,10 @@ class TPARAMCONTRL {
 		S_MVPARAM_HDR_T *find_param_to_name (char *name, long *dst_ix);
 		
 		void set_param_to_default (long ix);
+		uint32_t GN_CRC32 (void *ldata, uint32_t size);
 	
 	public:
-		TPARAMCONTRL (TEEPROMIF *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp);
+		TPARAMCONTRL (IFSTORAGE *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp);
 		
 		bool set_value (long ix, S_MDAT_T v);
 		bool set_value (char *p, S_MDAT_T v);

@@ -16,8 +16,16 @@ typedef struct {
 
 enum E24MEM {E24MEM_01 = 0, E24MEM_02, E24MEM_04, E24MEM_08, E24MEM_16, E24MEM_32, E24MEM_64, E24MEM_128, E24MEM_256, E24MEM_512, E24MEM_ENDENUM};
 
+class TEEPROMIF {
+	public:
+		virtual bool write (uint32_t adr, uint8_t *src, uint32_t sz) = 0;
+		virtual bool read (uint32_t adr, uint8_t *dst, uint32_t sz) = 0;
+};
+	
 
-class TM24CIF {
+
+
+class TM24CIF: public TEEPROMIF {
 	protected:
 		TI2CIFACE *i2c;
 		const E24MEM memtype;
@@ -27,13 +35,13 @@ class TM24CIF {
 	
 		//virtual uint8_t genchipsel () = 0;
 		virtual bool adress_tx (uint32_t adr, bool f_read_bit) = 0;
-		bool write_page (uint16_t adr, uint8_t *src, uint16_t sz_wr, uint16_t &rslt_wr);
+		bool write_page (uint32_t adr, uint8_t *src, uint16_t sz_wr, uint32_t &rslt_wr);
 		TM24CIF (TI2CIFACE *i2, uint8_t csa, E24MEM m);
 	
 	public:
 		
-		bool write (uint16_t adr, uint8_t *src, uint16_t sz);
-		bool read (uint16_t adr, uint8_t *dst, uint16_t sz);
+		virtual bool write (uint32_t adr, uint8_t *src, uint32_t sz)  override;
+		virtual bool read (uint32_t adr, uint8_t *dst, uint32_t sz) override;
 };
 
 

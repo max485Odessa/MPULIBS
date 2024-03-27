@@ -2,7 +2,7 @@
 
 
 
-TPARAMCONTRL::TPARAMCONTRL (TEEPROMIF *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp) : c_startflash_adr (start_m), c_sizeflash (size_m)
+TPARAMCONTRL::TPARAMCONTRL (IFSTORAGE *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp) : c_startflash_adr (start_m), c_sizeflash (size_m)
 {
 	param_internal = lst;
 	param_int_count = cp;
@@ -42,6 +42,37 @@ uint32_t TPARAMCONTRL::param_external_cnt ()
 uint32_t TPARAMCONTRL::param_full_cnt ()
 {
 	return param_ext_count + param_int_count;
+}
+
+
+
+uint32_t TPARAMCONTRL::GN_CRC32 (void *ldata, uint32_t size)
+{
+const uint32_t one_sig = 0x724169A3;
+const uint32_t zero_sig = 0x28181277;
+const unsigned char mask_sig = 0x18;
+unsigned long crc = 0;
+if (ldata && size)
+    {
+    unsigned char *src = (unsigned char*)ldata;
+    unsigned char dat;
+    while (size)
+        {
+        dat = *src++;
+        if (dat & mask_sig)
+            {
+            crc += one_sig;
+            }
+        else
+            {
+            crc += zero_sig;
+            }
+        crc <<= 1;
+        crc += dat;
+        size--;
+        }
+    }
+return crc;
 }
 
 
