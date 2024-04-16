@@ -126,7 +126,20 @@ typedef uint8_t trid_t;
 
 //enum ERFRESPSTAT  {ERFRESPSTAT_OK = 0, ERFRESPSTAT_PROGRESS = 1, ERFRESPSTAT_ERROR = 2};
 enum ERFDTYPE {ERFDTYPE_RESP = 0, ERFDTYPE_REQ = 1, ERFDTYPE_ENDENUM};
+enum ERFFMARK {ERFFMARK_MIDLE = 0, ERFFMARK_LAST = 1, ERFFMARK_FIST = 2, ERFFMARK_FISTLAST = 3};
+enum ERFTACK {ERFTACK_NONE = 0, ERFTACK_ACK_A = 1, ERFTACK_ACK_B = 2, ERFTACK_ENDENUM = 3};
+enum ERFSDEVICE {ERFSDEVICE_ACTIVE = 0, ERFSDEVICE_INIT = 1,  ERFSDEVICE_HOLD = 2, ERFSDEVICE_ERROR = 3, ERFSDEVICE_ENDENUM = 4};
 
+
+typedef struct {
+	local_rf_id_t src_id;
+	local_rf_id_t dst_id;
+	uint8_t maxsectros;
+	uint8_t cur_sector;	// используется как адрес оффсет внутри приемного буфера (по нему составляется битовая карта принятых секторов для ack ответа)
+	uint8_t tag;						// 7b - (1 = req/ 0 = resp), 6-5b (10 - fist frame, 00 - midle, 01 - last, 11 - fist & last), 4-3b (ack type req/resp), 2 - hard error, 1-0b (status state)
+	uint8_t local_size;			// полезных байт во фрейме
+	uint8_t crc;						// если коректна - таблица секторов для ack метится валидным битовым состоянием
+} S_RFMARKTAG_T;
 
 
 typedef struct {

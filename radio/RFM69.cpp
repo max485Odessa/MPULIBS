@@ -1,12 +1,8 @@
 #include "RFM69.h"
-//#include "comonrut.h"
-//#include "stm32f10x_gpio.h"
-//#include "misc.h"
-//#include "stm32f10x_exti.h"
 #include "hard_rut.h"
 
 
-TRFM69::TRFM69 (ISPI *s, const uint16_t szz, const S_GPIOPIN *p) : c_trnsm_bufer_sizes (szz + 2), pins_ir (p)
+TRFM69::TRFM69 (ISPI *s, const uint16_t szz, const S_GPIOPIN *p) : c_trnsm_bufer_sizes (szz + 2), pins_ir (p), c_datapayload_size (RF69_MAX_DATA_LEN-sizeof(S_RFMARKTAG_T))
 {
 SPIx = s;
 framebuffer = new uint8_t [c_trnsm_bufer_sizes];
@@ -20,8 +16,7 @@ f_rx_frame_blocked = true;
 Indik_Signal_rx = 0; Indik_Signal_tx = 0;
 SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_rx);
 SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_tx);
-//F_EndTx = true;
-//SYSBIOS::DEL_TIMER_ISR (&Timer_RxOn);
+
 _pin_low_init_out_pp (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), 1, EHRTGPIOSPEED_MID);
 _pin_low_init_in (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_ISR]), 1, EHRTGPIOSPEED_MID, EHRTGPIOPULL_UP);
 AddObjectToExecuteManager ();
@@ -29,12 +24,12 @@ Init ();
 }
 
 
-
+/*
 IFCRFTX *TRFM69::create (ISPI *s, const uint16_t szz, const S_GPIOPIN *p)	// , IRFRX *obbj
 {
 	return new TRFM69 (s, szz, p); 
 }
-
+*/
 
 
 bool TRFM69::get_isr_pin ()

@@ -8,6 +8,7 @@
 #include "TFTASKIF.h"
 #include "rfbasecmd.h"
 #include "hard_rut.h"
+#include "rfcmddefine.h"
 
 
 typedef unsigned char uint8_t;
@@ -130,7 +131,7 @@ class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
 		uint8_t GetVersion ();
 		void mode_sw_to_rx ();
 		bool ic_sendFrame (void* buffer, uint16_t bufferSize, ERFMODE endsw_to);
-		TRFM69 (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
+		
 		
 		const S_GPIOPIN *pins_ir;
 		
@@ -141,11 +142,12 @@ class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
 		
 		virtual bool GetIndicatorRx ();
 		virtual bool GetIndicatorTx ();
-		virtual bool send (uint8_t *src, uint16_t sz);
+		bool send (uint8_t *src, uint16_t sz);
+		const uint16_t c_datapayload_size;
 	
 	public:
-		
-		static IFCRFTX *create (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
+		TRFM69 (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
+		//static IFCRFTX *create (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
 
 };
 
