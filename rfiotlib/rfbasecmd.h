@@ -9,7 +9,7 @@
 #include "rutine.h"
 #include "rfcmddefine.h"
 
-enum ERFMODE {ERFMODE_SLEEP = 0, ERFMODE_STANDBY = 1, ERFMODE_SYNT = 2, ERFMODE_RX = 3, ERFMODE_TX = 4};
+
 enum ETRSSTAT {ETRS_SUCCESS = 0, ETRS_TIMEOUT = 1, ETRS_ERROR = 2};
 enum EEVENTRSLT {EEVENTRSLT_OK = 0, EEVENTRSLT_ERROR = 1, EEVENTRSLT_TIMEOUT = 2, EEVENTRSLT_ENDENUM = 3};
 
@@ -50,6 +50,9 @@ class IFCRFTX {
 		virtual bool GetIndicatorTx () = 0;
 		virtual bool send (uint8_t *src, uint16_t sz) = 0;
 };
+
+
+
 
 
 

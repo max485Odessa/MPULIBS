@@ -2,8 +2,9 @@
 
 
 
-TRFMASTER::TRFMASTER (ISPI *s, const uint16_t szz, const S_GPIOPIN *p) : TRFM69 (s, szz, p)
+TRFMASTER::TRFMASTER (TRADIOIF *r) : c_datapayload_size (r->frame_size()- sizeof(S_RFMARKTAG_T))
 {
+	radio = r;
 	acksectortab = new uint8_t[c_datapayload_size];
 	rxsector = new uint8_t[c_datapayload_size];
 }
@@ -60,6 +61,7 @@ bool TRFMASTER::is_tx_processed ()
 
 void TRFMASTER::send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, uint8_t sect)
 {
+	need_ack = ackt;
 }
 
 
@@ -68,6 +70,7 @@ void TRFMASTER::send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, ui
 void TRFMASTER::Task ()
 {
 	if (is_tx_processed ()) return;
+	if (need_ack != ERFTACK_NONE) {};
 	switch (sw_tx)
 		{
 		case ESWTXA_TX_FIST:
@@ -80,7 +83,7 @@ void TRFMASTER::Task ()
 				cur_txsect = 0;
 				send_sector (tx_src, cur_txsize, cur_txmark, ERFTACK_ACK_A, cur_txsect);
 				clear_rx_src ();
-				cur_txtimeout.set (100);
+				cur_swtimeout.set (100);
 				sw_tx = ESWTXA_RESP_FIST;
 				}
 			else
@@ -91,7 +94,7 @@ void TRFMASTER::Task ()
 			}
 		case ESWTXA_RESP_FIST:
 			{
-			if (cur_txtimeout.get ())
+			if (cur_swtimeout.get ())
 				{
 				if (read_rx_rf_sector (rxsector))
 					{
@@ -166,7 +169,7 @@ void TRFMASTER::Task ()
 				cur_txmark = ERFFMARK_LAST;
 				send_sector (tx_src, cur_txsize, cur_txmark, ERFTACK_ACK_B, cur_txsect);
 				clear_rx_src ();
-				cur_txtimeout.set (100);
+				cur_swtimeout.set (100);
 				sw_tx = ESWTXA_RESP_LAST;
 				}
 			else
@@ -177,7 +180,7 @@ void TRFMASTER::Task ()
 			}
 		case ESWTXA_RESP_LAST:
 			{
-			if (cur_txtimeout.get ())
+			if (cur_swtimeout.get ())
 				{
 				if (read_rx_rf_sector (rxsector))
 					{
@@ -215,7 +218,7 @@ void TRFMASTER::Task ()
 
 
 
-void TRFMASTER::tx_data (void *src, uint32_t sz, IFEVENT *tev)
+void TRFMASTER::tx_data (void *src, uint32_t sz)
 {
 	if (sz)
 		{

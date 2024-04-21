@@ -43,16 +43,14 @@ ESWTXA_ENDENUM, \
 #define C_RF_REPEATE 3
 
 
-class TRFMASTER: public TRFM69 {
+class TRFMASTER {
 		virtual void Task ();
 		IFCRFTX *txobj;
 		IFEVENT *evcb_tx;
-	
+		TRADIOIF *radio;
+		const uint16_t c_datapayload_size;
 		ESWTXA sw_tx;
-		//uint8_t tx_repeate;
-		//uint8_t c_tx_repeate;
-		
-		//uint8_t expect_rx_seq;
+
 		uint8_t *acksectortab;
 		uint8_t *rxsector;
 		
@@ -69,7 +67,9 @@ class TRFMASTER: public TRFM69 {
 		ERFFMARK cur_txmark;
 		uint8_t cur_txsect;
 		uint8_t cur_maxtxsectors;
-		SYSBIOS::Timer cur_txtimeout;
+		SYSBIOS::Timer cur_swtimeout;
+		ERFTACK need_ack;
+		//SYSBIOS::Timer cur_acktimeout;
 		
 		
 		bool is_tx_processed ();
@@ -81,8 +81,8 @@ class TRFMASTER: public TRFM69 {
 		void send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, uint8_t sect);
 		
 	public:
-		TRFMASTER (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
-		void tx_data (void *src, uint32_t sz, IFEVENT *tev);
+		TRFMASTER (TRADIOIF *r);
+		void tx_data (void *src, uint32_t sz);
 		void tx_repeate_set (uint8_t rcnt);
 	
 };

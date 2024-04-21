@@ -11,6 +11,9 @@
 #define C_PARAMCAPTION_SIZE 32
 #define C_MEAS_TXT_VAL_SIZE 8
 
+
+
+
 enum ESENSTYPE {ESENSTYPE_NONE = 0, \
 ESENSTYPE_PRESSURE = 1, \
 };
@@ -115,15 +118,16 @@ ECMDLAN_GET_STATE = 5,  \
 ECMDLAN_ENDENUM = 6};
 
 
-
+/*
 typedef struct {
     uint8_t pack_info;      // 7-6 bits (00 - midle payload, 01 - stop frame, 10 - start frame, 11 - start and stop frame), 5 - bit (1 - master tx, 0 - slave tx), 4-0 (transaction id)
     uint8_t size;           // local size
     uint8_t payload[60];
 } S_RFCAPSULA_T;
+*/
 
 typedef uint8_t trid_t;
-
+enum ERFMODE {ERFMODE_SLEEP = 0, ERFMODE_STANDBY = 1, ERFMODE_SYNT = 2, ERFMODE_RX = 3, ERFMODE_TX = 4};
 //enum ERFRESPSTAT  {ERFRESPSTAT_OK = 0, ERFRESPSTAT_PROGRESS = 1, ERFRESPSTAT_ERROR = 2};
 enum ERFDTYPE {ERFDTYPE_RESP = 0, ERFDTYPE_REQ = 1, ERFDTYPE_ENDENUM};
 enum ERFFMARK {ERFFMARK_MIDLE = 0, ERFFMARK_LAST = 1, ERFFMARK_FIST = 2, ERFFMARK_FISTLAST = 3};
@@ -134,11 +138,11 @@ enum ERFSDEVICE {ERFSDEVICE_ACTIVE = 0, ERFSDEVICE_INIT = 1,  ERFSDEVICE_HOLD = 
 typedef struct {
 	local_rf_id_t src_id;
 	local_rf_id_t dst_id;
-	uint8_t maxsectros;
+	uint8_t maxsectors;
 	uint8_t cur_sector;	// используется как адрес оффсет внутри приемного буфера (по нему составляется битовая карта принятых секторов для ack ответа)
 	uint8_t tag;						// 7b - (1 = req/ 0 = resp), 6-5b (10 - fist frame, 00 - midle, 01 - last, 11 - fist & last), 4-3b (ack type req/resp), 2 - hard error, 1-0b (status state)
 	uint8_t local_size;			// полезных байт во фрейме
-	uint8_t crc;						// если коректна - таблица секторов для ack метится валидным битовым состоянием
+	uint8_t crc;						
 } S_RFMARKTAG_T;
 
 
@@ -150,6 +154,18 @@ typedef struct {
 	local_rf_id_t src_id;
 	local_rf_id_t dst_id;
 } S_RFHEADER_T;
+
+
+
+class TRADIOIF {
+
+	public:
+		virtual void tx (S_RFMARKTAG_T *src, uint16_t sz, ERFMODE endsw_to) = 0;
+		virtual bool is_tx () = 0;
+		virtual uint16_t is_rx () = 0;
+		virtual uint16_t rx (S_RFMARKTAG_T *dst, uint16_t max_dstsz0) = 0;
+		virtual const uint16_t frame_size () = 0;
+};
 
 
 typedef struct {
