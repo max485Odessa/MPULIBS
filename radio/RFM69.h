@@ -95,8 +95,8 @@ class TRFM69: public TFFC, public TRADIOIF {		// IFCRFTX
 		ISPI *SPIx;
 		bool GetIntRFMLevel (void);
 		
-		utimer_t Indik_Signal_tx;
-		utimer_t Indik_Signal_rx;
+		SYSBIOS::Timer Indik_timeout_tx;
+		SYSBIOS::Timer Indik_timeout_rx;
 
 		void ResetPinTo (bool vals_set);
 		void ResetPulseToPin ();
@@ -128,10 +128,10 @@ class TRFM69: public TFFC, public TRADIOIF {		// IFCRFTX
 		virtual bool GetIndicatorTx ();
 		
 	
-		virtual void tx (S_RFMARKTAG_T *src, uint16_t sz, ERFMODE endsw_to);
+		virtual void tx (S_RFMARKTAG_T *src, ERFMODE endsw_to);
 		virtual bool is_tx ();
-		virtual uint16_t is_rx ();
-		virtual uint16_t rx (S_RFMARKTAG_T *dst,  uint16_t max_dstsz0);
+		virtual bool is_rx ();
+		virtual bool rx (S_RFMARKTAG_T *dst,  uint16_t max_dstsz0);
 		virtual const uint16_t frame_size ();
 	
 	public:

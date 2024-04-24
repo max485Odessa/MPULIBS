@@ -21,10 +21,11 @@ return rv;
 
 
 
-uint8_t calculate_crc8rf (uint8_t *src, uint32_t sz)
+uint8_t calculate_crc8rf (void *s, uint32_t sz)
 {
 uint8_t crc = 0;
 uint8_t dat;
+uint8_t *src = (uint8_t*)s;
 while (sz)
     {
     dat = *src++;

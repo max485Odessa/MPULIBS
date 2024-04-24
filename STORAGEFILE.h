@@ -20,8 +20,8 @@ class TSTORAGEFILE: public IFSTORAGE {
         TSTORAGEFILE (char *filename, const uint32_t size);
         ~TSTORAGEFILE ();
         virtual uint32_t file_size ();
-        virtual bool Write (uint32_t adrix, uint8_t *src, uint32_t wr_size);
-        virtual bool Read (uint32_t adrix, uint8_t *dst, uint32_t wr_size);
+        virtual bool write (uint32_t adrix, uint8_t *src, uint32_t wr_size);
+        virtual bool read (uint32_t adrix, uint8_t *dst, uint32_t wr_size);
 };
 
 

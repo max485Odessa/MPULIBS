@@ -89,7 +89,7 @@ bool rv=1;
         MyTimeout.WriteTotalTimeoutMultiplier=0;
         MyTimeout.WriteTotalTimeoutConstant=0;     // 1
 
-        if (!SetCommTimeouts(PortLocal1,&MyTimeout)) rv=0;
+        //if (!SetCommTimeouts(PortLocal1,&MyTimeout)) rv=0;
 
 return rv;
 }
@@ -230,16 +230,35 @@ if (src && sz && HandleOpenPort != INVALID_HANDLE_VALUE)
             }
 
         bool f_rslt = WriteFile (HandleOpenPort, src, sz, &bctrns, &writeOL);
-        DWORD signaled = WaitForSingleObject(writeOL.hEvent, 1000);   // INFINITE   2
+        DWORD signaled = WaitForSingleObject(writeOL.hEvent, 10);   // INFINITE   2   1000
         bool ret = signaled == WAIT_OBJECT_0 && GetOverlappedResult (HandleOpenPort, &writeOL, &bctrns, false);      // FALSE
         if (ret)
             {
             bps_counter_tx_local += bctrns;
             rv = true;
             }
+        else
+            {
+            rv = false;
+            }
       }
 return rv;
 }
+
+
+
+unsigned long TUARTSTREAM::GetRX_BPS ()
+{
+  return bps_counter_rx;
+}
+
+
+
+unsigned long TUARTSTREAM::GetTX_BPS ()
+{
+  return bps_counter_tx;
+}
+
 
 
 
@@ -265,6 +284,12 @@ switch (need_reconnect)
     }
 }
 
+
+
+bool TUARTSTREAM::is_recon_status ()
+{
+return (need_reconnect == EUSRTRCON_NEED)?true:false;
+}
 
 
 
@@ -305,7 +330,7 @@ void TUARTSTREAM::Task_Rx ()
             return;
             }
 
-        signal_rxi = WaitForSingleObject (readOL.hEvent, 40);
+        signal_rxi = WaitForSingleObject (readOL.hEvent, 100);   // 40
         switch (signal_rxi)
             {
             case WAIT_OBJECT_0:
@@ -330,6 +355,7 @@ void TUARTSTREAM::Task_Rx ()
                         if (ReadFile (HandleOpenPort, lpRxDestRam, btr_rxi, &temp_rxi, &readOL))
                           {
                           rxrata_to_fifo (lpRxDestRam, temp_rxi);
+                          bps_counter_rx_local += temp_rxi;
                           }
 
                         }
@@ -365,7 +391,17 @@ fifo_rx->push ((uint8_t*)src, sz);
 
 uint32_t TUARTSTREAM::rxif_in (void *dst, uint32_t max_sz)
 {
-return fifo_rx->pop ((uint8_t*)dst, max_sz);
+uint32_t rv = 0;
+if (!dst || !max_sz)
+    {
+    fifo_rx->clear();
+    }
+else
+    {
+    rv = fifo_rx->pop ((uint8_t*)dst, max_sz);
+    }
+
+return rv;
 }
 
 

@@ -12,11 +12,6 @@ isRFM69HW = 1;                     // if RFM69HW model matches high power enable
 powerLevel = 31;
 promiscuousMode = 0;
 
-
-Indik_Signal_rx = 0; Indik_Signal_tx = 0;
-SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_rx);
-SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_tx);
-
 _pin_low_init_out_pp (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), 1, EHRTGPIOSPEED_MID);
 _pin_low_init_in (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_ISR]), 1, EHRTGPIOSPEED_MID, EHRTGPIOPULL_UP);
 AddObjectToExecuteManager ();
@@ -680,7 +675,7 @@ if (!get_isr_pin ())
 				if (f_rx_ok) 
 					{
 					receive_size = currxsize;
-					Indik_Signal_rx = C_LEDBLINK_TIME;
+					Indik_timeout_rx.set (C_LEDBLINK_TIME);
 					}
 				}
 			break;
@@ -696,11 +691,12 @@ if (!get_isr_pin ())
 
 
 
-void TRFM69::tx (S_RFMARKTAG_T *src,  uint16_t sz, ERFMODE endsw_to)
+void TRFM69::tx (S_RFMARKTAG_T *src, ERFMODE endsw_to)
 {
 	bool rv = true;
 	unsigned long millis_current;
 	uint8_t *buffer = (uint8_t*)src;
+	uint16_t sz = src->local_size + sizeof(S_RFMARKTAG_T);
   ic_setMode (ERFMODE_STANDBY); // turn off receiver to prevent reception while filling fifo
 	ic_setMode (ERFMODE_TX);
   if (sz > RF69_MAX_DATA_LEN) sz = RF69_MAX_DATA_LEN;
@@ -713,7 +709,7 @@ void TRFM69::tx (S_RFMARKTAG_T *src,  uint16_t sz, ERFMODE endsw_to)
 
     //ic_setMode (ERFMODE_TX);
     millis_current = SYSBIOS::GetTickCountLong();
-		Indik_Signal_tx = C_LEDBLINK_TIME;
+		Indik_timeout_tx.set (C_LEDBLINK_TIME);
     while (get_isr_pin ()) // if (!get_isr_pin ())
 			{
 			if (((SYSBIOS::GetTickCountLong() - millis_current) >= RF69_TX_LIMIT_MS)) 
@@ -736,7 +732,7 @@ bool TRFM69::is_tx ()
 
 
 
-uint16_t TRFM69::is_rx ()
+bool TRFM69::is_rx ()
 {
 	return receive_size;
 }
@@ -750,7 +746,7 @@ const uint16_t TRFM69::frame_size ()
 
 
 
-uint16_t TRFM69::rx (S_RFMARKTAG_T *dst, uint16_t max_dstsz0)
+bool TRFM69::rx (S_RFMARKTAG_T *dst, uint16_t max_dstsz0)
 {
 	uint16_t rv = receive_size;
 	if (rv) {
@@ -835,23 +831,16 @@ return rv;
 
 
 
-
-
 bool TRFM69::GetIndicatorRx ()
 {
-return (Indik_Signal_rx)?true:false;
+return (Indik_timeout_rx.get())?true:false;
 }
 
 
 
 bool TRFM69::GetIndicatorTx ()
 {
-	return (Indik_Signal_tx)?true:false;
+	return (Indik_timeout_tx.get())?true:false;
 }
-
-
-
-
-
 
 

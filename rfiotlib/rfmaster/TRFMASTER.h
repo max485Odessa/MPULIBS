@@ -45,8 +45,13 @@ ESWTXA_ENDENUM, \
 
 class TRFMASTER {
 		virtual void Task ();
-		IFCRFTX *txobj;
-		IFEVENT *evcb_tx;
+		local_rf_id_t self_id;
+		local_rf_id_t dest_id;
+		bool f_tx_hard_error;
+		bool f_tx_req_type;
+		ERFSDEVICE tx_device_status;
+		//IFCRFTX *txobj;
+		//IFEVENT *evcb_tx;
 		TRADIOIF *radio;
 		const uint16_t c_datapayload_size;
 		ESWTXA sw_tx;
@@ -79,10 +84,16 @@ class TRFMASTER {
 		bool check_crc (S_RFMARKTAG_T *f);
 		bool check_selfid (S_RFMARKTAG_T *f);
 		void send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, uint8_t sect);
+		//void set_destid (local_rf_id_t dstid);
 		
 	public:
-		TRFMASTER (TRADIOIF *r);
-		void tx_data (void *src, uint32_t sz);
+		TRFMASTER (TRADIOIF *r, local_rf_id_t slf);
+		static uint8_t tagbytegen (bool f_hrder, bool f_req, ERFFMARK m, ERFTACK ak, ERFSDEVICE dvs);
+		void set_harderror_bit (bool v);
+
+		void set_device_stat_bit (ERFSDEVICE dv);
+		void tx_request_data (local_rf_id_t dstid, void *src, uint32_t sz);
+		void tx_responce_data (local_rf_id_t dstid, void *src, uint32_t sz);
 		void tx_repeate_set (uint8_t rcnt);
 	
 };

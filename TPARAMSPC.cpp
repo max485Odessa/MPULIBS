@@ -18,7 +18,7 @@ uint32_t read_sz = sizeof(S_DATAFLASH_T)*c_list_cnt + sizeof(uint32_t);
 dloc = (S_DATAFLASH_T*)new uint8_t[read_sz];
 if (mem->file_size() == read_sz)
     {
-    if (!mem->Read (0, (uint8_t*)dloc, read_sz)) {
+    if (!mem->read (0, (uint8_t*)dloc, read_sz)) {
         clear ();
         }
     else
@@ -119,8 +119,8 @@ if (mem)
     {
     uint32_t wr_sz = sizeof(S_DATAFLASH_T)*c_list_cnt;
     uint32_t crc32 = calculate_crc ((uint8_t*)dloc, wr_sz);
-    mem->Write (0, (uint8_t*)dloc, wr_sz);
-    mem->Write (wr_sz, (uint8_t*)&crc32, sizeof(crc32));
+    mem->write (0, (uint8_t*)dloc, wr_sz);
+    mem->write (wr_sz, (uint8_t*)&crc32, sizeof(crc32));
     }
 }
 

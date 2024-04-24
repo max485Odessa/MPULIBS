@@ -1,9 +1,10 @@
 #include "TRFMASTER.H"
+#include "rfcmddefine.h"
 
 
-
-TRFMASTER::TRFMASTER (TRADIOIF *r) : c_datapayload_size (r->frame_size()- sizeof(S_RFMARKTAG_T))
+TRFMASTER::TRFMASTER (TRADIOIF *r, local_rf_id_t slf) : c_datapayload_size (r->frame_size()- sizeof(S_RFMARKTAG_T))
 {
+	self_id = slf;
 	radio = r;
 	acksectortab = new uint8_t[c_datapayload_size];
 	rxsector = new uint8_t[c_datapayload_size];
@@ -59,9 +60,57 @@ bool TRFMASTER::is_tx_processed ()
 
 
 
+
+void TRFMASTER::set_harderror_bit (bool v)
+{
+	f_tx_hard_error = v;
+}
+
+
+
+
+
+void TRFMASTER::set_device_stat_bit (ERFSDEVICE dv)
+{
+tx_device_status = dv;
+}
+
+
+
+uint8_t TRFMASTER::tagbytegen (bool f_hrder, bool f_req, ERFFMARK m, ERFTACK ak, ERFSDEVICE dvs)
+{
+uint8_t rv = m;
+rv <<= 5; rv &= 0x60;	// m
+rv |= (((uint8_t)ak) << 3) & 0x18;	// ak
+rv |= ((uint8_t)dvs) & 0x03;	// dvs
+if (f_hrder) rv |= 2;
+if (f_req) rv |= 128;
+return rv;
+}
+
+
+
+// S_RFMARKTAG_T *src, uint16_t sz, ERFMODE endsw_to
+
 void TRFMASTER::send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, uint8_t sect)
 {
-	need_ack = ackt;
+	if (scr && sz && sz <= c_datapayload_size)
+		{
+		S_RFMARKTAG_T *hdr = (S_RFMARKTAG_T*)scr;
+		hdr->crc = 0;
+		hdr->cur_sector = sect;
+		hdr->dst_id = dest_id;
+		hdr->local_size = sz;
+		hdr->maxsectors = cur_maxtxsectors;
+		hdr->src_id = self_id;
+		hdr->tag = tagbytegen (f_tx_hard_error, f_tx_req_type, m, ackt, tx_device_status);
+		hdr->crc = calculate_crc8rf (hdr, sz + sizeof(S_RFMARKTAG_T));
+		ERFMODE rfswtomode = ERFMODE_RX;
+		if (m == ERFFMARK_MIDLE) rfswtomode = ERFMODE_TX;
+		radio->tx (hdr, rfswtomode);
+		need_ack = ackt;		
+		}
+
 }
 
 
@@ -218,8 +267,10 @@ void TRFMASTER::Task ()
 
 
 
-void TRFMASTER::tx_data (void *src, uint32_t sz)
+void TRFMASTER::tx_request_data (local_rf_id_t dstid, void *src, uint32_t sz)
 {
+	dest_id = dstid;
+	f_tx_req_type = true;
 	if (sz)
 		{
 		uint16_t secsz = sz / c_datapayload_size;

@@ -43,7 +43,7 @@ if (wrrd) delete wrrd;
 
 
 
-bool TSTORAGEFILE::Write (uint32_t adrix, uint8_t *src, uint32_t wr_size)
+bool TSTORAGEFILE::write (uint32_t adrix, uint8_t *src, uint32_t wr_size)
 {
 bool rv = false;
 if (f_objok && wrrd->OpenStream (c_filename)) {
@@ -62,7 +62,7 @@ return rv;
 
 
 
-bool TSTORAGEFILE::Read (uint32_t adrix, uint8_t *dst, uint32_t rd_size)
+bool TSTORAGEFILE::read (uint32_t adrix, uint8_t *dst, uint32_t rd_size)
 {
 bool rv = false;
 if (f_objok && wrrd->OpenStream (c_filename)) {
