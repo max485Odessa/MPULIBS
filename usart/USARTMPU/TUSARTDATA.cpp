@@ -1,10 +1,5 @@
 #include "tusartdata.h"
 
-TSERIALISR *TSERIALISR::ifc[ESYSUSART_ENDENUM] = {0,0,0,0,0,0};
-static uint8_t usartisr_arr[ESYSUSART_ENDENUM] = {USART1_IRQn, USART2_IRQn, USART3_IRQn, UART4_IRQn, UART5_IRQn, USART6_IRQn};
-static S_USARTPINS_T usarthardarr[ESYSUSART_ENDENUM] = {{GPIOA, GPIO_PIN_9/*tx*/, GPIOA, GPIO_PIN_10/*rx*/, USART1, GPIO_AF7_USART1}, {GPIOA, GPIO_PIN_2/*tx*/, GPIOA, GPIO_PIN_3/*rx*/, USART2, GPIO_AF7_USART2}, \
-{GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, USART3, GPIO_AF7_USART3}, {GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, UART4, GPIO_AF8_UART4}, {GPIOC, GPIO_PIN_12/*tx*/, GPIOD, GPIO_PIN_2/*rx*/, UART5, GPIO_AF8_UART5}, \
-{GPIOC, GPIO_PIN_6/*tx*/, GPIOC, GPIO_PIN_7/*rx*/, USART6, GPIO_AF8_USART6}};
 
 #define _IFCUSART_UART_DISABLE_IT(__HANDLE__, __INTERRUPT__)  ((((__INTERRUPT__) >> 28U) == UART_CR1_REG_INDEX)? ((__HANDLE__)->CR1 &= ~((__INTERRUPT__) & UART_IT_MASK)): \
                                                            (((__INTERRUPT__) >> 28U) == UART_CR2_REG_INDEX)? ((__HANDLE__)->CR2 &= ~((__INTERRUPT__) & UART_IT_MASK)): \
@@ -14,6 +9,23 @@ static S_USARTPINS_T usarthardarr[ESYSUSART_ENDENUM] = {{GPIOA, GPIO_PIN_9/*tx*/
                                                            ((__HANDLE__)->CR3 |= ((__INTERRUPT__) & UART_IT_MASK)))
 #define _IFCUSART_UART_CLEAR_FLAG(__HANDLE__, __FLAG__) ((__HANDLE__)->SR = ~(__FLAG__))
 #define _IFCUSART_UART_ENABLE(__HANDLE__)               ((__HANDLE__)->CR1 |=  USART_CR1_UE)
+
+
+#if (HRDCPU == 1)
+TSERIALISR *TSERIALISR::ifc[ESYSUSART_ENDENUM] = {0,0,0};
+static uint8_t usartisr_arr[ESYSUSART_ENDENUM] = {USART1_IRQn, USART2_IRQn, USART3_IRQn};
+static S_USARTPINS_T usarthardarr[ESYSUSART_ENDENUM] = {{GPIOB, GPIO_PIN_6/*tx*/, GPIOB, GPIO_PIN_7/*rx*/, USART1, 0}, {GPIOA, GPIO_PIN_2/*tx*/, GPIOA, GPIO_PIN_3/*rx*/, USART2, 0}, \
+{GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, USART3, 0}};
+#endif
+
+#if (HRDCPU == 4)
+TSERIALISR *TSERIALISR::ifc[ESYSUSART_ENDENUM] = {0,0,0,0,0,0};
+static uint8_t usartisr_arr[ESYSUSART_ENDENUM] = {USART1_IRQn, USART2_IRQn, USART3_IRQn, UART4_IRQn, UART5_IRQn, USART6_IRQn};
+static S_USARTPINS_T usarthardarr[ESYSUSART_ENDENUM] = {{GPIOA, GPIO_PIN_9/*tx*/, GPIOA, GPIO_PIN_10/*rx*/, USART1, GPIO_AF7_USART1}, {GPIOA, GPIO_PIN_2/*tx*/, GPIOA, GPIO_PIN_3/*rx*/, USART2, GPIO_AF7_USART2}, \
+{GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, USART3, GPIO_AF7_USART3}, {GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, UART4, GPIO_AF8_UART4}, {GPIOC, GPIO_PIN_12/*tx*/, GPIOD, GPIO_PIN_2/*rx*/, UART5, GPIO_AF8_UART5}, \
+{GPIOC, GPIO_PIN_6/*tx*/, GPIOC, GPIO_PIN_7/*rx*/, USART6, GPIO_AF8_USART6}};
+#endif
+
 
 #ifdef __cplusplus
  extern "C" {
@@ -49,35 +61,40 @@ void USART1_IRQHandler ()
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_1]);
 }
 
-
+#ifdef USART2
 void USART2_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_2]);
 }
+#endif
 
-
+#ifdef USART3
 void USART3_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_3]);
 }
+#endif
 
-
+#ifdef UART4
 void UART4_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_4]);
 }
+#endif
 
-
+#ifdef UART5
 void UART5_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_5]);
 }
+#endif
 
-
+#ifdef UART6
 void USART6_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_6]);
 }
+#endif
 
 
 
@@ -243,8 +260,14 @@ void TUSARTOBJ::Init ()
 	SetSpeed (C_USART_SPEED_DEF);
 	
 	//_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
-	_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
-	_pin_low_init_out_od_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX]);
+	#if (HRDCPU == 1)
+	_pin_low_init_out_pp_af ( &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], EHRTGPIOSPEED_MID);
+	_pin_low_init_out_od_af ( &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX], EHRTGPIOSPEED_MID);
+	#endif
+	#if (HRDCPU == 4)
+	_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX],EHRTGPIOSPEED_MID);
+	_pin_low_init_out_od_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX],EHRTGPIOSPEED_MID);
+	#endif
 		
 	_IFCUSART_UART_DISABLE_IT (USARTPort, USART_IT_RXNE);
 	_IFCUSART_UART_CLEAR_FLAG (USARTPort, USART_IT_RXNE);

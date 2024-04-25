@@ -75,17 +75,19 @@ void hard_gpio_clock_enable (GPIO_TypeDef *port);
 void _pin_low_init (S_GPMD_PIN_T *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp, EHRTGPIOPULL pl);
 void _pin_low_init_out_od ( S_GPIOPIN *lp_pin, uint8_t cnt , EHRTGPIOSPEED sp);
 void _pin_low_init_out_pp ( S_GPIOPIN *lp_pin, uint8_t cnt , EHRTGPIOSPEED sp);
+
 #if (HRDCPU == 1)
 void _pin_low_init_out_pp_af (S_GPIOPIN *lp_pin , EHRTGPIOSPEED sp);
+void _pin_low_init_out_od_af (S_GPIOPIN *lp_pin, EHRTGPIOSPEED sp );
 #endif
 #if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
 void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin , EHRTGPIOSPEED sp);
+void _pin_low_init_out_od_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSPEED sp )
 #endif
 
 void _pin_low_init_in ( S_GPIOPIN *lp_pin, uint8_t cnt , EHRTGPIOSPEED sp, EHRTGPIOPULL pl);
-//void _pin_low_init_in_pull (S_GPIOPIN *lp_pin, uint8_t cnt, bool vl, EHRTGPIOSPEED sp);
 void _pin_low_init_int (S_GPIOPIN *lp_pin, unsigned char cnt, EGPINTMOD md, EHRTGPIOSPEED sp);
-void _pin_low_init_adc ( S_GPIOPIN *lp_pin, uint8_t cnt, EHRTGPIOSPEED sp );
+void _pin_low_init_adc ( S_GPIOPIN *lp_pin, uint8_t cnt, EHRTGPIOSPEED sp);
 bool _pin_input ( S_GPIOPIN *lp_pin );
 void _pin_output ( S_GPIOPIN *lp_pin, bool val );
 #define _pin_set_to(x,y) _pin_output(x,y)

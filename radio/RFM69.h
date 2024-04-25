@@ -8,6 +8,7 @@
 #include "TFTASKIF.h"
 #include "rfbasecmd.h"
 #include "hard_rut.h"
+#include "rfcmddefine.h"
 
 
 typedef unsigned char uint8_t;
@@ -51,6 +52,7 @@ enum ERFSW {ERFSW_NONE = 0, ERFSW_INIT, ERFSW_TX, ERFSW_RX, ERFSW_STANBY, ERFSW_
 #define C_FRAMECRC_SIZEOF 2
 
 #pragma pack (push,1)
+/*
 typedef struct {
 	uint8_t ts_code;	// код фрагмента, инкрементный код последовательности, флаг необходимости подтверждения по принятию последнего фрейма
 										// 7b - fist, 6b - last, 5b - ack, 4-0b seq_n
@@ -61,36 +63,21 @@ typedef struct {
 	S_RFFRGM_HDR_T hdr;
 	uint8_t data[C_FRAGMENTDATA_SIZE];	// ...... данные
 } S_RFFRAGMENT_TAG;
+*/
 #pragma pack (pop)
 
 #define C_networkID 0x34
 #define C_LEDBLINK_TIME 100
 
 
-class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
+class TRFM69: public TFFC, public TRADIOIF {		// IFCRFTX
 	
 		ERFMODE rfmode;
 		const uint16_t c_trnsm_bufer_sizes;
-		uint8_t tempbf[C_BUFERSIZE_RX];
-		uint8_t *framebuffer;
-
-		uint16_t data_tx_ix;				// индекс передаваемых данных
-		uint16_t c_full_size_tx;		// полный размер передаваемых данных
-	
-		uint16_t data_rx_ix;				// индекс принимаемых данных
-		uint8_t last_rx_seq_n;
-		uint8_t last_tx_seqn;
-		bool f_rx_frame_blocked;
-		
-		void decode_ts (uint8_t ts_in, EFRFGTYPE *lcod, uint8_t *l_seqn, bool *f_ack);
-		uint8_t code_ts (EFRFGTYPE ts, bool f_ack, uint8_t seqn);
-		bool copy_to_frame_bufer (uint8_t *src, uint8_t sz);
-		bool copy_from_frame_bufer (uint8_t *dst, uint8_t sz);
-		void seq_inc (uint8_t &sqdata);
-		uint16_t calculate_crc (uint8_t *src, uint16_t sz);
-	
+		uint8_t *txbuffer;
+		uint8_t *rxbuffer;
+		uint8_t receive_size;
 		uint8_t isRFM69HW;                     // if RFM69HW model matches high power enable possible
-
 		uint8_t powerLevel;
 		uint8_t promiscuousMode;
 	
@@ -100,8 +87,7 @@ class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
 		void encrypt(const char* key);
 		int16_t ic_readRSSI(uint8_t forceTrigger);
 
-		
-		uint8_t readTemperature(uint8_t calFactor); // get CMOS temperature (8bit)
+		uint8_t readTemperature(uint8_t calFactor);
 		void setHighPowerRegs(uint8_t onOff);
 		
 		uint8_t ReadFromFifo (uint8_t *dst, uint16_t maxsz);
@@ -109,8 +95,8 @@ class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
 		ISPI *SPIx;
 		bool GetIntRFMLevel (void);
 		
-		utimer_t Indik_Signal_tx;
-		utimer_t Indik_Signal_rx;
+		SYSBIOS::Timer Indik_timeout_tx;
+		SYSBIOS::Timer Indik_timeout_rx;
 
 		void ResetPinTo (bool vals_set);
 		void ResetPulseToPin ();
@@ -129,10 +115,9 @@ class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
 		void setPowerLevel (uint8_t level);            // reduce/increase transmit power level
 		uint8_t GetVersion ();
 		void mode_sw_to_rx ();
-		bool ic_sendFrame (void* buffer, uint16_t bufferSize, ERFMODE endsw_to);
-		TRFM69 (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
-		
+
 		const S_GPIOPIN *pins_ir;
+		const uint16_t c_datapayload_size;
 		
 	protected:
 		ERFMODE getMode();
@@ -141,11 +126,18 @@ class TRFM69: public TFFC, public IFCRFTX {		// IFCRFTX
 		
 		virtual bool GetIndicatorRx ();
 		virtual bool GetIndicatorTx ();
-		virtual bool send (uint8_t *src, uint16_t sz);
+		
+	
+		virtual void tx (S_RFMARKTAG_T *src, ERFMODE endsw_to);
+		virtual bool is_tx ();
+		virtual bool is_rx ();
+		virtual bool rx (S_RFMARKTAG_T *dst,  uint16_t max_dstsz0);
+		virtual const uint16_t frame_size ();
 	
 	public:
-		
-		static IFCRFTX *create (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
+		TRFM69 (ISPI *s, const S_GPIOPIN *p);
+
+		//static IFCRFTX *create (ISPI *s, const uint16_t szz, const S_GPIOPIN *p);
 
 };
 

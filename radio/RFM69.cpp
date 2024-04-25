@@ -1,39 +1,23 @@
 #include "RFM69.h"
-//#include "comonrut.h"
-//#include "stm32f10x_gpio.h"
-//#include "misc.h"
-//#include "stm32f10x_exti.h"
 #include "hard_rut.h"
 
 
-TRFM69::TRFM69 (ISPI *s, const uint16_t szz, const S_GPIOPIN *p) : c_trnsm_bufer_sizes (szz + 2), pins_ir (p)
+TRFM69::TRFM69 (ISPI *s, const S_GPIOPIN *p) : c_trnsm_bufer_sizes (RF69_MAX_DATA_LEN), pins_ir (p), c_datapayload_size (RF69_MAX_DATA_LEN-sizeof(S_RFMARKTAG_T))
 {
 SPIx = s;
-framebuffer = new uint8_t [c_trnsm_bufer_sizes];
-data_rx_ix = 0;
+txbuffer = new uint8_t [c_trnsm_bufer_sizes];
+rxbuffer = new uint8_t [c_trnsm_bufer_sizes];
 rfmode = ERFMODE_SLEEP;
 isRFM69HW = 1;                     // if RFM69HW model matches high power enable possible
 powerLevel = 31;
 promiscuousMode = 0;
-f_rx_frame_blocked = true;
 
-Indik_Signal_rx = 0; Indik_Signal_tx = 0;
-SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_rx);
-SYSBIOS::DEL_TIMER_ISR (&Indik_Signal_tx);
-//F_EndTx = true;
-//SYSBIOS::DEL_TIMER_ISR (&Timer_RxOn);
 _pin_low_init_out_pp (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_RESET]), 1, EHRTGPIOSPEED_MID);
 _pin_low_init_in (const_cast <S_GPIOPIN*>(&pins_ir[ERFMPINS_ISR]), 1, EHRTGPIOSPEED_MID, EHRTGPIOPULL_UP);
 AddObjectToExecuteManager ();
 Init ();
 }
 
-
-
-IFCRFTX *TRFM69::create (ISPI *s, const uint16_t szz, const S_GPIOPIN *p)	// , IRFRX *obbj
-{
-	return new TRFM69 (s, szz, p); 
-}
 
 
 
@@ -73,7 +57,7 @@ SPIx->txrx (REG_FIFO & 0x7F);
 data_len = SPIx->txrx (0);
 bool f_fifo_need_clr = false;
 if (data_len && dst && maxsz) {
-	if (data_len >= sizeof(S_RFFRGM_HDR_T)) {
+	if (data_len >= sizeof(S_RFMARKTAG_T)) {
 		rv = data_len;
 		while (data_len && maxsz)
 			{
@@ -453,37 +437,12 @@ int16_t TRFM69::ic_readRSSI (uint8_t forceTrigger)
 }
 
 
-
+/*
 bool TRFM69::ic_sendFrame (void* buffer, uint16_t bufferSize, ERFMODE endsw_to)		// unsigned char DestAdrr
 {
-	bool rv = true;
-	unsigned long millis_current;
-  ic_setMode (ERFMODE_STANDBY); // turn off receiver to prevent reception while filling fifo
-	ic_setMode (ERFMODE_TX);
-  if (bufferSize > RF69_MAX_DATA_LEN) bufferSize = RF69_MAX_DATA_LEN;
 
-    SPIx->cs_0 ();
-    SPIx->txrx(REG_FIFO | 0x80);
-    for (uint8_t i = 0; i < bufferSize; i++)
-        SPIx->txrx(((uint8_t*) buffer)[i]);
-    SPIx->cs_1 ();
-
-    //ic_setMode (ERFMODE_TX);
-    millis_current = SYSBIOS::GetTickCountLong();
-		Indik_Signal_tx = C_LEDBLINK_TIME;
-    while (get_isr_pin ()) // if (!get_isr_pin ())
-			{
-			if (((SYSBIOS::GetTickCountLong() - millis_current) >= RF69_TX_LIMIT_MS)) 
-				{
-				rv = false;
-				break;
-				}
-			} 
-	if (ERFMODE_TX != endsw_to) ic_setMode (endsw_to);
-    //ic_setMode (ERFMODE_STANDBY);
-		//F_EndTx = true;		
-	return rv;
 }
+*/
 
 
 
@@ -549,6 +508,7 @@ void TRFM69::ic_promiscuous(uint8_t onOff)
 
 
 
+/*
 void TRFM69::decode_ts (uint8_t ts_in, EFRFGTYPE *lcod, uint8_t *l_seqn, bool *f_ack)
 {
 	uint8_t dat;
@@ -579,6 +539,7 @@ void TRFM69::decode_ts (uint8_t ts_in, EFRFGTYPE *lcod, uint8_t *l_seqn, bool *f
 
 
 
+
 uint8_t TRFM69::code_ts (EFRFGTYPE ts, bool f_ack, uint8_t seqn)
 {
 uint8_t rv = ts;
@@ -588,11 +549,11 @@ seqn &= 0x1F;
 rv |= seqn;
 return rv;
 }
+*/
 
 
 
-
-
+/*
 bool TRFM69::copy_to_frame_bufer (uint8_t *src, uint8_t sz)
 {
 	bool rv = false;
@@ -611,9 +572,10 @@ bool TRFM69::copy_to_frame_bufer (uint8_t *src, uint8_t sz)
 		}
 	return rv;
 }
+*/
 
 
-
+/*
 bool TRFM69::copy_from_frame_bufer (uint8_t *dst, uint8_t sz)
 {
 	bool rv = false;
@@ -641,9 +603,10 @@ void TRFM69::seq_inc (uint8_t &sqdata)
 	dat++; dat &= 0x1F;
 	sqdata = dat;
 }
+*/
 
 
-
+/*
 uint16_t TRFM69::calculate_crc (uint8_t *src, uint16_t sz)
 {
 uint16_t crc16 = 0;
@@ -671,15 +634,14 @@ if (crc16 == 0) crc16 = 1;
 if (crc16 == 0xFFFF) crc16 = 2;
 return crc16;
 }
-
+*/
 
 
 void TRFM69::mode_sw_to_rx ()
 {
-	data_rx_ix = 0;
 	ic_setMode (ERFMODE_STANDBY);
 	ic_setMode (ERFMODE_RX);		// clear fifo
-	f_rx_frame_blocked = true;	// only single frame or fist frame enabled
+
 }
 
 
@@ -693,164 +655,34 @@ if (!get_isr_pin ())
 		{
 		case ERFMODE_RX:
 			{
-			uint16_t rxemptysize = c_trnsm_bufer_sizes - data_rx_ix;
-			bool f_rx_ok = false;
-			if (rxemptysize)
+			if (!receive_size)
 				{
-				uint8_t currxsize = ReadFromFifo (tempbf, sizeof(tempbf));
-				if (currxsize >= sizeof(S_RFFRGM_HDR_T) && currxsize <= sizeof(S_RFFRAGMENT_TAG))
+				bool f_rx_ok = false;
+				uint8_t currxsize = ReadFromFifo (rxbuffer, c_trnsm_bufer_sizes);
+				if (currxsize >= sizeof(S_RFMARKTAG_T))
 					{
-					S_RFFRAGMENT_TAG *frame = (S_RFFRAGMENT_TAG*)tempbf;
-						
-					if (frame->hdr.lsize && frame->hdr.lsize <= C_FRAGMENTDATA_SIZE)
+					S_RFMARKTAG_T *frame = (S_RFMARKTAG_T*)rxbuffer;
+					uint16_t size = frame->local_size;
+					if (size && size <= c_datapayload_size)
 						{
-						uint16_t datacopy_size = frame->hdr.lsize;
-						uint8_t *lsrccopy = tempbf + sizeof(S_RFFRGM_HDR_T);
-						EFRFGTYPE fcod; uint8_t seqn;
-						decode_ts (frame->hdr.ts_code, &fcod, &seqn, 0);
-						switch (fcod)	
-							{
-							case EFRFGTYPE_MIDLE: 
-								{
-								if (f_rx_frame_blocked) break;
-								if (seqn == last_rx_seq_n)
-									{
-									seq_inc (last_rx_seq_n);
-									f_rx_ok = copy_to_frame_bufer (lsrccopy, datacopy_size);
-									}
-								else
-									{
-									f_rx_frame_blocked = true;
-									}
-								break;
-								}
-							case EFRFGTYPE_FIST:
-								{
-								if (!seqn)
-									{
-									last_rx_seq_n = seqn;
-									seq_inc (last_rx_seq_n);	// следующий номер должен быть на 1 больше
-									data_rx_ix = 0;
-									f_rx_ok = copy_to_frame_bufer (lsrccopy, datacopy_size);
-									f_rx_frame_blocked = false;
-									}
-								else
-									{
-									f_rx_frame_blocked = true;
-									}
-								break;
-								}
-							case EFRFGTYPE_LAST:
-								{
-								if (f_rx_frame_blocked) break;
-								if (seqn == last_rx_seq_n)
-									{
-									if (copy_to_frame_bufer (lsrccopy, datacopy_size))
-										{
-										// проверка контрольной суммы
-										if (data_rx_ix > C_FRAMECRC_SIZEOF)
-											{
-											uint16_t user_data_size = data_rx_ix - C_FRAMECRC_SIZEOF;
-											uint16_t crc16 = calculate_crc (framebuffer, user_data_size);
-											uint16_t *lcrc = (uint16_t*)&framebuffer[user_data_size];
-											if (crc16 == *lcrc) if (eventsobj_cb) eventsobj_cb->RF_recv_cb (framebuffer, user_data_size, ic_readRSSI(0));
-											}
-										f_rx_ok = true;
-										}
-									}
-								else
-									{
-									f_rx_frame_blocked = true;
-									}
-								break;
-								}
-							case EFRFGTYPE_SINGLE:
-								{
-								data_rx_ix = 0;
-								f_rx_frame_blocked = false;
-								if (copy_to_frame_bufer (lsrccopy, datacopy_size))
-									{
-									// проверка контрольной суммы
-									if (data_rx_ix > C_FRAMECRC_SIZEOF)
-										{
-										uint16_t user_data_size = data_rx_ix - C_FRAMECRC_SIZEOF;
-										uint16_t crc16 = calculate_crc (framebuffer, user_data_size);
-										uint16_t *lcrc = (uint16_t*)&framebuffer[user_data_size];
-										if (crc16 == *lcrc) if (eventsobj_cb) eventsobj_cb->RF_recv_cb (framebuffer, user_data_size, ic_readRSSI(0));
-										}
-									f_rx_ok = true;
-									}
-								break;
-								}
-							default: 
-								{
-								f_rx_frame_blocked = true;
-								break;
-								}
-							}
+						uint8_t cur_crc = frame->crc;
+						frame->crc = 0;
+						uint8_t crc = calculate_crc8rf (rxbuffer, size + sizeof(S_RFMARKTAG_T));
+						if (crc == cur_crc)	f_rx_ok = true;
+						frame->crc = cur_crc;
 						}
 					}
+				if (f_rx_ok) 
+					{
+					receive_size = currxsize;
+					Indik_timeout_rx.set (C_LEDBLINK_TIME);
+					}
 				}
-				
-			if (f_rx_ok) Indik_Signal_rx = C_LEDBLINK_TIME;
 			break;
 			}
 		case ERFMODE_TX:
 			{
-			if (c_full_size_tx > data_tx_ix)
-				{
-				uint16_t dlt_tx = c_full_size_tx - data_tx_ix;
-				ERFMODE mod_aftetx;
-				EFRFGTYPE ftype = EFRFGTYPE_MIDLE;
-				uint16_t tx_size;
-					
-				if (dlt_tx <= C_FRAGMENTDATA_SIZE) 
-					{
-					if (!data_tx_ix) 
-						{
-						ftype = EFRFGTYPE_SINGLE;
-						last_tx_seqn = 0;
-						}
-					else
-						{
-						ftype = EFRFGTYPE_LAST;
-						}
-					tx_size = dlt_tx;
-					mod_aftetx = ERFMODE_RX;
-					}
-				else
-					{
-					if (!data_tx_ix) 
-						{
-						ftype = EFRFGTYPE_FIST;
-						last_tx_seqn = 0;
-						}
-					tx_size = C_FRAGMENTDATA_SIZE;
-					mod_aftetx = ERFMODE_TX;
-					}
-				
-				S_RFFRAGMENT_TAG *frame = (S_RFFRAGMENT_TAG*)tempbf;
-				frame->hdr.ts_code = code_ts (ftype, false, last_tx_seqn);
-				frame->hdr.lsize = tx_size;
-				seq_inc (last_tx_seqn);
-				copy_from_frame_bufer (frame->data, tx_size);
-				if (ic_sendFrame (tempbf, tx_size, mod_aftetx))
-					{
-					if (ftype == EFRFGTYPE_LAST || ftype == EFRFGTYPE_SINGLE)
-						{
-						if (eventsobj_cb) eventsobj_cb->RF_txend_cb (true);
-						}
-					}
-				else
-					{
-					if (eventsobj_cb) eventsobj_cb->RF_txend_cb (false);
-					mode_sw_to_rx ();
-					}
-				}
-			else
-				{
-				mode_sw_to_rx ();
-				}
+			mode_sw_to_rx ();
 			break;
 			}
 		}
@@ -859,24 +691,89 @@ if (!get_isr_pin ())
 
 
 
+void TRFM69::tx (S_RFMARKTAG_T *src, ERFMODE endsw_to)
+{
+	bool rv = true;
+	unsigned long millis_current;
+	uint8_t *buffer = (uint8_t*)src;
+	uint16_t sz = src->local_size + sizeof(S_RFMARKTAG_T);
+  ic_setMode (ERFMODE_STANDBY); // turn off receiver to prevent reception while filling fifo
+	ic_setMode (ERFMODE_TX);
+  if (sz > RF69_MAX_DATA_LEN) sz = RF69_MAX_DATA_LEN;
+
+    SPIx->cs_0 ();
+    SPIx->txrx(REG_FIFO | 0x80);
+    for (uint8_t i = 0; i < sz; i++)
+        SPIx->txrx(((uint8_t*) buffer)[i]);
+    SPIx->cs_1 ();
+
+    //ic_setMode (ERFMODE_TX);
+    millis_current = SYSBIOS::GetTickCountLong();
+		Indik_timeout_tx.set (C_LEDBLINK_TIME);
+    while (get_isr_pin ()) // if (!get_isr_pin ())
+			{
+			if (((SYSBIOS::GetTickCountLong() - millis_current) >= RF69_TX_LIMIT_MS)) 
+				{
+				rv = false;
+				break;
+				}
+			} 
+	if (ERFMODE_TX != endsw_to) ic_setMode (endsw_to);
+    //ic_setMode (ERFMODE_STANDBY);
+
+}
+
+
+
+bool TRFM69::is_tx ()
+{
+	return (rfmode == ERFMODE_RX)?true:false;
+}
+
+
+
+bool TRFM69::is_rx ()
+{
+	return receive_size;
+}
+
+
+
+const uint16_t TRFM69::frame_size ()
+{
+	return c_trnsm_bufer_sizes;
+}
+
+
+
+bool TRFM69::rx (S_RFMARKTAG_T *dst, uint16_t max_dstsz0)
+{
+	uint16_t rv = receive_size;
+	if (rv) {
+		if (max_dstsz0 < receive_size) receive_size = max_dstsz0;
+		CopyMemorySDC (rxbuffer, dst, receive_size);
+		receive_size = 0;
+		}
+	return rv;
+}
+
+
+
+/*
 bool TRFM69::send (uint8_t *src, uint16_t sz)
 {
 	bool rv = false;
 	if (src && sz)
 		{
-		if ((sz + C_FRAMECRC_SIZEOF) > c_trnsm_bufer_sizes) return false;
-		CopyMemorySDC (src, framebuffer, sz);
-		uint16_t crc16 = calculate_crc (framebuffer, sz);
+		if (sz > c_trnsm_bufer_sizes) return false;
+		CopyMemorySDC (src, txbuffer, sz);
 		c_full_size_tx = sz;
-		*((uint16_t*)&framebuffer[c_full_size_tx]) = crc16;
-		c_full_size_tx += C_FRAMECRC_SIZEOF;
-		data_tx_ix = 0;
-		last_tx_seqn = 0;
+		//data_tx_ix = 0;
 		rv = true;
 		}
 	return rv;
 }
-
+*/
 
 
 
@@ -934,20 +831,16 @@ return rv;
 
 
 
-
-
 bool TRFM69::GetIndicatorRx ()
 {
-return (Indik_Signal_rx)?true:false;
+return (Indik_timeout_rx.get())?true:false;
 }
 
 
 
 bool TRFM69::GetIndicatorTx ()
 {
-	return (Indik_Signal_tx)?true:false;
+	return (Indik_timeout_tx.get())?true:false;
 }
-
-
 
 

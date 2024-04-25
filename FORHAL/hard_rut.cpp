@@ -208,6 +208,26 @@ void _pin_low_init_out_pp_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSP
 
 
 
+#if (HRDCPU == 1)
+void _pin_low_init_out_od_af (S_GPIOPIN *lp_pin, EHRTGPIOSPEED sp )
+#else
+void _pin_low_init_out_od_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSPEED sp )
+#endif
+{
+	GPIO_InitTypeDef GPIO_InitStructure;
+		hard_gpio_clock_enable (lp_pin->port);
+		GPIO_InitStructure.Speed = sp;
+		GPIO_InitStructure.Mode = GPIO_MODE_AF_OD;
+		GPIO_InitStructure.Pull = GPIO_PULLUP;
+	#if (HRDCPU == 2 || HRDCPU == 3 || HRDCPU == 4)
+		GPIO_InitStructure.Alternate = af_codemux;
+	#endif
+		GPIO_InitStructure.Pin = lp_pin->pin;
+		HAL_GPIO_Init (lp_pin->port, &GPIO_InitStructure);
+}
+
+
+
 void _pin_low_init_out_od (S_GPIOPIN *lp_pin, unsigned char cnt, EHRTGPIOSPEED sp)
 {
 	GPIO_InitTypeDef GPIO_InitStructure;

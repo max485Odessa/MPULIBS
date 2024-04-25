@@ -1,16 +1,16 @@
 #include "rfcmddefine.h"
 
 
-void decode_trid (trid_t d,  ERFDTYPE *tp, ERFRESPSTAT *srslt, uint8_t *trid )
+void decode_trid (trid_t d,  ERFDTYPE *tp, ERESPSTATE *srslt, uint8_t *trid )
 {
 if (tp) *tp = (d & 128)?ERFDTYPE_REQ:ERFDTYPE_RESP;
-if (srslt) *srslt = (ERFRESPSTAT)((d >> 5) & 3);
+if (srslt) *srslt = (ERESPSTATE)((d >> 5) & 3);
 if (trid) *trid = d & 0x1F;
 }
 
 
 
-trid_t encode_trid (ERFDTYPE tp, ERFRESPSTAT srs, uint8_t trid )
+trid_t encode_trid (ERFDTYPE tp, ERESPSTATE srs, uint8_t trid )
 {
 uint8_t rv = 0;
 if (tp == ERFDTYPE_REQ) rv |= 128;
@@ -21,10 +21,11 @@ return rv;
 
 
 
-uint8_t calculate_crc8rf (uint8_t *src, uint32_t sz)
+uint8_t calculate_crc8rf (void *s, uint32_t sz)
 {
 uint8_t crc = 0;
 uint8_t dat;
+uint8_t *src = (uint8_t*)s;
 while (sz)
     {
     dat = *src++;
