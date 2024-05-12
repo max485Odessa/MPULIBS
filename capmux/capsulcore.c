@@ -189,7 +189,7 @@ return rv;
 
 
 
-bool capsule_mux_tx_push (EMUCCHAN mux, void *s, uint32_t sz)
+bool capsule_mux_tx_push (uint32_t mux, void *s, uint32_t sz)
 {
 bool rv = false;
 uint32_t full_tx_sz = sz + sizeof(S_MUXCAPSULE_HDR_T);
