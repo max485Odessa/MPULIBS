@@ -5,6 +5,130 @@
 
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
+static bool cur_clock_state_tim[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
+static const TIM_TypeDef *cur_clock_port_tim[ESYSTIM_ENDENUM] = {TIM1,TIM2,TIM3,TIM4,TIM5,0,0,0,TIM9,TIM10,TIM11,0};
+static const bool period_tim[ESYSTIM_ENDENUM] = {0,true,0,0,true,0,0,0,0,0,0,0};
+
+
+TIM_TypeDef *hard_get_tim (ESYSTIM tn, bool *f_wdth_32)
+{
+	TIM_TypeDef *rv = 0;
+	if (tn < ESYSTIM_ENDENUM) {
+		rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
+		if (f_wdth_32) *f_wdth_32 = period_tim[tn];
+		}
+	return rv;
+}
+
+
+
+void hard_tim_clock_enable (ESYSTIM tn)
+{
+	bool f_sets = false;
+	if (cur_clock_state_tim[tn]) return;
+	do	{
+			#ifdef TIM1
+			if (tn == ESYSTIM_TIM1) {
+				__HAL_RCC_TIM1_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM2
+			if (tn == ESYSTIM_TIM2) {
+				__HAL_RCC_TIM2_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM3
+			if (tn == ESYSTIM_TIM3) {
+				__HAL_RCC_TIM3_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM4
+			if (tn == ESYSTIM_TIM4) {
+				__HAL_RCC_TIM4_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+				
+			#ifdef TIM5
+			if (tn == ESYSTIM_TIM5) {
+				__HAL_RCC_TIM5_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM6
+			if (tn == ESYSTIM_TIM6) {
+				__HAL_RCC_TIM6_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM7
+			if (tn == ESYSTIM_TIM7) {
+				__HAL_RCC_TIM7_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM8
+			if (tn == ESYSTIM_TIM8) {
+				__HAL_RCC_TIM8_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+			
+			#ifdef TIM9
+			if (tn == ESYSTIM_TIM9) {
+				__HAL_RCC_TIM9_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM10
+			if (tn == ESYSTIM_TIM10) {
+				__HAL_RCC_TIM10_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM11
+			if (tn == ESYSTIM_TIM11) {
+				__HAL_RCC_TIM11_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef TIM12
+			if (tn == ESYSTIM_TIM12) {
+				__HAL_RCC_TIM12_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+			} while (false);
+	
+	if (f_sets) cur_clock_state_tim[tn] = true;
+}
+
+
 
 
 void hard_gpio_clock_enable (GPIO_TypeDef *port)
