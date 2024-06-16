@@ -26,6 +26,7 @@ ESWTXA_RESP_FIST /* ожидание подтверждения приема первого фрейма */, \
 ESWTXA_TX_MIDLE /* передача серии секторов без подтверждения */, \
 ESWTXA_TX_LAST /* передача последнего сектора в серии передач */, \
 ESWTXA_RESP_LAST /* ожидание подтверждения фрейма */, \
+	
 // последовательность при передаче одинарного фрейма (короткого)
 ESWTXA_TX_FIST_LAST /* передача одинарного фрейм-сектора*/, \
 ESWTXA_RESP_FIST_LAST /* подтверждение одинарного фрейм-сектора */, \
@@ -43,8 +44,8 @@ ESWTXA_ENDENUM, \
 #define C_RF_REPEATE 3
 
 
-class TRFMASTER {
-		virtual void Task ();
+class TRFMASTER: public TFFC {
+		virtual void Task () override;
 		local_rf_id_t self_id;
 		local_rf_id_t dest_id;
 		bool f_tx_hard_error;
@@ -86,12 +87,15 @@ class TRFMASTER {
 		void send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, uint8_t sect);
 		//void set_destid (local_rf_id_t dstid);
 		
+		void rx_task ();
+		void tx_task ();
+		
 	public:
 		TRFMASTER (TRADIOIF *r, local_rf_id_t slf);
 		static uint8_t tagbytegen (bool f_hrder, bool f_req, ERFFMARK m, ERFTACK ak, ERFSDEVICE dvs);
 		void set_harderror_bit (bool v);
-
 		void set_device_stat_bit (ERFSDEVICE dv);
+	
 		void tx_request_data (local_rf_id_t dstid, void *src, uint32_t sz);
 		void tx_responce_data (local_rf_id_t dstid, void *src, uint32_t sz);
 		void tx_repeate_set (uint8_t rcnt);

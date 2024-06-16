@@ -746,11 +746,10 @@ const uint16_t TRFM69::frame_size ()
 
 
 
-bool TRFM69::rx (S_RFMARKTAG_T *dst, uint16_t max_dstsz0)
+bool TRFM69::rx (S_RFMARKTAG_T *dst)
 {
 	uint16_t rv = receive_size;
 	if (rv) {
-		if (max_dstsz0 < receive_size) receive_size = max_dstsz0;
 		CopyMemorySDC (rxbuffer, dst, receive_size);
 		receive_size = 0;
 		}
