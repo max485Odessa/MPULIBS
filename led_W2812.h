@@ -5,6 +5,7 @@
 #include "SYSBIOS.H"
 #include "TFTASKIF.h"
 #include "hard_rut.h"
+#include "THIZIF.h"
 
 #ifdef __cplusplus
  extern "C" {
@@ -16,7 +17,7 @@ extern void S_NOP ();
 }
 #endif
 	 
-enum EBASECOLOR {ECOLR_BLACK = 0, ECOLR_RED = 1, ECOLR_GREEN = 2, ECOLR_BLUE = 3, ECOLR_YELOW = 4, ECOLR_WHITE = 5, ECOLR_ENDENUM};
+enum EBASECOLOR {ECOLR_BLACK = 0, ECOLR_RED = 1, ECOLR_GREEN = 2, ECOLR_BLUE = 3, ECOLR_YELOW = 4, ECOLR_WHITE = 5, ECOLR_ORANGE = 6, ECOLR_ENDENUM};
 enum EWAITNANO {EWN_1T = 0, EWN_2T = 1};
 const unsigned char C_MAXCOLOR_LEVEL = 0xFF;
 const utimer_t C_W2818_TRESETPERIOD = 3;		// 3 ms период обновления
@@ -49,8 +50,9 @@ class TLED {
 };
 
 
-//enum ELEDSWISR {ELEDSWISR_SYNC = 0, ELEDSWISR_LEDS, ELEDSWISR_WAIT, ELEDSWISR_ENDENUN};
-class TLEDS : public TFFC {		//  
+
+// при отключении питания 5 вольт вытекающих токов не будет если установлен лог 0, в конце каджого обновления светодиодов лог 0 устанавливается всегда
+class TLEDS : public TFFC, public THIZIF {		//  
 		
 		void Bit_Tx (bool val);
 		void Tx8bit (uint8_t colr);
@@ -68,6 +70,8 @@ class TLEDS : public TFFC {		//
 	
 		bool f_isr_sync;
 	
+		virtual void thizif_hiz_outputs (bool f_act_hiz) override;
+	
 	public:
 		TLEDS (const S_GPIOPIN *pn, uint8_t cnt, uint8_t *imx);
 		void all_color (uint8_t r, uint8_t g, uint8_t b);
@@ -80,9 +84,7 @@ class TLEDS : public TFFC {		//
 	
 		TLED *l10 (uint8_t ix);
 	
-		void sync_after_isr ();
-	
-
+		void clear_now ();
 };
 
 

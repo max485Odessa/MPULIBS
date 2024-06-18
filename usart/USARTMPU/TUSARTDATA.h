@@ -7,6 +7,7 @@
 #include "rutine.h"
 #include "TTFIFO.h"
 #include "SYSBIOS.H"
+#include "THIZIF.h"
 
 
 
@@ -71,7 +72,7 @@ class TSERIALUSR {
 
 
 
-class TUSARTOBJ: public TSERIALISR, public TSERIALUSR {
+class TUSARTOBJ: public TSERIALISR, public TSERIALUSR, public THIZIF {
 	protected:
 		uint32_t cur_speed;
 		virtual void isr_rx (uint8_t d) override;
@@ -81,6 +82,7 @@ class TUSARTOBJ: public TSERIALISR, public TSERIALUSR {
 		bool f_tx_status;
 		
 		void Init ();
+		virtual void thizif_hiz_outputs (bool f_act_hiz) override;
 		
 	public:
 		TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx);

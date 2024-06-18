@@ -14,13 +14,17 @@ TJOYSTIC::TJOYSTIC (S_GPIOPIN *p, const uint8_t pc, const float *x, const float 
 	while (ix < EJSTCPINS_ENDENUM) 
 		{
 		pins[ix].keypin = p[ix];
+		HAL_GPIO_DeInit(p[ix].port, p[ix].pin);
 		_pin_low_init_in_pullup (&pins[ix].keypin, 1, true);
 		clear_key (pins[ix]);
 		ix++;
 		}
 	gmsg_ix = 0;
 	last_ticks = SYSBIOS::GetTickCountLong ();
+	relax_jstc_tim.set (1000);		// задержка работы джойстика после старта системы
 }
+
+
 
 
 
@@ -147,15 +151,6 @@ void TJOYSTIC::block_time (EJSTCPINS p, uint32_t tbl)
 
 
 
-float TJOYSTIC::axis_value (EJSTCA ax)
-{
-	float rv = 0;
-	if (ax < EJSTCA_ENDENUM) rv = 0;
-	return rv;
-}
-
-
-
 void TJOYSTIC::joyst_subtask ()
 {
 	if (!relax_jstc_tim.get())
@@ -201,7 +196,7 @@ void TJOYSTIC::joyst_subtask ()
 			axiscalibr[ix].f_result_ok = true;
 			ix++;
 			}
-		relax_jstc_tim.set (50);		// 50 ms
+		relax_jstc_tim.set (5);		// 20 ms
 		}
 		
 }

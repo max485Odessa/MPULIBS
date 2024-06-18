@@ -185,10 +185,12 @@ curflight_mode_in = EFLIGHTMODE_NONE;
 curflight_mode_out = EFLIGHTMODE_NONE;
 cur_arm_status_out = false;
 cur_arm_status_in = false;
+//cur_arm_status_newracom_in = false;
 f_setmode_new_cmd = false;
 confdev_param_state = EPRMSTATE_NONE;
 f_new_bano_data = false;
 bano_data = 0;
+force_arm_code_act = 0;
 //params
 //C_MAVID_CONFIGDEV = 
 C_MAVID_CONFIGDEV = 2;
@@ -217,11 +219,9 @@ void TMAVCORE::restart ()
 	serial_RF_obj->clear ();
 	mavatom_QG_to_RF->clear ();
 	mavatom_RF_to_QG->clear ();
-	f_new_joystick_data = false;
 	f_setmode_new_cmd = false;
 	f_enabled = false;
-	thrcontrl_sw = ETHRSTATE_NONE;
-	//cur_throtle_proc_out = 101;			// 101 $ overflow
+	thrcontrl_sw = ETHRSTATE_CRUIS;
 }
 
 
@@ -257,28 +257,7 @@ void TMAVCORE::Task ()
 		rf_mav_frame_peak_rx = mavatom_RF_to_QG->debug_peak ();
 	#endif
 	
-	/*
-	if (TUSBOBJ::config_detect ())
-		{
-		// сброс некоторых состояний при открытии порта со стороны QG
-		//param_inc_sw = EPRMINCSW_SOME_PARAM_VALUE;
-		confdev_param_state = EPRMSTATE_NONE;
-		last_param_ix = 0;
-		// зафиксированно usb переподключение
-		#ifdef SERIALDEBAG
-			serial_QG_obj->debug_peak_clear ();
-			serial_RF_obj->debug_peak_clear ();
-			mavatom_QG_to_RF->debug_peak_clear ();
-			mavatom_RF_to_QG->debug_peak_clear ();
-		#endif
-		#ifdef MAVSNIFF
-			sniff_qg_modem.clear ();
-			sniff_modem_qg.clear ();
-		#endif
-		// обнулить все фифо буфера
-		// ... тут нужен код обнуления
-		}
-	*/
+
 	
 	// direct: serial QG tx -> (mavfifo)mav_QG_rx -> serial modem rx
 	// receive byte stream to atom_mavlink deserialize fifo
@@ -319,9 +298,6 @@ void TMAVCORE::Task ()
 				}
 			}		
 		
-			//SysID_QG_sniff = 0xFF;
-			//ComponentID_QG_sniff = 0;
-		
 	// direct: serial modem rx -> (mavfifo)mav_modem_rx -> serial usb tx
 	mav_deserializer = mavatom_RF_to_QG;	// мавлинк десериализатор с fifo буфером целых сообщений
 	TGLOBISR::disable ();
@@ -345,7 +321,7 @@ void TMAVCORE::Task ()
 					uint16_t len_tx = mavlink_msg_to_send_buffer (rawbuf, &mavframe_tmp.frame);
 					if (len_tx && free_space >= len_tx)
 						{
-						// переносим цельное сообщение в буфер передачи usb
+						// переносим цельное сообщение в буфер передачи usb/serial
 						TGLOBISR::disable ();
 						serial_QG_obj->Tx (rawbuf, len_tx);
 						TGLOBISR::enable ();
@@ -357,22 +333,18 @@ void TMAVCORE::Task ()
 						#endif
 						}
 					}
-				}	
-		// перехват mavlink id борта
-		SysID_RF_sniff = mavframe_tmp.frame.sysid;
-		ComponentID_RF_sniff = mavframe_tmp.frame.compid;			
-		}
+				}				
+			}
 		
 	heartbeat_to_QG_task ();
 	send_system_time_task ();
 	send_radio_param_list_to_qg_task ();
-	//send_myparams_inc_task ();
 	joystickdata_task ();					// отправляет два rc канала (x, y) и ненажатые клавиши, все 16 клавиш в нуле. + throtle value in procents
 	setmodechange_task ();
 	send_arm_status_task ();
 	banomodechange_task ();
 	parachute_tx_task ();
-	send_throttle_task ();
+	//send_sys_status_to_qg_task ();
 	//send_mav_throtle_task ();
 	
 }
@@ -491,30 +463,6 @@ void TMAVCORE::send_radio_param_list_to_qg_task ()
 
 
 
-/*
-void TMAVCORE::send_myparams_inc_task ()
-{
-	if (param_inc_sw == EPRMINCSW_SEND_MY_PARAMS)
-		{
-		if (is_free_space_chan_RF_tx ())
-			{
-			// формирование списка параметров
-			S_MVPARAM_HDR_T *prm_tag = params->get_param_tag (my_paramix_send);
-			if (prm_tag)
-				{
-				send_mav_frame_myparam_value_to_qg (prm_tag, my_paramix_send);		// отправка в направлении RF->QG
-				my_paramix_send++;
-				}
-			else
-				{
-				param_inc_sw = EPRMINCSW_COMPLETE;
-				}
-			}
-		}
-}
-*/
-
-
 
 void TMAVCORE::banomodechange_task ()
 {
@@ -527,7 +475,7 @@ void TMAVCORE::banomodechange_task ()
 			}
 		if (is_free_space_chan_QG_tx ())
 			{
-			send_mav_frame_bano (bano_data, EDSTSYS_QG);
+			send_mav_frame_bano (bano_data, EDSTSYS_QG_ROUTE);
 			f_new_bano_data = false;
 			}
 		}
@@ -574,7 +522,7 @@ void TMAVCORE::setmodechange_task ()
 			}
 		if (is_free_space_chan_QG_tx ())
 			{
-			sendcmd_set_mode (curflight_mode_out, cur_arm_status_out, EDSTSYS_QG);
+			sendcmd_set_mode (curflight_mode_out, cur_arm_status_out, EDSTSYS_QG_ROUTE);
 			f_setmode_new_cmd = false;
 			}
 		}
@@ -591,7 +539,7 @@ bool TMAVCORE::is_modem_link ()
 
 
 
-bool TMAVCORE::is_usb_link ()
+bool TMAVCORE::is_qg_serial_link ()
 {
 	return serial_QG_obj->is_link ();
 }
@@ -632,14 +580,23 @@ bool TMAVCORE::is_usb_link ()
 
 
 
-bool TMAVCORE::filter_command_long_QG_to_RF (mavlink_command_long_t &msg)
+bool TMAVCORE::filter_command_long_QG_to_RF (mavlink_command_long_t &msg, EDSTSYS d)
 {
-	//static uint32_t cntcmdlng = 0;
 	bool rv = false;
 	static uint32_t value_s = 0;
+	static uint32_t cmd_s = 0;
 
+	cmd_s = msg.command;
 	switch (msg.command)
 		{
+		case MAV_CMD_PREFLIGHT_REBOOT_SHUTDOWN:
+			{
+			if (msg.param1 != 0 || msg.param2 != 0 || msg.param3 != 0)
+				{
+				while (true) {};
+				}
+			break;
+			}
 		case MAV_CMD_PREFLIGHT_STORAGE:
 			{
 			if (msg.param1 == 1)	// PARAM_WRITE_PERSISTENT	Write all parameter values to persistent storage (flash/EEPROM)
@@ -650,23 +607,47 @@ bool TMAVCORE::filter_command_long_QG_to_RF (mavlink_command_long_t &msg)
 				}
 			break;
 			}
-		case 0x200:
+		/*
+		case MAV_CMD_DTC_STATUS:
+			{
+			//tim_mav_dtc_link.set (1200);
+			
+			break;
+			}
+		*/
+		case 0x200:		// REQUEST MESSAGE
 			{
 			value_s = msg.param1;
 			switch (value_s)
 				{
 				case MAVLINK_MSG_ID_AUTOPILOT_VERSION :
 					{
-					send_mav_autopilot_version ();
+					send_commang_long_ack (MAVLINK_MSG_ID_AUTOPILOT_VERSION, false, d);
+					//send_mav_autopilot_version ();
 					break;
 					}
 				case MAVLINK_MSG_ID_COMPONENT_INFORMATION:
 					{
-					send_mav_component_information ();
+					send_commang_long_ack (MAVLINK_MSG_ID_COMPONENT_INFORMATION, false, d);
+					//send_mav_component_information ();
 					break;
 					}
-				default: break;
+				case 397:		// COMPONENT_METADATA ( #397 )
+					{
+					send_commang_long_ack (397, false, d);
+					break;
+					}
+				default:
+					{
+					value_s = value_s;
+					break;
+					}
 				}
+			break;
+			}
+		default:
+			{
+			cmd_s = cmd_s;
 			break;
 			}
 		}
@@ -676,9 +657,15 @@ bool TMAVCORE::filter_command_long_QG_to_RF (mavlink_command_long_t &msg)
 
 
 
+
+
+
+
+
+static S_MAVDATAFRAME_T mav_tmp;
 void TMAVCORE::send_mav_component_information ()
 {
-	S_MAVDATAFRAME_T mav_tmp;
+	// S_MAVDATAFRAME_T mav_tmp;
 	mavlink_component_information_t frm;
 	fillmem (&frm, 0, sizeof(frm));
 	
@@ -688,35 +675,113 @@ void TMAVCORE::send_mav_component_information ()
 
 
 
+void TMAVCORE::send_commang_long_ack (uint16_t cmd, bool f_ok, EDSTSYS d)
+{
+	mavlink_command_ack_t frm;
+	frm.command = cmd;
+	frm.result = (f_ok)?0:3;
+	switch (d)
+		{
+		case EDSTSYS_QG_SELF:
+			{
+			mavlink_msg_command_ack_encode_chan (C_MAVID_CONFIGDEV, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &frm); 
+			insert_to_QG (mav_tmp);
+			break;
+			}
+		case EDSTSYS_QG_ROUTE:
+			{
+			mavlink_msg_command_ack_encode_chan (C_MAVID_ROUTE, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &frm); 
+			insert_to_QG (mav_tmp);
+			break;
+			}
+		case EDSTSYS_RF:
+			{
+			mavlink_msg_command_ack_encode_chan (0xFF, 0, C_MAVLNK_CH_QG_TO_MODEM, &mav_tmp.frame, &frm);  // C_MAVLNK_CH_MODEM_TO_QG
+			insert_to_RF (mav_tmp);
+			break;
+			}
+		default: break;
+		}
+}
+
+
+
 void TMAVCORE::send_mav_autopilot_version ()
 {
-	S_MAVDATAFRAME_T mav_tmp;
+	//S_MAVDATAFRAME_T mav_tmp;
 	mavlink_autopilot_version_t frm;
 	fillmem (&frm, 0, sizeof(frm));
-	
+	frm.capabilities = MAV_PROTOCOL_CAPABILITY_MAVLINK2 | 16;// 131072 | MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT;//MAV_PROTOCOL_CAPABILITY_PARAM_FLOAT;//CAPABILITY_PARAM_ENCODE_C_CAST;
+	frm.flight_custom_version[0] = '1';
+	frm.middleware_custom_version[0] = '2';
+	frm.os_custom_version[0] = '2';
+	frm.flight_sw_version = 1;
+	frm.middleware_sw_version = 2;
+	frm.os_sw_version = 2;
 	mavlink_msg_autopilot_version_encode (C_MAVID_CONFIGDEV, 1, &mav_tmp.frame, &frm);
 	insert_to_QG (mav_tmp);
 }
+
+
+/*
+
+void TMAVCORE::send_mav_sys_status ()
+{
+	mavlink_sys_status_t ss_frm;
+	fillmem (&ss_frm, 0, sizeof(ss_frm));
+	
+	mavlink_msg_sys_status_encode (C_MAVID_CONFIGDEV, 1, &mav_tmp.frame, &ss_frm);
+	insert_to_QG (mav_tmp);
+}
+
+
+
+void TMAVCORE::send_sys_status_to_qg_task ()
+{
+
+	if (!tim_sys_status.get ())
+		{
+		send_mav_sys_status ();
+		tim_sys_status.set (1000);
+		}
+
+}
+*/
 
 
 
 bool TMAVCORE::sniff_filter_changer_QG_to_RF (mavlink_message_t &msg)
 {
 	bool rv = true;
-	last_seq_QGtoRF = msg.seq;
+	last_seq_QGtoRF = msg.seq;	
 	uint32_t cmdlong = 0;
-	//static uint32_t test_data;
-	static S_MAVDATAFRAME_T mav_tmp;
+
 
       switch(msg.msgid) 
 				{
+				case MAVLINK_MSG_ID_MISSION_REQUEST_LIST:
+					{
+					mavlink_mission_request_list_t mrl;
+					mavlink_msg_mission_request_list_decode(&msg, &mrl);
+					if (mrl.target_system == C_MAVID_CONFIGDEV)
+						{
+						mavlink_mission_count_t resp;
+						resp.target_system = msg.sysid;
+						resp.target_component = 0;
+						resp.count = 0;
+						mavlink_msg_mission_count_encode (C_MAVID_CONFIGDEV, 1, &mav_tmp.frame, &resp);
+						insert_to_QG (mav_tmp);
+						rv = false;
+						}
+					break;
+					}
 				case MAVLINK_MSG_ID_COMMAND_LONG:		// 76
 					{
 					mavlink_command_long_t cmdlongframe;
 					mavlink_msg_command_long_decode (&msg, &cmdlongframe);
 					if (cmdlongframe.target_system == C_MAVID_CONFIGDEV)
 						{
-						filter_command_long_QG_to_RF (cmdlongframe);
+						filter_command_long_QG_to_RF (cmdlongframe, EDSTSYS_QG_SELF);
 						rv = false;
 						}
 					cmdlong = cmdlongframe.command;
@@ -724,12 +789,23 @@ bool TMAVCORE::sniff_filter_changer_QG_to_RF (mavlink_message_t &msg)
 					}
         case MAVLINK_MSG_ID_HEARTBEAT:  // #0: Heartbeat
           {
-					// E.g. read GCS heartbeat and go into
-					// comm lost mode if timer times out
 					mavlink_heartbeat_t heartbeat;
-					mavlink_msg_heartbeat_decode (&msg, &heartbeat); 
-					//test_data = heartbeat.autopilot;
-					//rv = false;
+					mavlink_msg_heartbeat_decode (&msg, &heartbeat);
+					
+					if (msg.sysid == C_MAVID_PILOT)	// фрейм маркируется как от автопилота
+						{
+						cur_arm_status_in = (heartbeat.base_mode & MAV_MODE_FLAG_SAFETY_ARMED)?true:false;
+						if (heartbeat.base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED)
+							{
+							curflight_mode_in = flight_mode_code_from_custom (heartbeat.custom_mode);	
+							}
+						else
+							{
+							curflight_mode_in = EFLIGHTMODE_NONE;
+							}
+						tim_mav_dtc_link.set (1500);
+						rv = false;
+						}
 					break;
           }
 				case MAVLINK_MSG_ID_REQUEST_DATA_STREAM:
@@ -748,6 +824,8 @@ bool TMAVCORE::sniff_filter_changer_QG_to_RF (mavlink_message_t &msg)
 					}
 				case MAVLINK_MSG_ID_STATUSTEXT:			// 253
 				case MAVLINK_MSG_ID_TIMESYNC:		// 111
+				case MAVLINK_MSG_ID_SYSTEM_TIME: // 2
+				case MAVLINK_MSG_ID_MISSION_ACK:  // #47
 					{
 					break;
 					}
@@ -828,6 +906,16 @@ bool TMAVCORE::sniff_filter_changer_QG_to_RF (mavlink_message_t &msg)
 
 					break;
 					}
+				case MAVLINK_MSG_ID_FILE_TRANSFER_PROTOCOL:
+					{
+					mavlink_file_transfer_protocol_t ftprtcl;
+					mavlink_msg_file_transfer_protocol_decode (&msg, &ftprtcl);
+					if (ftprtcl.target_system == C_MAVID_CONFIGDEV)
+						{
+						ftprtcl.target_system = 0;
+						}
+					break;
+					}
 				default:
 					{
 					rv = false;
@@ -845,18 +933,36 @@ bool TMAVCORE::sniff_filter_changer_QG_to_RF (mavlink_message_t &msg)
 
 
 
-bool TMAVCORE::is_modem_mav_link ()
+bool TMAVCORE::is_newracom_mav_link ()
 {
-	return (tim_mav_modem_link_timeout.get())?true:false;
+	return (tim_mav_newracom_link.get() )?true:false;
 }
+
+
+
+bool TMAVCORE::is_dtc_mav_link ()
+{
+	return (tim_mav_dtc_link.get())?true:false;
+}
+
+
+
+bool TMAVCORE::is_common_mav_link ()
+{
+	return (tim_mav_newracom_link.get() || tim_mav_dtc_link.get ())?true:false;
+}
+
+
+
+
 
 
 
 bool TMAVCORE::sniff_filter_changer_RF_to_QG (mavlink_message_t &msg)
 {
 	bool rv = true;
-	tim_mav_modem_link_timeout.set (1500);
-	
+	tim_mav_newracom_link.set (1200);
+	/*
 	if (mavatom_RF_to_QG->free_space ())
 		{
 		if (!test_txt_period.get ())
@@ -865,6 +971,7 @@ bool TMAVCORE::sniff_filter_changer_RF_to_QG (mavlink_message_t &msg)
 			test_txt_period.set (2000);
 			}
 		}
+	*/
 		uint32_t cmdlong = 0;
       switch(msg.msgid) 
 				{
@@ -876,7 +983,7 @@ bool TMAVCORE::sniff_filter_changer_RF_to_QG (mavlink_message_t &msg)
 					{
 					mavlink_vfr_hud_t frame;
 					mavlink_msg_vfr_hud_decode (&msg, &frame);
-					if (msg.sysid == C_PILOT_MAV_ID)
+					if (msg.sysid == C_MAVID_PILOT)
 						{
 						cur_throtle_proc_in = frame.throttle;
 						cur_in_airspeed = frame.airspeed;
@@ -930,7 +1037,7 @@ bool TMAVCORE::sniff_filter_changer_RF_to_QG (mavlink_message_t &msg)
           {
 					mavlink_heartbeat_t heartbeat;
 					mavlink_msg_heartbeat_decode (&msg, &heartbeat);
-					if (msg.sysid == C_PILOT_MAV_ID)
+					if (msg.sysid == C_MAVID_PILOT)
 						{
 						cur_arm_status_in = (heartbeat.base_mode & MAV_MODE_FLAG_SAFETY_ARMED)?true:false;
 						if (heartbeat.base_mode & MAV_MODE_FLAG_CUSTOM_MODE_ENABLED)
@@ -984,66 +1091,39 @@ void TMAVCORE::send_rc_data (uint8_t ix, float v1, float v2)
 */
 
 
-void TMAVCORE::send_joystick_data (float v_pitch, float v_roll, uint16_t butns)
+void TMAVCORE::send_joystick_data (float v_pitch, float v_roll)
 {
+		//float v_roll = pitch;
+		//float v_pitch = roll;
 		if (v_pitch > 1) v_pitch = 1;
 		if (v_pitch < -1) v_pitch = -1;
 		if (v_roll > 1) v_roll = 1;
 		if (v_roll < -1) v_roll = -1;
-		joyst_data_pitch = v_pitch*1000;
-		joyst_data_roll = v_roll*1000;
-		joyst_buttons = butns;
-		f_new_joystick_data = true;
+		joyst_data_pitch = v_pitch * 1000;
+		joyst_data_roll = v_roll * 1000;
+		//joyst_buttons = butns;
+
 }
 
 
 
 void TMAVCORE::joystickdata_task ()
 {
-
 	if (!joystick_period.get()) {
-		if (f_new_joystick_data) { 
-				if (is_free_space_chan_RF_tx ()) 
-					{
-					send_mav_manual_controll (EDSTSYS_RF);
-					f_new_joystick_data = false;
-					}
-				if (is_free_space_chan_QG_tx ()) 
-					{
-					send_mav_manual_controll (EDSTSYS_QG);
-					f_new_joystick_data = false;
-					}
+				if (is_free_space_chan_RF_tx ()) send_mav_cmd_mch_manual_controll (EDSTSYS_RF);
+				if (is_free_space_chan_QG_tx ()) send_mav_cmd_mch_manual_controll (EDSTSYS_QG_ROUTE);
 		joystick_period.set (100);
 		}
-	}
-
 }
 
 
-
-/*
-void TMAVCORE::send_mav_throtle_task ()
-{
-	if (curflight_mode_in == EFLIGHTMODE_STABILIZE)		// curflight_mode_in == EFLIGHTMODE_STABILIZE
-		{
-		if (f_do_change_speed)
-			{
-			if (is_free_space_chan_RF_tx ())
-				{
-				send_mav_frame_dochange_speed ();
-				f_do_change_speed = false;
-				}
-			}
-		}
-}
-*/
 
 
 // часть механизма подкидывания параметров для возможности редактирования параметров джойстика со стороны наземки
 void TMAVCORE::send_mav_frame_myparam_value_to_qg (S_MVPARAM_HDR_T *tag, int16_t ix)
 {
 	mavlink_param_value_t param;
-	S_MAVDATAFRAME_T mav_tmp;
+	//S_MAVDATAFRAME_T mav_tmp;
 
 	bool rslt_ok = false;
 	switch (tag->type)
@@ -1059,7 +1139,8 @@ void TMAVCORE::send_mav_frame_myparam_value_to_qg (S_MVPARAM_HDR_T *tag, int16_t
 		case MAV_PARAM_TYPE_UINT32:
 			{
 			S_MVPARAM_U32_T *data_u32 = (S_MVPARAM_U32_T*)tag;
-			param.param_value = data_u32->value;
+			CopyMemorySDC ((char*)&data_u32->value, (char*)&param.param_value, sizeof(param.param_value));	
+			//param.param_value = data_u32->value;
 			rslt_ok = true;
 			break;
 			}
@@ -1068,7 +1149,7 @@ void TMAVCORE::send_mav_frame_myparam_value_to_qg (S_MVPARAM_HDR_T *tag, int16_t
 	if (rslt_ok)
 		{
 		param.param_type = tag->type;
-		param.param_count = params->param_full_cnt () - 1;
+		param.param_count = params->param_full_cnt ();
 		param.param_index = ix;
 		TSTMSTRING str(const_cast<char*>(tag->param_id), param.param_id, sizeof(param.param_id));		// просто копирует строку
 		uint16_t lensz = mavlink_msg_param_value_encode_chan (C_MAVID_CONFIGDEV, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &param);
@@ -1078,14 +1159,28 @@ void TMAVCORE::send_mav_frame_myparam_value_to_qg (S_MVPARAM_HDR_T *tag, int16_t
 
 
 
+void TMAVCORE::send_mav_cmd_mch_manual_controll (EDSTSYS d)
+{
+		clear_tmpmavarr ();
+		tmpmavcmdarr[0] = joyst_data_roll;
+		tmpmavcmdarr[1] = joyst_data_pitch; 
+	
+		int16_t thr_val = throttle_gen_value ();
+		tmpmavcmdarr[3] = thr_val;
+	
+		//if (!bano_data) send_mav_frame_command_long (MAV_CMD_MCH_SET_MANUAL_CONTROL, tmpmavcmdarr, 7, d);
+		send_mav_frame_command_long (MAV_CMD_MCH_SET_MANUAL_CONTROL, tmpmavcmdarr, 7, d);
+}
 
+
+/*
 void TMAVCORE::send_mav_manual_controll (EDSTSYS d)
 {
 	
 	S_MAVDATAFRAME_T mav_tmp;
 	mavlink_manual_control_t joymanual;
 	
-	joymanual.target = 1;
+	joymanual.target = C_MAVID_PILOT;
 	joymanual.r = 0;//INT16_MAX;
 	joymanual.z = throttle_gen_value ();//INT16_MAX;
 	joymanual.x = joyst_data_roll;
@@ -1096,9 +1191,15 @@ void TMAVCORE::send_mav_manual_controll (EDSTSYS d)
 
 	switch (d)
 		{
-		case EDSTSYS_QG:
+		case EDSTSYS_QG_SELF:
 			{
 			mavlink_msg_manual_control_encode_chan (C_MAVID_CONFIGDEV, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &joymanual);  // C_MAVLNK_CH_MODEM_TO_QG
+			insert_to_QG (mav_tmp);
+			break;
+			}
+		case EDSTSYS_QG_ROUTE:
+			{
+			mavlink_msg_manual_control_encode_chan (C_MAVID_ROUTE, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &joymanual);  // C_MAVLNK_CH_MODEM_TO_QG
 			insert_to_QG (mav_tmp);
 			break;
 			}
@@ -1111,27 +1212,29 @@ void TMAVCORE::send_mav_manual_controll (EDSTSYS d)
 		default: break;
 		}
 }
+*/
 
 
 
 
 void TMAVCORE::send_heartbeat_confdev_to_qg ()
 {
-	S_MAVDATAFRAME_T mav_tmp;
+	//S_MAVDATAFRAME_T mav_tmp;
 	mavlink_heartbeat_t heartbeat;
 		
-		heartbeat.type = 1;// MAV_TYPE_ONBOARD_CONTROLLER;// 1;// MAV_TYPE_CHARGING_STATION;//13;// 13;//MAV_TYPE_GCS;//MAV_TYPE_GCS;// MAV_TYPE_CHARGING_STATION;
-		heartbeat.autopilot = MAV_AUTOPILOT_ARDUPILOTMEGA;//MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;//3;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_TYPE_CHARGING_STATION;
-		heartbeat.base_mode = 17;  // 0x51
-		heartbeat.custom_mode = 2;
-		heartbeat.system_status = MAV_STATE_ACTIVE;//3;//MAV_STATE_STANDBY;// MAV_STATE_ACTIVE;//MAV_STATE_ACTIVE;//0;//MAV_STATE_ACTIVE;
+		heartbeat.type = 50;// 50;//MAV_TYPE_CHARGING_STATION;// MAV_TYPE_ONBOARD_CONTROLLER;// 1;// MAV_TYPE_CHARGING_STATION;//13;// 13;//MAV_TYPE_GCS;//MAV_TYPE_GCS;// MAV_TYPE_CHARGING_STATION;
+		heartbeat.autopilot = MAV_AUTOPILOT_ARDUPILOTMEGA;//MAV_AUTOPILOT_ARDUPILOTMEGA;//MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;//3;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_TYPE_CHARGING_STATION;
+		heartbeat.base_mode = 17;//0x51;//81;//0x51;  // 81
+		heartbeat.custom_mode = 2;// 2;
+		heartbeat.system_status = MAV_STATE_ACTIVE;// MAV_STATE_ACTIVE;//3;//MAV_STATE_STANDBY;// MAV_STATE_ACTIVE;//MAV_STATE_ACTIVE;//0;//MAV_STATE_ACTIVE;
 		heartbeat.mavlink_version = 3;
 		
+
 		/*
-		heartbeat.type = MAV_TYPE_ANTENNA_TRACKER;// 1  13;// 13;//MAV_TYPE_GCS;//MAV_TYPE_GCS;// MAV_TYPE_CHARGING_STATION;  MAV_TYPE_ANTENNA_TRACKER
+		heartbeat.type = MAV_TYPE_CHARGING_STATION;// 1  13;// 13;//MAV_TYPE_GCS;//MAV_TYPE_GCS;// MAV_TYPE_CHARGING_STATION;  MAV_TYPE_ANTENNA_TRACKER
 		heartbeat.autopilot = 3;//3;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_AUTOPILOT_INVALID;//MAV_AUTOPILOT_ARDUPILOTMEGA;// MAV_TYPE_CHARGING_STATION;
-		heartbeat.base_mode = 17;  // 0x51
-		heartbeat.custom_mode = 2;
+		heartbeat.base_mode = 0x51;  // 0x51
+		heartbeat.custom_mode = 0;
 		heartbeat.system_status = MAV_STATE_ACTIVE;//3;//MAV_STATE_STANDBY;// MAV_STATE_ACTIVE;//MAV_STATE_ACTIVE;//0;//MAV_STATE_ACTIVE;
 		heartbeat.mavlink_version = 3;
 		*/
@@ -1145,17 +1248,24 @@ void TMAVCORE::send_heartbeat_confdev_to_qg ()
 
 void TMAVCORE::set_mavsysid_self (uint32_t d)
 {
-	
-	SysID_QG_hrtbt = d;
-	ComponentID_QG_hrtbt = 0;
+	C_MAVID_CONFIGDEV = d;
+	//ComponentID_QG_hrtbt = 0;
 }
 
 
 
 void TMAVCORE::set_mavsysid_dest (uint32_t d)
 {
-	SysID_RF_hrtbt = d;
-	ComponentID_RF_hrtbt = 0;
+	C_MAVID_PILOT = d;
+	//ComponentID_RF_hrtbt = 0;
+}
+
+
+
+void TMAVCORE::set_mavsysid_route (uint32_t d)
+{
+	C_MAVID_ROUTE = d;
+	//ComponentID_RF_hrtbt = 0;
 }
 
 
@@ -1184,13 +1294,13 @@ void TMAVCORE::set_forse_arm_mode (bool v)
 
 void TMAVCORE::send_mav_frame_command_long (uint16_t cmd, float *arr, uint8_t p_cnt, EDSTSYS d)
 {
-	S_MAVDATAFRAME_T mav_tmp;
+	//S_MAVDATAFRAME_T mav_tmp;
 	mavlink_command_long_t framecmdlong;
 
 	framecmdlong.command = cmd;
 	framecmdlong.confirmation = 0;
-	framecmdlong.target_component = 0;
-	framecmdlong.target_system = (d == EDSTSYS_QG)?0xFF:1;
+	framecmdlong.target_component = 1;
+	//framecmdlong.target_system = (d == EDSTSYS_QG_SELF)?0xFF:C_MAVID_PILOT;		// назначение наземка если указано EDSTSYS_QG_SELF
 	
 	framecmdlong.param1 = *arr++;
 	framecmdlong.param2 = *arr++;
@@ -1202,14 +1312,23 @@ void TMAVCORE::send_mav_frame_command_long (uint16_t cmd, float *arr, uint8_t p_
 
 	switch (d)
 		{
-		case EDSTSYS_QG:
+		case EDSTSYS_QG_SELF:
 			{
-			mavlink_msg_command_long_encode_chan (C_MAVID_CONFIGDEV, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &framecmdlong);  // C_MAVLNK_CH_MODEM_TO_QG
+			framecmdlong.target_system = 0xFF;
+			mavlink_msg_command_long_encode_chan (C_MAVID_CONFIGDEV, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &framecmdlong); 
+			insert_to_QG (mav_tmp);
+			break;
+			}
+		case EDSTSYS_QG_ROUTE:
+			{
+			framecmdlong.target_system = 0xFF;
+			mavlink_msg_command_long_encode_chan (C_MAVID_ROUTE, 1, C_MAVLNK_CH_MODEM_TO_QG, &mav_tmp.frame, &framecmdlong); 
 			insert_to_QG (mav_tmp);
 			break;
 			}
 		case EDSTSYS_RF:
 			{
+			framecmdlong.target_system = C_MAVID_PILOT;
 			mavlink_msg_command_long_encode_chan (0xFF, 0, C_MAVLNK_CH_QG_TO_MODEM, &mav_tmp.frame, &framecmdlong);  // C_MAVLNK_CH_MODEM_TO_QG
 			insert_to_RF (mav_tmp);
 			break;
@@ -1222,7 +1341,7 @@ void TMAVCORE::send_mav_frame_command_long (uint16_t cmd, float *arr, uint8_t p_
 
 void TMAVCORE::StatusText ()
 {
-	S_MAVDATAFRAME_T mav_tmp;
+	//S_MAVDATAFRAME_T mav_tmp;
 	//mavlink_message_t tx_message; 
 	mavlink_statustext_t txtmav;
 	static uint32_t j_count = 0;
@@ -1260,7 +1379,7 @@ void TMAVCORE::sendcmd_set_mode (EFLIGHTMODE mmd, bool f_armst, EDSTSYS d)
 		{
 		clear_tmpmavarr ();
 			
-		tmpmavcmdarr[0] = MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | ((f_armst)?MAV_MODE_FLAG_SAFETY_ARMED:0);
+		tmpmavcmdarr[0] = MAV_MODE_FLAG_MANUAL_INPUT_ENABLED | MAV_MODE_FLAG_STABILIZE_ENABLED | MAV_MODE_FLAG_CUSTOM_MODE_ENABLED | ((f_armst)?MAV_MODE_FLAG_SAFETY_ARMED:0);
 		tmpmavcmdarr[1] = custom_mode_code (mmd); 
 		send_mav_frame_command_long (MAV_CMD_DO_SET_MODE, tmpmavcmdarr, 7, d);
 		}
@@ -1271,7 +1390,7 @@ void TMAVCORE::sendcmd_set_mode (EFLIGHTMODE mmd, bool f_armst, EDSTSYS d)
 void TMAVCORE::send_payload_place ()
 {
 		clear_tmpmavarr ();
-		send_mav_frame_command_long (MAV_CMD_NAV_PAYLOAD_PLACE , tmpmavcmdarr, 7, EDSTSYS_QG);
+		send_mav_frame_command_long (MAV_CMD_NAV_PAYLOAD_PLACE , tmpmavcmdarr, 7, EDSTSYS_QG_SELF);
 }
 
 
@@ -1299,7 +1418,7 @@ void TMAVCORE::send_arm_status_task ()
 			}
 		if (is_free_space_chan_QG_tx ())
 			{
-			send_mav_frame_arm_dissarm (EDSTSYS_QG);
+			send_mav_frame_arm_dissarm (EDSTSYS_QG_ROUTE);
 			f_arm_new_cmd = false;
 			}
 		}
@@ -1344,7 +1463,7 @@ ETHRCHECK TMAVCORE::check_feedback_throtle_val (uint8_t vprc)
 	if (cur_throtle_proc_in >= 0 && cur_throtle_proc_in <= 100)
 		{
 		uint32_t jitval = 2;
-		long min_val = vprc;//45;//params->get_value_d (0).u.u32;
+		long min_val = vprc;
 		long max_val = min_val;
 		min_val -= jitval;
 		max_val += jitval;
@@ -1373,7 +1492,7 @@ ETHRCHECK TMAVCORE::check_feedback_throtle_val (uint8_t vprc)
 
 
 
-
+/*
 void TMAVCORE::send_mav_frame_throttle (ETHRSTATE s, EDSTSYS d)
 {
 		clear_tmpmavarr ();
@@ -1381,10 +1500,12 @@ void TMAVCORE::send_mav_frame_throttle (ETHRSTATE s, EDSTSYS d)
 		tmpmavcmdarr[1] = 500;
 		send_mav_frame_command_long (42102, tmpmavcmdarr, 7, d);
 }
+*/
 
 
 
 // QG <-SRC-> RF
+/*
 void TMAVCORE::send_throttle_task ()
 {
 	if (!throttle_period.get ()) {
@@ -1397,13 +1518,14 @@ void TMAVCORE::send_throttle_task ()
 				}
 			if (is_free_space_chan_QG_tx ())
 				{
-				send_mav_frame_throttle (thrcontrl_sw, EDSTSYS_QG);
+				send_mav_frame_throttle (thrcontrl_sw, EDSTSYS_QG_ROUTE);
 				thrcontrl_sw = ETHRSTATE_NONE;
 				}
 			}
 		throttle_period.set (100);
 		}
 }
+*/
 
 
 
@@ -1476,10 +1598,10 @@ int16_t TMAVCORE::mav_throtle_task ()
 */
 
 
+
 void TMAVCORE::send_throtle_max_proc ()
 {
 	thrcontrl_sw = ETHRSTATE_MAX;
-	trottle_timeout.set (200);
 }
 
 
@@ -1487,7 +1609,6 @@ void TMAVCORE::send_throtle_max_proc ()
 void TMAVCORE::send_throtle_cruise_proc ()
 {
 	thrcontrl_sw = ETHRSTATE_CRUIS;
-	trottle_timeout.set (0);
 }
 
 
@@ -1495,12 +1616,18 @@ void TMAVCORE::send_throtle_cruise_proc ()
 void TMAVCORE::send_throtle_min_proc ()
 {
 	thrcontrl_sw = ETHRSTATE_MIN;
-	trottle_timeout.set (200);
 }
 
 
 
+void TMAVCORE::send_throtle_zero_proc ()
+{
+	thrcontrl_sw = ETHRSTATE_ZERO;
+}
 
+
+
+/*
 int16_t TMAVCORE::throttle_gen_value ()
 {
 	int16_t rv = INT16_MAX;
@@ -1520,6 +1647,32 @@ int16_t TMAVCORE::throttle_gen_value ()
 		default: 
 			break;
 		}
+	return rv;
+}
+*/
+
+
+
+int16_t TMAVCORE::throttle_gen_value ()
+{
+	int16_t rv = thrcontrl_sw;
+	/*
+	switch (thrcontrl_sw)
+		{
+		case ETHRSTATE_MAX:
+			{
+			if (trottle_timeout.get ()) rv = 100;
+			break;
+			}
+		case ETHRSTATE_MIN:
+			{
+			if (trottle_timeout.get ()) rv = 0;
+			break;
+			}
+		default: 
+			break;
+		}
+	*/
 	return rv;
 }
 
@@ -1578,6 +1731,21 @@ EFLIGHTMODE TMAVCORE::get_mode ()
 }
 
 
+/*
+bool TMAVCORE::get_arm_status_newracom ()
+{
+	return cur_arm_status_newracom_in;
+}
+
+
+
+bool TMAVCORE::get_arm_status_dtc ()
+{
+	return cur_arm_status_dtc_in;
+}
+*/
+
+
 
 bool TMAVCORE::get_arm_status ()
 {
@@ -1586,15 +1754,14 @@ bool TMAVCORE::get_arm_status ()
 
 
 
+
+
+
 void TMAVCORE::send_arm_status (bool v)
 {
 	cur_arm_status_out = v;
 	f_arm_new_cmd = true;
 }
-
-
-
-
 
 
 
@@ -1617,7 +1784,8 @@ void TMAVCORE::send_mav_frame_parachute (PARACHUTE_ACTION act)
 
 
 
-static const uint32_t convcustommode_plane[EFLIGHTMODE_ENDENUM] = {29/*none*/, 9/*auto*/, 2/*stabilize*/, 11/*rtl*/};
+//static const uint32_t convcustommode_plane[EFLIGHTMODE_ENDENUM] = {29/*none*/, 9/*auto*/, 2/*stabilize*/, 11/*rtl*/};
+static const uint32_t convcustommode_plane[EFLIGHTMODE_ENDENUM] = {29/*none*/, 10/*auto*/, 2/*stabilize*/, 11/*rtl*/};
 static const uint32_t convcustommode_copter[EFLIGHTMODE_ENDENUM] = {29/*none*/, 3/*auto*/, 0/*stabilize*/, 6/*rtl*/};
 uint32_t TMAVCORE::custom_mode_code (EFLIGHTMODE fm)
 {
@@ -1643,6 +1811,7 @@ uint32_t TMAVCORE::custom_mode_code (EFLIGHTMODE fm)
 		}
 	return rv;
 }
+
 
 
 
@@ -1694,7 +1863,8 @@ void TMAVCORE::send_mav_frame_bano (uint8_t prog, EDSTSYS d)
 {
 		clear_tmpmavarr ();
 		tmpmavcmdarr[0] = prog;
-		send_mav_frame_command_long (42101, tmpmavcmdarr, 7, d);
+		send_mav_frame_command_long (MAV_CMD_SET_BANO, tmpmavcmdarr, 7, d);
+		// send_mav_frame_command_long (42101, tmpmavcmdarr, 7, d);
 }
 
 
@@ -1703,14 +1873,15 @@ void TMAVCORE::send_mav_parachute_act (EPARACHUTEACT act_n, EDSTSYS d)
 {
 		clear_tmpmavarr ();
 		tmpmavcmdarr[0] = act_n;
-		send_mav_frame_command_long (MAV_CMD_DO_PARACHUTE, tmpmavcmdarr, 7, d);
+		send_mav_frame_command_long (MAV_CMD_SET_PARACHUTE, tmpmavcmdarr, 7, d);
+		// send_mav_frame_command_long (MAV_CMD_DO_PARACHUTE, tmpmavcmdarr, 7, d);
 }
 
 
 
 void TMAVCORE::send_mav_systime ()
 {
-	S_MAVDATAFRAME_T mav_tmp;
+	//S_MAVDATAFRAME_T mav_tmp;
 	mavlink_system_time_t frm;
 	frm.time_boot_ms = SYSBIOS::GetTickCountLong ();
 	frm.time_unix_usec = frm.time_boot_ms * 1000;
@@ -1732,7 +1903,6 @@ void TMAVCORE::send_system_time_task ()
 
 
 
-
 void TMAVCORE::parachute_tx_task ()
 {
 // rate передачи контролируется в TDEVCODE
@@ -1745,7 +1915,7 @@ if (f_new_parachute_data)
 		}
 	if (is_free_space_chan_QG_tx ())
 		{
-		send_mav_parachute_act (parachute_action, EDSTSYS_QG);
+		send_mav_parachute_act (parachute_action, EDSTSYS_QG_ROUTE);
 		f_new_parachute_data = false;
 		}
 	}
