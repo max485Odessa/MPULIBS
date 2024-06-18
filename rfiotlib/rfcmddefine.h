@@ -164,7 +164,7 @@ class TRADIOIF {
 		virtual void tx (S_RFMARKTAG_T *src, ERFMODE endsw_to) = 0;
 		virtual bool is_tx () = 0;
 		virtual bool is_rx () = 0;
-		virtual bool rx (S_RFMARKTAG_T *dst, uint16_t max_dstsz0) = 0;
+		virtual bool rx (S_RFMARKTAG_T *dst) = 0;
 		virtual const uint16_t frame_size () = 0;
 };
 

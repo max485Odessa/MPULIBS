@@ -131,7 +131,7 @@ class TRFM69: public TFFC, public TRADIOIF {		// IFCRFTX
 		virtual void tx (S_RFMARKTAG_T *src, ERFMODE endsw_to);
 		virtual bool is_tx ();
 		virtual bool is_rx ();
-		virtual bool rx (S_RFMARKTAG_T *dst,  uint16_t max_dstsz0);
+		virtual bool rx (S_RFMARKTAG_T *dst);
 		virtual const uint16_t frame_size ();
 	
 	public:

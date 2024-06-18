@@ -2,12 +2,12 @@
 #include "rfcmddefine.h"
 
 
-TRFMASTER::TRFMASTER (TRADIOIF *r, local_rf_id_t slf) : c_datapayload_size (r->frame_size()- sizeof(S_RFMARKTAG_T))
+TRFMASTER::TRFMASTER (TRADIOIF *r, local_rf_id_t slf) : c_datapayload_size (r->frame_size() - sizeof(S_RFMARKTAG_T))
 {
 	self_id = slf;
 	radio = r;
-	acksectortab = new uint8_t[c_datapayload_size];
-	rxsector = new uint8_t[c_datapayload_size];
+	acksectortab = new uint8_t[c_datapayload_size];	// only payload size
+	rxsector = new uint8_t[radio->frame_size()];	// full size
 }
 
 
@@ -90,11 +90,28 @@ return rv;
 
 
 
+
+
+void TRFMASTER::rx_task ()
+{
+	if (radio->is_rx ())
+		{
+		if (radio->rx ((S_RFMARKTAG_T*)rxsector))
+			{
+			
+			}
+		}
+	
+}
+
+
+
+
 // S_RFMARKTAG_T *src, uint16_t sz, ERFMODE endsw_to
 
 void TRFMASTER::send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, uint8_t sect)
 {
-	if (scr && sz && sz <= c_datapayload_size)
+	if (scr && sz && sz <= (radio->frame_size() - sizeof(S_RFMARKTAG_T)))
 		{
 		S_RFMARKTAG_T *hdr = (S_RFMARKTAG_T*)scr;
 		hdr->crc = 0;
@@ -116,7 +133,8 @@ void TRFMASTER::send_sector (void *scr, uint8_t sz, ERFFMARK m, ERFTACK ackt, ui
 
 
 
-void TRFMASTER::Task ()
+
+void TRFMASTER::tx_task ()
 {
 	if (is_tx_processed ()) return;
 	if (need_ack != ERFTACK_NONE) {};
@@ -263,6 +281,14 @@ void TRFMASTER::Task ()
 			}
 		default: break;
 		}
+}
+
+
+
+void TRFMASTER::Task ()
+{
+tx_task ();
+rx_task ();
 }
 
 

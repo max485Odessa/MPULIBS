@@ -2,10 +2,13 @@
 #include "stm32f4xx_hal_cortex.h"
 
 
+
 IEXTINT_ISR *IEXTINT_ISR::isr_this[C_MAXGPIOPININTERRUPT] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 	//IEXTINT_ISR *IEXTINT_ISR::isr_this[C_MAXGPIOPININTERRUPT] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 static const uint8_t isrnumbarr[C_MAXGPIOPININTERRUPT] = {EXTI0_IRQn, EXTI1_IRQn, EXTI2_IRQn, EXTI3_IRQn, EXTI4_IRQn, EXTI9_5_IRQn, EXTI9_5_IRQn, EXTI9_5_IRQn, EXTI9_5_IRQn, EXTI9_5_IRQn, \
 EXTI15_10_IRQn, EXTI15_10_IRQn, EXTI15_10_IRQn, EXTI15_10_IRQn, EXTI15_10_IRQn, EXTI15_10_IRQn};
+
+
 
 #ifdef __cplusplus
  extern "C" {
@@ -48,6 +51,7 @@ void EXTI4_IRQHandler ()
 }
 
 
+
 void EXTI9_5_IRQHandler ()
 {
 	uint16_t start_mask = GPIO_PIN_5, ix = 5;
@@ -84,9 +88,9 @@ void EXTI15_10_IRQHandler ()
 
 void IEXTINT_ISR::gpio_isr (uint16_t pinn)
 {
-	__HAL_GPIO_EXTI_CLEAR_IT (pinn);
 	GPIO_PinState stt = HAL_GPIO_ReadPin(c_pin_in->port, c_pin_in->pin);
 	isr_gpio_cb_int (c_isr_nmbr, stt);
+	__HAL_GPIO_EXTI_CLEAR_IT (pinn);
 }
 
 
@@ -99,7 +103,7 @@ IEXTINT_ISR::IEXTINT_ISR (S_GPIOPIN *p, EGPINTMOD md)
 		{
 		c_isr_nmbr = ix;
 		isr_this[ix] = this;
-		_pin_low_init_int (c_pin_in, 1, md);
+		_pin_low_init_int (c_pin_in, 1, md, EHRTGPIOSPEED_HI);
 		enable_extint_isr (true);
 		}
 }
@@ -131,6 +135,7 @@ long IEXTINT_ISR::gpio_pin_ix_from_mask (uint16_t msk)
 			rv = ix;
 			break;
 			}
+		msk >>= 1;
 		ix++;
 		}
 	return rv;
