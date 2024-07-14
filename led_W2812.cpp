@@ -51,7 +51,7 @@ void TLED::color_rgb (s_rgb_t *lc)
 
 
 
-static const s_rgb_t arrdefcolor[ECOLR_ENDENUM] = {{0,0,0},{0xFF,0,0},{0,0xFF,0},{0,0,0xFF}, {0xFF,0xFF,0}, {0xFF,0xFF,0xFF}};
+static const s_rgb_t arrdefcolor[ECOLR_ENDENUM] = {{0,0,0},{0xFF,0,0},{0,0xFF,0},{0,0,0xFF}, {0xFF,0xFF,0}, {0xFF,0xFF,0xFF}, {0xFF, 164,0}/*orange*/};
 void TLED::color (EBASECOLOR eclr)
 {
 	s_rgb_t ccolr;
@@ -82,10 +82,10 @@ void TLED::color (EBASECOLOR eclr, s_rgb_t &dst, float brlv)
 
 
 
-
 TLEDS::TLEDS (const S_GPIOPIN *pn, uint8_t cnt, uint8_t *imx) : gp(pn), c_ar_cnt (cnt), reixmx(imx)
 {
-	_pin_low_init_out_pp ((S_GPIOPIN*)pn, 1);
+	//_pin_low_init_out_pp ((S_GPIOPIN*)pn, 1);
+	thizif_hiz_outputs (false);
 	relax_time = 0;
 	SYSBIOS::ADD_TIMER_SYS (&relax_time);
 	uint8_t ix = 0;
@@ -97,6 +97,20 @@ TLEDS::TLEDS (const S_GPIOPIN *pn, uint8_t cnt, uint8_t *imx) : gp(pn), c_ar_cnt
 		}
 	//sw_isr = ELEDSWISR_SYNC;
 	f_need_update = true;
+}
+
+
+
+void TLEDS::thizif_hiz_outputs (bool f_act_hiz)
+{
+	if (!f_act_hiz)
+		{
+		_pin_low_init_out_pp ((S_GPIOPIN*)gp, 1);
+		}
+	else
+		{
+		_pin_low_init_in ((S_GPIOPIN*)gp, 1);
+		}
 }
 
 
@@ -333,20 +347,26 @@ void TLEDS::color (uint8_t ix, uint8_t r, uint8_t g, uint8_t b)
 
 
 
-void TLEDS::sync_after_isr ()
+
+
+void TLEDS::clear_now ()
 {
-	f_isr_sync = true;
+		all_color (0, 0, 0);
+		update ();
+		f_need_update = false;
+	relax_time = C_LEDSTROBE_FRAME_TIME;
 }
+
 
 
 
 void TLEDS::Task ()
 {
 	if (!relax_time) {
-		if (f_need_update && f_isr_sync) {
+		if (f_need_update) {		//  && f_isr_sync
 			update ();
 			f_need_update = false;
-			f_isr_sync = false;
+			//f_isr_sync = false;
 			}
 		relax_time = C_LEDSTROBE_FRAME_TIME;
 		}

@@ -3,7 +3,6 @@ typedef unsigned short ushort;
 typedef unsigned long ulong;
 #include "stdlib.h"
 
-//#include "vcl.h"
 
 #include "textrut.hpp"
 #include <Registry.hpp>

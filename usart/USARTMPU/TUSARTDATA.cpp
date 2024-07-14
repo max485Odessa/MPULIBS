@@ -250,6 +250,20 @@ fifo_rx->clear ();
 
 
 
+void TUSARTOBJ::thizif_hiz_outputs (bool f_act_hiz)
+{
+	if (!f_act_hiz)
+		{
+		_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
+		}
+	else
+		{
+		_pin_low_init_in (&usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], 1);
+		}
+}
+
+
+
 void TUSARTOBJ::Init ()
 {
 	ifc[c_port_ix] = this;
@@ -261,11 +275,13 @@ void TUSARTOBJ::Init ()
 	
 	//_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
 	#if (HRDCPU == 1)
-	_pin_low_init_out_pp_af ( &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], EHRTGPIOSPEED_MID);
+	thizif_hiz_outputs (false);
+	//_pin_low_init_out_pp_af ( &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], EHRTGPIOSPEED_MID);
 	_pin_low_init_out_od_af ( &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX], EHRTGPIOSPEED_MID);
 	#endif
 	#if (HRDCPU == 4)
-	_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX],EHRTGPIOSPEED_MID);
+	thizif_hiz_outputs (false);
+	//_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX],EHRTGPIOSPEED_MID);
 	_pin_low_init_out_od_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_RX],EHRTGPIOSPEED_MID);
 	#endif
 		

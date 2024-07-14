@@ -53,7 +53,7 @@ bool rv = false;
 if (src && sz) {
     uint32_t ix = 0;
     while (ix < protocol_obj_n) {
-        parsobj_arr[ix].finded = parsobj_arr[ix].po->find_protocol(src, sz, parsobj_arr[ix].find_ix, parsobj_arr[ix].find_sz);
+        parsobj_arr[ix].finded = parsobj_arr[ix].po->find_protocol(src, 0, sz, parsobj_arr[ix].find_ix, parsobj_arr[ix].find_sz);
         ix++;
         }
     }

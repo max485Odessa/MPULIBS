@@ -79,9 +79,10 @@ class TJOYSTIC: public TFFC {
 		uint32_t get_pushtime_last (EJSTCPINS p);
 		EJSTMSG get_message (EJSTCPINS &kn);	
 	
-		float axis_value (EJSTCA ax);			// -1; 0 ; 1
+
 		void set_calibrate_axis_band (EJSTCA ax, S_JOYCALIBR_T *v);
-		bool get_axis (float &val_x, float &val_y);
+		bool get_axis (float &val_x, float &val_y);		// -1; 0 ; 1
+
 
 };
 

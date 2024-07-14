@@ -30,7 +30,7 @@ class TPARSEOBJ {
         // if return value true:
         // find_ix - index fist data frame protocol
         // findsz - size protocol data
-        virtual bool find_protocol (void *src, uint32_t szsrc, uint32_t &find_ix, uint32_t &findsz) = 0;
+        virtual bool find_protocol (void *src, uint32_t start_ix, uint32_t stop_ix, uint32_t &find_ix, uint32_t &findsz) = 0;
 
         // src - fist data
         // szsrc - size data

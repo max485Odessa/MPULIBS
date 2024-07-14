@@ -18,6 +18,12 @@
 #define C_MAVLNK_CH_QG_TO_MODEM MAVLINK_COMM_1
 
 
+// new id's for command long commands
+#define MAV_CMD_SET_BANO 44004
+#define MAV_CMD_SET_PARACHUTE 44005
+#define MAV_CMD_MCH_SET_MANUAL_CONTROL 44003
+//#define MAV_CMD_DTC_STATUS 43200
+
 
 //enum EPRMINCSW {EPRMINCSW_SOME_PARAM_VALUE = 0, EPRMINCSW_DETECT_LAST_PARAM, EPRMINCSW_SEND_MY_PARAMS, EPRMINCSW_COMPLETE, EPRMINCSW_ENDENUM};
 
@@ -132,19 +138,22 @@ class TMAVOUTSTATES {
 };
 
 //#define C_MAVID_CONFIGDEV 2
-#define C_PILOT_MAV_ID 1
+//#define C_PILOT_MAV_ID 1
 
 
-enum EDSTSYS {EDSTSYS_QG = 0, EDSTSYS_RF, EDSTSYS_ENDENUM};
-enum ETHRSTATE {ETHRSTATE_NONE = 0, ETHRSTATE_CRUIS = 1, ETHRSTATE_MAX = 2, ETHRSTATE_MIN = 3, ETHRSTATE_ENDENUM};
+enum EDSTSYS {EDSTSYS_QG_ROUTE = 0, EDSTSYS_QG_SELF, EDSTSYS_RF, EDSTSYS_ENDENUM};
+enum ETHRSTATE {ETHRSTATE_NONE = 0, ETHRSTATE_CRUIS = 1, ETHRSTATE_MAX = 2, ETHRSTATE_MIN = 3, ETHRSTATE_ZERO = 4, ETHRSTATE_ENDENUM};
 enum ETHRCHECK {ETHRCHECK_PASS = 0, ETHRCHECK_LOW, ETHRCHECK_HI, ETHRCHECK_ENDENUM};
-enum EPARACHUTEACT {EPARACHUTEACT_MANUAL_OPEN = 3, EPARACHUTEACT_MANUAL_CLOSE = 4, PARACHUTE_MANUAL_ENDENUM = 5};
+enum EPARACHUTEACT {EPARACHUTEACT_RELEASE = 2, EPARACHUTEACT_MANUAL_OPEN = 3, PARACHUTE_MANUAL_ENDENUM = 4};
 enum EPRMSTATE {EPRMSTATE_NONE = 0, EPRMSTATE_LIST_RESP = 1, EPRMSTATE_ENDENUM};
 
 
 class TMAVCORE: public TFFC {	
 	
-		uint32_t C_MAVID_CONFIGDEV;
+		uint8_t C_MAVID_CONFIGDEV;
+		uint8_t C_MAVID_PILOT;
+		uint8_t C_MAVID_ROUTE;
+	
 		TMAVSTREAM *mavatom_QG_to_RF;		// fifo mavlink messages for direction USB->MODEM
 		TMAVSTREAM *mavatom_RF_to_QG;		// fifo mavlink messages for direction MODEM->USB
 		TSERIALUSR *serial_QG_obj;			// serial fifo for usb
@@ -154,7 +163,9 @@ class TMAVCORE: public TFFC {
 	
 		virtual void Task () override;
 		SYSBIOS::Timer tim_link_detect;
-		SYSBIOS::Timer tim_mav_modem_link_timeout;
+		SYSBIOS::Timer tim_mav_newracom_link;
+		SYSBIOS::Timer tim_mav_dtc_link;
+		
 	
 		#ifdef SERIALDEBAG
 			uint32_t lost_mavlink_QG_to_RF_cnt;
@@ -164,21 +175,21 @@ class TMAVCORE: public TFFC {
 		#endif
 	
 		void StatusText ();
-		SYSBIOS::Timer test_txt_period;
+		//SYSBIOS::Timer test_txt_period;
 		
 		uint32_t custom_mode_code (EFLIGHTMODE fm);
 		EFLIGHTMODE flight_mode_code_from_custom (uint32_t fm);
 	
 		uint32_t force_arm_code_act;
 		uint8_t BoardType;
-		uint8_t SysID_QG_hrtbt;
-		uint8_t SysID_RF_hrtbt;
-		uint8_t ComponentID_QG_hrtbt;
-		uint8_t ComponentID_RF_hrtbt;
+		//uint8_t SysID_self;
+		//uint8_t SysID_RF_hrtbt;
+		//uint8_t ComponentID_QG_hrtbt;
+		//uint8_t ComponentID_RF_hrtbt;
 		//uint8_t SysID_QG_sniff;
-		uint8_t SysID_RF_sniff;
+		//uint8_t SysID_RF_sniff;
 		//uint8_t ComponentID_QG_sniff;
-		uint8_t ComponentID_RF_sniff;
+		//uint8_t ComponentID_RF_sniff;
 
 		uint8_t last_seq_QGtoRF;
 
@@ -186,17 +197,18 @@ class TMAVCORE: public TFFC {
 		float cur_in_airspeed;
 		
 		int16_t throttle_gen_value ();
-		SYSBIOS::Timer trottle_timeout;
+		//SYSBIOS::Timer trottle_timeout;
 		SYSBIOS::Timer heartbeat_conf_dev_timeout;
 		SYSBIOS::Timer timesync_timeout;
 		SYSBIOS::Timer joystick_period;
 		SYSBIOS::Timer throttle_period;
+		
 		//SYSBIOS::Timer parachute_period;
 
 		void qg_to_rf_mavlink_analise_task ();
 		void heartbeat_to_QG_task ();
 		
-		bool f_new_joystick_data;
+		//bool f_new_joystick_data;
 		int16_t joyst_data_pitch;
 		int16_t joyst_data_roll;
 		uint16_t joyst_buttons;
@@ -205,13 +217,12 @@ class TMAVCORE: public TFFC {
 		void banomodechange_task ();
 		void parachute_tx_task ();
 		//void send_myparams_inc_task ();
-		void send_mav_manual_controll (EDSTSYS d);
+		void send_mav_cmd_mch_manual_controll (EDSTSYS d);
 		void send_mav_autopilot_version ();
 		void send_mav_component_information ();
 		void send_mav_systime ();
-		//int16_t mav_throtle_task ();
 		void send_arm_status_task ();
-		void send_throttle_task ();
+		
 		
 		uint32_t c_confdev_systime_period;
 		SYSBIOS::Timer confdev_systime_period;
@@ -223,13 +234,10 @@ class TMAVCORE: public TFFC {
 		bool f_new_bano_data;
 		uint8_t bano_data;
 		
-		
-		//PARACHUTE_ACTION parachute_data;
-		
 		EFLIGHTMODE curflight_mode_in;		
 		EFLIGHTMODE curflight_mode_out;	
 		bool cur_arm_status_out;
-		bool cur_arm_status_in;
+		bool cur_arm_status_in;		// cur_arm_status_newracom_in
 		bool f_setmode_new_cmd;
 		bool f_arm_new_cmd;
 		
@@ -241,8 +249,9 @@ class TMAVCORE: public TFFC {
 		void send_mav_frame_bano (uint8_t prog, EDSTSYS d);		// QG <-SRC-> RF
 		//void send_mav_frame_do_set_servo (uint8_t an, uint16_t val);
 		void send_mav_frame_command_long (uint16_t cmd, float *arr, uint8_t p_cnt, EDSTSYS d);
+		void send_commang_long_ack (uint16_t cmd, bool f_ok, EDSTSYS d);
 		void send_mav_frame_myparam_value_to_qg (S_MVPARAM_HDR_T *tag, int16_t ix);
-		void send_mav_frame_throttle (ETHRSTATE s, EDSTSYS d);   // QG <-SRC-> RF
+		//void send_mav_frame_throttle (ETHRSTATE s, EDSTSYS d);   // QG <-SRC-> RF
 		void send_mav_parachute_act (EPARACHUTEACT act_n, EDSTSYS d);
 		
 		void send_payload_place ();
@@ -275,12 +284,15 @@ class TMAVCORE: public TFFC {
 		bool f_new_parachute_data;
 		EPARACHUTEACT parachute_action;
 		//mavlink_servo_output_raw_t servo_data_in;
+		
+		
+
 	
 	protected:
 	
 		bool sniff_filter_changer_QG_to_RF (mavlink_message_t &msg);
 		bool sniff_filter_changer_RF_to_QG (mavlink_message_t &msg);
-		bool filter_command_long_QG_to_RF (mavlink_command_long_t &msg);
+		bool filter_command_long_QG_to_RF (mavlink_command_long_t &msg, EDSTSYS d);
 	
 	public:
 		TMAVCORE (TMAVPARAMS *mp, TSERIALUSR *usbser, TSERIALUSR *uartser, uint16_t c_rftoqg_cnt, uint16_t c_qgtorf_cnt);		// количество елементов в фифо буфере
@@ -288,17 +300,21 @@ class TMAVCORE: public TFFC {
 		bool insert_to_QG ( S_MAVDATAFRAME_T &fr);			// mavcommand frame
 	
 
-		bool is_modem_mav_link ();
-		bool is_usb_link ();
+		bool is_newracom_mav_link ();
+		bool is_dtc_mav_link ();
+		bool is_common_mav_link ();
+		bool is_qg_serial_link ();
 		void restart ();
 		void enabled (bool val);
 		//void send_rc_data (uint8_t ix, float v1, float v2);
-		void send_joystick_data (float v_pitch, float v_roll, uint16_t butns);
+		void send_joystick_data (float v_pitch, float v_roll);
 		void send_set_mode (EFLIGHTMODE m);
 		EFLIGHTMODE get_mode ();
+		//bool get_arm_status_newracom ();
+		//bool get_arm_status_dtc ();
 		bool get_arm_status ();
 		void send_arm_status (bool v);
-		void send_BANO (uint8_t prog);			// 42101
+		void send_BANO (uint8_t prog);	
 		//void send_parachute ();
 		void send_parachute_action (EPARACHUTEACT act_n);
 		uint8_t get_pilot_throttle ();
@@ -307,9 +323,11 @@ class TMAVCORE: public TFFC {
 		void send_throtle_max_proc ();
 		void send_throtle_cruise_proc ();
 		void send_throtle_min_proc ();
+		void send_throtle_zero_proc ();
 		
 		void set_mavsysid_self (uint32_t d);
 		void set_mavsysid_dest (uint32_t d);
+		void set_mavsysid_route (uint32_t d);
 		//void set_pilotboard_type (uint32_t d);
 		void set_forse_arm_mode (bool v);
 	
