@@ -10,15 +10,10 @@
 
 
 
-//enum EHALLPOINT {EHALLPOINT_START = 0, EHALLPOINT_STOP = 1, EHALLPOINT_ENDENUM};
-
-
-
 class IFHALLCB {
 	public:
 		virtual void cb_ifhall (uint32_t ps) = 0;
 };
-
 
 
 
@@ -31,10 +26,11 @@ typedef struct {
 } S_HALPOINT_T;
 
 
+
 // модуль дискретного датчика хола
 // Функционал:
-// по CB интерфейсу получает сигнал синхронизации (прерывания по внешнему сигналу), измеряет длительность между прерываниями
-// вычисляет RPM, устанавливает угловую меру для для двух точек прерывания, управление по прерываниям передается в IFHALLCB интерфейс
+// по IEXTISRCB интерфейсу получает сигнал синхронизации (прерывания по внешнему сигналу), измеряет длительность между прерываниями
+// вычисляет RPM, устанавливает угловую меру для для точек прерывания, управление по прерываниям передается в IFHALLCB интерфейс
 class THALLDIG: public TFFC, public ITIMCB, public IEXTISRCB {
 		S_HALPOINT_T *points;
 		const uint8_t c_points_n;
@@ -46,7 +42,7 @@ class THALLDIG: public TFFC, public ITIMCB, public IEXTISRCB {
 		long search_ix;
 	
 		IFHALLCB *cb;
-		//ESYSTIM etim;
+
 		TTIM_MKS_ISR *etim;	
 		TEXTINT_ISR *extisr;
 		EPWMCHNL used_ch;
@@ -63,11 +59,10 @@ class THALLDIG: public TFFC, public ITIMCB, public IEXTISRCB {
 		float c_period_quantangle;
 
 		
-		S_GPIOPIN *c_pin_out;
 		bool f_enable;
 	
 	public:
-		THALLDIG (TTIM_MKS_ISR *t, TEXTINT_ISR *ei, EPWMCHNL usdch, S_GPIOPIN *c_pout, uint8_t npnt);		// S_GPIOPIN *p, EGPINTMOD md
+		THALLDIG (TTIM_MKS_ISR *t, TEXTINT_ISR *ei, EPWMCHNL usdch, uint8_t npnt);		// S_GPIOPIN *p, EGPINTMOD md S_GPIOPIN *c_pout,
 		void set_cb (IFHALLCB *c);
 		
 		// добавить точку прерывания
@@ -78,6 +73,7 @@ class THALLDIG: public TFFC, public ITIMCB, public IEXTISRCB {
 		void setoffset (float angl);
 		void enable (bool v);
 		uint32_t getrpm ();
+		float get_freq ();
 };
 
 

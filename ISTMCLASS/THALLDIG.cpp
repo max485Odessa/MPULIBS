@@ -1,9 +1,9 @@
 #include "THALLDIG.h"
 #include "rutine.h"
+#include "TGlobalISR.h"
 
 
-
-THALLDIG::THALLDIG (TTIM_MKS_ISR *t, TEXTINT_ISR *ei, EPWMCHNL usdch, S_GPIOPIN *c_pout, uint8_t npnt): c_points_n (npnt?1:npnt)
+THALLDIG::THALLDIG (TTIM_MKS_ISR *t, TEXTINT_ISR *ei, EPWMCHNL usdch,  uint8_t npnt): c_points_n ((!npnt)?1:npnt)
 {
 	points = new S_HALPOINT_T[c_points_n];
 	add_points_ix = 0;
@@ -11,13 +11,12 @@ THALLDIG::THALLDIG (TTIM_MKS_ISR *t, TEXTINT_ISR *ei, EPWMCHNL usdch, S_GPIOPIN 
 	etim = t;
 	extisr = ei;
 	used_ch = usdch;
-	c_pin_out = c_pout;
-	//sw_p = EHALLPOINT_ENDENUM;
+	//c_pin_out = c_pout;
 	etim->set_tim_cb (used_ch, this);
 	etim->enable_timer_oc (used_ch, true);
 	etim->enable_timer_isr (true);
-	//timisr = new ITIM_ISR (t, this);
-	//timisr->timer_init (10, 1000000);
+	c_treshold_step = 10;
+	c_offset_angl = 0;
 }
 
 
@@ -47,20 +46,20 @@ if (add_points_ix > 1)
 	while (fist_ix < (add_points_ix-1))
 		{
 		value = points[fist_ix].angl;
-		uint32_t search_ix = fist_ix + 1;
-		uint32_t find_ix = search_ix;
+		uint32_t s_ix = fist_ix + 1;
+		uint32_t find_ix = s_ix;
 		float find_value;
 		f_find = false;
-		while (search_ix < add_points_ix)
+		while (s_ix < add_points_ix)
 			{
-			find_value = points[search_ix].angl;
+			find_value = points[s_ix].angl;
 			if (find_value < value)
 				{
-				find_ix = search_ix;
+				find_ix = s_ix;
 				value = find_value;
 				f_find = true;
 				}
-			search_ix++;
+			s_ix++;
 			}
 		if (f_find)
 			{
@@ -131,6 +130,8 @@ void THALLDIG::set_cb (IFHALLCB *c)
 
 void THALLDIG::add_acc_period (uint32_t v)
 {
+acc_current_period_value = v;
+/*
 if (v > c_treshold_step)
 	{
 	acc_current_period_value = v;
@@ -139,6 +140,7 @@ else
 	{
 	acc_current_period_value += ((prev_period_value + v)/2);
 	}
+*/
 }
 
 
@@ -146,8 +148,9 @@ else
 void THALLDIG::isr_gpio_cb_isr (uint8_t isr_n, bool pinstate)
 {
 	// need control rpm
-	int32_t cv = etim->get_timer_counter ();
-	int32_t value = etim->get_delta (prev_period_value, cv);
+	TGLOBISR::disable ();
+	uint32_t cv = etim->get_timer_counter ();
+	uint32_t value = etim->get_delta (prev_period_value, cv);
 	add_acc_period (value);
 	prev_period_value = cv;
 	
@@ -159,8 +162,9 @@ void THALLDIG::isr_gpio_cb_isr (uint8_t isr_n, bool pinstate)
 	if (add_points_ix)
 		{
 		search_ix = 0;
-		etim->set_timer_oc_value (used_ch, points[search_ix++].oc_offset);
+		etim->set_timer_oc_value (used_ch, points[search_ix].oc_offset);
 		}
+	TGLOBISR::enable ();
 }
 
 
@@ -172,7 +176,7 @@ long ix = 0;
 uint32_t val;
 while (ix < add_points_ix)
 	{
-	val = scnnt + ((c_offset_angl + points[ix].angl) * c_period_quantangle); 
+	val = ((points[ix].angl + c_offset_angl) * c_period_quantangle) + scnnt; 
 	points[ix].oc_offset = val;
 	ix++;
 	}
@@ -182,10 +186,10 @@ while (ix < add_points_ix)
 
 void THALLDIG::tim_comp_cb_user_isr (ESYSTIM t, EPWMCHNL ch)
 {
-	if (!f_enable) return;
+	if (f_enable == false) return;
 	if (add_points_ix && search_ix < add_points_ix)
 		{
-		etim->set_timer_oc_value (used_ch, points[search_ix].oc_offset);
+		etim->set_timer_oc_value (used_ch, points[search_ix + 1].oc_offset);
 		cb->cb_ifhall (points[search_ix].en_name);
 		search_ix++;
 		}
@@ -202,8 +206,17 @@ void THALLDIG::setoffset (float angl)
 
 uint32_t THALLDIG::getrpm ()
 {
+return get_freq () * 60;
 }
 
+
+
+float THALLDIG::get_freq ()
+{
+	double val = acc_current_period_value;
+	val *= 0.000001;
+	return 1.0F / val;
+}
 
 
 
