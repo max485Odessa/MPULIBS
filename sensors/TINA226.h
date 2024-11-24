@@ -2,8 +2,8 @@
 #define _H_STM32_STDLIB_INA226_H_
 
 #include "TFTASKIF.h"
-#include "stm32f10x_gpio.h"
-#include "stm32f10x_rcc.h"
+//#include "stm32f10x_gpio.h"
+//#include "stm32f10x_rcc.h"
 #include "hard_rut.h"
 #include "I2CSOFTWARE.H"
 #include "SYSBIOS.H"
@@ -82,44 +82,54 @@ typedef enum
 
 
 
-enum EINAMOD {EINAMOD_VSHUNT = 0, EINAMOD_VBUS, EINAMOD_ENDENUM = 2}; // EINAMOD_CSHUNT
+enum EINAMOD {EINAMOD_MANID = 0, EINAMOD_DIEID, EINAMOD_VSHUNT, EINAMOD_VBUS, EINAMOD_ENDENUM}; // EINAMOD_CSHUNT
 #define C_INARELAX_TIME 100
 
 class TTINA226 : public TFFC {
+	
 		TI2CIFACE *i2c;
 		uint8_t i2c_adress;
 		bool readRegister(uint8_t reg, uint16_t &dst);
 		bool writeRegister16 (uint8_t reg, uint16_t val);
 		virtual void Task ();
-		utimer_t relax_time;
+		static utimer_t relax_time;
 	
-		//double _current_LSB;
-		//float _maxCurrent;
-		//float _shunt;
-		//float currentLSB, powerLSB;
-		//float vShuntMax, vBusMax, rShunt;
-	
-		//uint16_t raw_v_shunt;
-		//uint16_t raw_v_bus;
-		//uint16_t raw_c_shunt;
+		const float c_shunt_resistance;
 	
 		float v_shunt;
 		float v_bus;
 		float c_shunt;
+		bool f_is_ok;
+		uint16_t data_manid;
+		uint16_t data_dieid;
 	
 		EINAMOD sw;
 		bool setMaxCurrentShunt (float maxCurrent, float shunt, bool normalize);
-	
-	public:
-		TTINA226 (uint8_t adr, TI2CIFACE *cc_i2c);
-		bool configure (ina226_averages_t avg, ina226_busConvTime_t busConvTime, ina226_shuntConvTime_t shuntConvTime, ina226_mode_t mode);
-		//bool calibrate(float rShuntValue, float iMaxExpected);
-		float current ();
 		bool readShuntCurrent (float &dst);
 		bool readShuntVoltage(float &dst);
 		bool readBusVoltage(float &dst);
-		bool getManufacturerID (uint16_t &id);
-		bool getDieID (uint16_t &id);
+		bool readDieID (uint16_t &id);
+		bool readManufacturerID (uint16_t &id);
+		
+		static uint16_t c_chip_cnt;
+		static uint16_t work_chip_index;
+		static void next_chip_index ();
+		uint16_t obj_chip_index;
+		
+	protected:
+		
+	
+	public:
+		TTINA226 (uint8_t adr, TI2CIFACE *cc_i2c, float shnt_v);
+		bool configure (ina226_averages_t avg, ina226_busConvTime_t busConvTime, ina226_shuntConvTime_t shuntConvTime, ina226_mode_t mode);
+		bool is_ok ();
+		float current ();
+		float volt ();
+		uint16_t manID ();
+		uint16_t DieID ();
+	
+		float *adr_current ();
+		float *adr_volt ();
 };
 
 

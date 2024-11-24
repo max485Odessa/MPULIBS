@@ -6,6 +6,7 @@
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
 static bool cur_clock_state_tim[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
+static bool cur_clock_state_uart[ESYSUSART_ENDUNUM] = {0,0,0,0,0,0};
 static const TIM_TypeDef *cur_clock_port_tim[ESYSTIM_ENDENUM] = {TIM1,TIM2,TIM3,TIM4,TIM5,0,0,0,TIM9,TIM10,TIM11,0};
 static const bool period_tim[ESYSTIM_ENDENUM] = {0,true,0,0,true,0,0,0,0,0,0,0};
 
@@ -204,32 +205,29 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 	do	{
 			if (p == USART1)
 				{
-				static bool f_active = false;
-				if (!f_active)
+				if (!cur_clock_state_uart[ESYSUSART_1])
 					{
 					__HAL_RCC_USART1_CLK_ENABLE ();
-					f_active = true;
+					cur_clock_state_uart[ESYSUSART_1] = true;
 					}
 				break;
 				}
 			if (p == USART2)
 				{
-				static bool f_active = false;
-				if (!f_active)
+				if (!cur_clock_state_uart[ESYSUSART_2])
 					{
 					__HAL_RCC_USART2_CLK_ENABLE ();
-					f_active = true;
+					cur_clock_state_uart[ESYSUSART_2] = true;
 					}
 				break;
 				}
 			#ifdef USART3
 			if (p == USART3)
 				{
-				static bool f_active = false;
-				if (!f_active)
+				if (!cur_clock_state_uart[ESYSUSART_3])
 					{
 					__HAL_RCC_USART3_CLK_ENABLE ();
-					f_active = true;
+					cur_clock_state_uart[ESYSUSART_3] = true;
 					}
 				break;
 				}
@@ -237,11 +235,10 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 			#ifdef USART4
 			if (p == UART4)
 				{
-				static bool f_active = false;
-				if (!f_active)
+				if (!cur_clock_state_uart[ESYSUSART_4])
 					{
 					__HAL_RCC_UART4_CLK_ENABLE ();
-					f_active = true;
+					cur_clock_state_uart[ESYSUSART_4] = true;
 					}
 				break;
 				}
@@ -249,11 +246,10 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 			#ifdef UART5
 			if (p == UART5)
 				{
-				static bool f_active = false;
-				if (!f_active)
+				if (!cur_clock_state_uart[ESYSUSART_5])
 					{
 					__HAL_RCC_UART5_CLK_ENABLE ();
-					f_active = true;
+					cur_clock_state_uart[ESYSUSART_5] = true;
 					}
 				break;
 				}
@@ -261,11 +257,10 @@ void hard_usart_clock_enable (USART_TypeDef *p)
 			#ifdef UART6
 			if (p == USART6)
 				{
-				static bool f_active = false;
-				if (!f_active)
+				if (!cur_clock_state_uart[ESYSUSART_6])
 					{
 					__HAL_RCC_USART6_CLK_ENABLE ();
-					f_active = true;
+					cur_clock_state_uart[ESYSUSART_6] = true;
 					}
 				break;
 				}

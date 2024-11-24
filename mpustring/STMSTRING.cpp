@@ -1,7 +1,7 @@
 #include "STMSTRING.h"
 
 #ifdef IS_WINDOWS_OS
-	//using namespace TEX;
+	using namespace TEX;
 #endif
 static const unsigned long C_MULTDV_L32_AMOUNT = 10;
 static const unsigned long tmpMultData[C_MULTDV_L32_AMOUNT] = {1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000};
@@ -282,9 +282,13 @@ AddStringP ((char*)lpsrc);
 
 void TSTMSTRING::Add_String (const char *lpsrc, unsigned long sz)
 {
+	char d;
 while (sz)
     {
-    InsChar (*lpsrc++);
+		d = *lpsrc;
+		if (!d) break;
+    InsChar (d);
+		lpsrc++;
     sz--;
     }
 }
@@ -504,8 +508,9 @@ if (lpStrRam)
 
 
 
-TSTMSTRING& TSTMSTRING::operator=(char date)
+TSTMSTRING TSTMSTRING::operator=(char date)
 {
+size_str = 0;
 InsChar (date);
 return *this;
 }
@@ -543,15 +548,74 @@ return *this;
 
 
 
-
-
-
 TSTMSTRING TSTMSTRING::operator+=( long date)
 {
 Insert_Long (date);
 return *this;
 }
 
+
+
+TSTMSTRING TSTMSTRING::operator=(unsigned short val)
+{
+size_str = 0;
+Insert_ULong (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator=(short val)
+{
+size_str = 0;
+Insert_Long (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator=(unsigned long val)
+{
+size_str = 0;
+Insert_ULong (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator=(long val)
+{
+size_str = 0;
+Insert_Long (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator=(unsigned char val)
+{
+size_str = 0;
+Insert_ULong (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator=(unsigned int val)
+{
+size_str = 0;
+Insert_ULong (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator=(int val)
+{
+size_str = 0;
+Insert_Long (val);
+return *this;
+}
 
 
 

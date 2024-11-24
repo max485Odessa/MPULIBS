@@ -3,16 +3,36 @@
 #include <stdio.h>
 
 
-TTINA226::TTINA226 (uint8_t adr, TI2CIFACE *cc_i2c)
+uint16_t TTINA226::c_chip_cnt = 0;
+uint16_t TTINA226::work_chip_index = 0;
+utimer_t TTINA226::relax_time = 0;
+
+
+TTINA226::TTINA226 (uint8_t adr, TI2CIFACE *cc_i2c, float shnt_v) : c_shunt_resistance (shnt_v)
 {
-	i2c_adress = adr;
+	static bool f_one_shot = true;
+	
+	i2c_adress = 0x80 + ((adr & 0x0F)<<1);
 	i2c = cc_i2c;
 	configure (INA226_AVERAGES_1, INA226_BUS_CONV_TIME_1100US, INA226_SHUNT_CONV_TIME_1100US, INA226_MODE_SHUNT_BUS_CONT);		// INA226_MODE_SHUNT_BUS_CONT
-	relax_time = 0;
-	SYSBIOS::ADD_TIMER_SYS (&relax_time);
+	
+	if (f_one_shot) {
+		SYSBIOS::ADD_TIMER_SYS (&relax_time);
+		f_one_shot = false;
+		}
+	f_is_ok = false;
+	sw = EINAMOD_MANID;
+	obj_chip_index = c_chip_cnt;
+	c_chip_cnt++;
 }
 
 
+
+void TTINA226::next_chip_index ()
+{
+work_chip_index++;
+if (work_chip_index >= c_chip_cnt) work_chip_index = 0;
+}
 
 
 
@@ -22,7 +42,7 @@ bool TTINA226::writeRegister16 (uint8_t reg, uint16_t val)
 	dat_dst[0] = val >> 8;
 	dat_dst[1] = (uint8_t)val;
 
-	return i2c->WriteFrame (i2c_adress, reg, dat_dst, 2);
+	return i2c->WriteFrame_i2c (i2c_adress, reg, dat_dst, 2);
 }
 
 
@@ -30,7 +50,7 @@ bool TTINA226::writeRegister16 (uint8_t reg, uint16_t val)
 bool TTINA226::readRegister(uint8_t SrcReg, uint16_t &dst)
 {
 	uint8_t dat_dst[2];
-	bool rv = i2c->ReadFrame (i2c_adress, SrcReg, dat_dst, 2);
+	bool rv = i2c->ReadFrame_i2c (i2c_adress, SrcReg, dat_dst, 2);
 	if (rv) {
 		uint16_t value = dat_dst[0]; value <<= 8;
 		value |= dat_dst[1];
@@ -41,7 +61,7 @@ bool TTINA226::readRegister(uint8_t SrcReg, uint16_t &dst)
 
 
 
-bool TTINA226::getManufacturerID (uint16_t &id)
+bool TTINA226::readManufacturerID (uint16_t &id)
 {
 	bool rv = false;
 	uint16_t data = 0;
@@ -55,7 +75,7 @@ bool TTINA226::getManufacturerID (uint16_t &id)
 
 
 
-bool TTINA226::getDieID (uint16_t &id)
+bool TTINA226::readDieID (uint16_t &id)
 {
 	bool rv = false;
 	uint16_t data = 0;
@@ -147,9 +167,7 @@ bool TTINA226::calibrate(float rShuntValue, float iMaxExpected)
 }
 */
 
-static float dbg_vbus;
-static float dbg_vshunt;
-static float dbg_current;
+
 
 float TTINA226::current ()
 {
@@ -158,43 +176,112 @@ float TTINA226::current ()
 
 
 
+float TTINA226::volt ()
+{
+	return v_bus;
+}
+
+
+
+uint16_t TTINA226::manID ()
+{
+	return data_manid;
+}
+
+
+
+uint16_t TTINA226::DieID ()
+{
+	return data_dieid;
+}
+
+
+
+float *TTINA226::adr_current ()
+{
+	return &c_shunt;
+}
+
+
+
+float *TTINA226::adr_volt ()
+{
+	return &v_bus;
+}
+
+
+
+bool TTINA226::is_ok ()
+{
+	return f_is_ok;
+}
+
+
+
 void TTINA226::Task ()
 {
+if (work_chip_index != obj_chip_index) return;
 if (relax_time) return;
+	
 	switch (sw)
 		{
+		case EINAMOD_MANID:
+			{
+			if (!readManufacturerID (data_manid)) {
+				f_is_ok = false;
+				next_chip_index ();
+				}
+			else
+				{
+				sw = EINAMOD_DIEID;
+				}
+			relax_time = C_INARELAX_TIME;
+			break;
+			}
+		case EINAMOD_DIEID:
+			{
+			if (!readDieID (data_dieid)) {
+				f_is_ok = false;
+				next_chip_index ();
+				}
+			else
+				{
+				sw = EINAMOD_VSHUNT;
+				}
+			break;
+			}
 		case EINAMOD_VSHUNT:
 			{
-			readShuntVoltage (v_shunt);
-			c_shunt = v_shunt / 0.02;
-			//dst /= 0.02;
-			
-			dbg_vshunt = v_shunt;
-			sw = EINAMOD_VBUS;
+			if (!readShuntVoltage (v_shunt)) {
+				next_chip_index ();
+				f_is_ok = false;
+				}
+			else
+				{
+				sw = EINAMOD_VBUS;
+				}
+			c_shunt = v_shunt / c_shunt_resistance;
 			relax_time = C_INARELAX_TIME;
 			break;
 			}
 		case EINAMOD_VBUS:
 			{
-			readBusVoltage (v_bus);
-			dbg_vbus = v_bus;
+			if (!readBusVoltage (v_bus)) 
+				{
+				next_chip_index ();
+				f_is_ok = false;
+				}
+			else
+				{
+				f_is_ok = true;
+				}
 			sw = EINAMOD_VSHUNT;
 			relax_time = C_INARELAX_TIME;
 			break;
 			}
-		/*
-		case EINAMOD_CSHUNT:
-			{
-			readShuntCurrent (c_shunt);
-			dbg_current = c_shunt;
-			sw = EINAMOD_VSHUNT;
-			relax_time = C_INARELAX_TIME;
-			break;
-			}
-		*/
 		default:
 			{
-			sw = EINAMOD_VSHUNT;
+			sw = EINAMOD_MANID;
 			break;
 			}
 		}

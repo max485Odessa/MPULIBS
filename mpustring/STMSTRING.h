@@ -4,15 +4,13 @@
 
 
 #include "stdint.h"
-/*
 #ifdef IS_WINDOWS_OS
     #include "textrut.hpp"
 		using namespace TEX;
 #else
 		#include "rutine.h"
 #endif
-*/
-#include "rutine.h"
+
 
 
 class TSTMSTRING {
@@ -61,9 +59,17 @@ public:
         TSTMSTRING operator+=(short val);
         TSTMSTRING operator+=(unsigned short val);
         TSTMSTRING operator+=(unsigned char val);
+				
+				TSTMSTRING operator=(unsigned short val);
+				TSTMSTRING operator=(short val);
+				TSTMSTRING operator=(unsigned long val);
+				TSTMSTRING operator=(long val);
+				TSTMSTRING operator=(unsigned int val);
+				TSTMSTRING operator=(int val);
+				TSTMSTRING operator=(unsigned char val);
 
         TSTMSTRING operator=(const char *lpRams);
-        TSTMSTRING& operator=(char dt);
+        TSTMSTRING operator=(char dt);
         TSTMSTRING operator=(TSTMSTRING &dt);
         TSTMSTRING operator+=(TSTMSTRING &dt);
 
@@ -93,7 +99,7 @@ public:
 
         bool ToLong (long &ul_dat);
         bool ToULong (uint32_t &ul_dat);
-        bool ToFloat (float &ul_dat);
+        bool ToFloat (float &f_dat);
         bool HexToUint64 (uint64_t &ul_dat);
 
         bool getcomastring_indx (TSTMSTRING *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField);
