@@ -2,7 +2,6 @@
 
 
 
-
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
 static bool cur_clock_state_tim[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
@@ -17,6 +16,27 @@ TIM_TypeDef *hard_get_tim (ESYSTIM tn, bool *f_wdth_32)
 	if (tn < ESYSTIM_ENDENUM) {
 		rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
 		if (f_wdth_32) *f_wdth_32 = period_tim[tn];
+		}
+	return rv;
+}
+
+
+
+bool hard_tim_is_32bit (ESYSTIM tn)
+{
+bool rv = false;
+	if (tn < ESYSTIM_ENDENUM) {
+		rv = period_tim[tn];
+		}
+	return rv;
+}
+
+
+TIM_TypeDef *get_hard_tim (ESYSTIM tn)
+{
+	TIM_TypeDef *rv = 0;
+	if (tn < ESYSTIM_ENDENUM) {
+		rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
 		}
 	return rv;
 }
