@@ -395,6 +395,9 @@ return *this;
 
 
 
+
+
+
 TSTMSTRING TSTMSTRING::operator+(const char *lpRams)
 {
 if (lpStrRam && lpRams)
@@ -440,13 +443,14 @@ if (lpStrRam && lpRams) {
 return *this;
 }
 
-/*
-TSTMSTRING& TSTMSTRING::operator=(char *lpRams)
+
+TSTMSTRING TSTMSTRING::operator+=(uint8_t *lpRams)
 {
-SetStr (lpRams);
+if (lpStrRam && lpRams) {
+			AddStringP ((char*)lpRams);
+			}
 return *this;
 }
-*/
 
 
 
@@ -516,14 +520,6 @@ return *this;
 }
 
 
-/*
-TSTMSTRING::operator char*()
-{
-   return (char*)lpStrRam;
-}
-*/
-
-
 
 void TSTMSTRING::Insert_Long (long val)
 {
@@ -538,8 +534,6 @@ if (freem >= 10)
 
 
 
-
-
 TSTMSTRING TSTMSTRING::operator+=( unsigned short date)
 {
 Insert_ULong (date);
@@ -549,6 +543,61 @@ return *this;
 
 
 TSTMSTRING TSTMSTRING::operator+=( long date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+( long date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+=( int16_t date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+TSTMSTRING TSTMSTRING::operator+( int16_t date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+=( int8_t date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+( int8_t date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+=( int32_t date)
+{
+Insert_Long (date);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+( int32_t date)
 {
 Insert_Long (date);
 return *this;
@@ -577,6 +626,14 @@ return *this;
 TSTMSTRING TSTMSTRING::operator=(unsigned long val)
 {
 size_str = 0;
+Insert_ULong (val);
+return *this;
+}
+
+
+
+TSTMSTRING TSTMSTRING::operator+=(unsigned int val)
+{
 Insert_ULong (val);
 return *this;
 }

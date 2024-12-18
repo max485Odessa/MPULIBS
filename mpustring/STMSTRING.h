@@ -3,7 +3,7 @@
 
 
 
-#include "stdint.h"
+#include <stdint.h>
 #ifdef IS_WINDOWS_OS
     #include "textrut.hpp"
 		using namespace TEX;
@@ -47,29 +47,40 @@ public:
         TSTMSTRING operator+(char *lpRams);
         TSTMSTRING operator+(const char *lpRams);
         TSTMSTRING operator+=(char *lpRams);
+				TSTMSTRING operator+=(uint8_t *lpRams);
         TSTMSTRING operator+=(const char *lpRams);
         bool operator!=(char *lpRams);
         bool operator!=(const char *lpRams);
+
         TSTMSTRING operator+=(long val);
+				TSTMSTRING operator+(long val);
+				TSTMSTRING operator+(int16_t val);
+				TSTMSTRING operator+=(int32_t val);
+				TSTMSTRING operator+(int32_t val);
+				TSTMSTRING operator+=(int8_t val);
+				TSTMSTRING operator+(int8_t val);
         TSTMSTRING operator+=(unsigned long val);
         bool operator==(TSTMSTRING &val);
         bool operator==(const char *lp);
         //bool operator!=(const char *lp);
         //bool operator!=(char *lp);
         TSTMSTRING operator+=(short val);
-        TSTMSTRING operator+=(unsigned short val);
+				TSTMSTRING operator+=(uint32_t val);
+        TSTMSTRING operator+=(uint16_t val);
+				//TSTMSTRING operator+=(uint16_t val);
         TSTMSTRING operator+=(unsigned char val);
 				
-				TSTMSTRING operator=(unsigned short val);
+				TSTMSTRING operator=(uint16_t val);
 				TSTMSTRING operator=(short val);
 				TSTMSTRING operator=(unsigned long val);
 				TSTMSTRING operator=(long val);
-				TSTMSTRING operator=(unsigned int val);
+				TSTMSTRING operator=(uint32_t val);
 				TSTMSTRING operator=(int val);
 				TSTMSTRING operator=(unsigned char val);
 
         TSTMSTRING operator=(const char *lpRams);
         TSTMSTRING operator=(char dt);
+				TSTMSTRING operator=(int8_t date);
         TSTMSTRING operator=(TSTMSTRING &dt);
         TSTMSTRING operator+=(TSTMSTRING &dt);
 
