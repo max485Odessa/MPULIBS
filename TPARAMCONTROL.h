@@ -3,8 +3,9 @@
 
 
 #include <stdint.h>
+#include "TM24Cxxx.h"
 #include "STMSTRING.h"
-#include "STORAGEIF.h"
+#include "TM24Cxxx.h"
 
 typedef enum MAV_PARAM_TYPE
 {
@@ -18,7 +19,8 @@ typedef enum MAV_PARAM_TYPE
    MAV_PARAM_TYPE_INT64=8, /* 64-bit signed integer | */
    MAV_PARAM_TYPE_REAL32=9, /* 32-bit floating-point | */
    MAV_PARAM_TYPE_REAL64=10, /* 64-bit floating-point | */
-   MAV_PARAM_TYPE_ENUM_END=11, /*  | */
+	 MAV_PARAM_TYPE_BOOL=11, 
+   MAV_PARAM_TYPE_ENUM_END=12, /*  | */
 } MAV_PARAM_TYPE;
 
 // список внутрених параметров
@@ -91,6 +93,7 @@ typedef struct {
 
 #pragma pack (pop)
 
+
 class TPARAMCONTRL {
 	protected:
 		bool f_need_save;
@@ -101,7 +104,7 @@ class TPARAMCONTRL {
 		uint32_t param_ext_max_alocate;
 		uint32_t param_ext_count;
 	
-		IFSTORAGE *flashmem;
+		TEEPROMIF *flashmem;
 		const uint32_t c_startflash_adr;
 		const uint32_t c_sizeflash;	
 
@@ -112,10 +115,11 @@ class TPARAMCONTRL {
 		S_MVPARAM_HDR_T *find_param_to_name (char *name, long *dst_ix);
 		
 		void set_param_to_default (long ix);
-		uint32_t GN_CRC32 (void *ldata, uint32_t size);
+		bool check_param_width (long ix);
+		bool update_check_params_width ();
 	
 	public:
-		TPARAMCONTRL (IFSTORAGE *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp);
+		TPARAMCONTRL (TEEPROMIF *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp);
 		
 		bool set_value (long ix, S_MDAT_T v);
 		bool set_value (char *p, S_MDAT_T v);

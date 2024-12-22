@@ -4,6 +4,7 @@
 #include "rutine.h"
 #include "maxfont.h"
 #include "STMSTRING.h"
+#include "TDRAWPARAM.h"
 
 #define LCD_WIDTH_PIXELS 136 //136
 #define LCD_HEIGHT_PIXELS 72
@@ -57,7 +58,7 @@ namespace VID {
 	} TMBitmap;
 
 enum ALIGN {LEFT = 0, RIGHT = 1, UP = 2, DOWN = 3};
-enum ESTRALIGN {A_LEFT = 0, A_MIDLE = 1, A_RIGHT = 2};
+enum EGALIGN {EGALIGN_LEFT = 0, EGALIGN_MIDLE, EGALIGN_RIGHT, EGALIGN_ENDENUM};
 enum ECURSSTYLE {CRS_GRAY = 0};
 
 const unsigned char C_BLINESIZE = 136;
@@ -79,16 +80,11 @@ const unsigned char MaskXLine_R[8] = {0,128,192,224,240,248,252,254};
 
 class TLCDCANVABW {
 	private:
-		/*
-    	unsigned char CntCharF_Celie;
-        unsigned char CntCharF_Droba;
-    	char BufStr[64];
-        unsigned char IndxStr;
-        void FloatToRam (char *lpDest, float datf, unsigned char drobcnt);
-	*/
+
 
 	protected:
 		unsigned char BuferLCD[LCD_WIDTH_PIXELS * (LCD_HEIGHT_PIXELS / 8)];
+		unsigned char FixBuferLCD[LCD_WIDTH_PIXELS * (LCD_HEIGHT_PIXELS / 8)];
 		unsigned char RLEBufLCD[LCD_RLEBUFSIZE];
 		unsigned char FontHeightBytes;							// высота шрифта в пикселах (размерность шрифта в байтах)
 		unsigned char CntByteLine;
@@ -134,9 +130,13 @@ class TLCDCANVABW {
 		long lastX;
 		long lastY;
 		long F_FixXWStep;
+	
+		void fixed_scr ();
 
-		unsigned long CopyCanva_BLine (BUFPAR *lpDst, unsigned char IndxLine);			// копирует и преобразовывает часть канвы в BYTE-строку
-		unsigned long CopyCanva_BLine_RLE (BUFPAR *lpDst, unsigned char IndxLine);		// тоже самое + RLE сжатие
+		unsigned long CopyCanva_BLine (BUFPAR *lpDst, unsigned char IndxLine, bool f_fxscr);			// копирует и преобразовывает часть канвы в BYTE-строку
+		unsigned long CopyCanva_BLine_RLE (BUFPAR *lpDst, unsigned char IndxLine, bool f_fxscr);		// тоже самое + RLE сжатие
+		uint32_t CopyCanva_ALine (BUFPAR *lpDst, uint8_t IndxLine, bool f_fxscr);
+		
 
 		void SetFonts (MaxFontMicro *lpFont);
 		MaxFontMicro *GetFonts (void);
@@ -231,7 +231,8 @@ class TLCDCANVABW {
 		void MoveHorisontalLine (long Dest_X, long Dest_Y, long Src_Y, unsigned long wdth);
 
 
-
+		void draw_param (short x, short y, TGRAPHPARAM *p, VID::EGALIGN a, uint32_t wd, bool f_blank);
+		void draw_param (short x, short y, char *p, VID::EGALIGN algnn, uint32_t wd_all, bool f_blank);
 
 
 };

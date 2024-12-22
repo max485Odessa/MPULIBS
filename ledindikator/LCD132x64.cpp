@@ -16,8 +16,7 @@ extern const unsigned char resname_wendy16_engl_f[];
 
 
 
-//unsigned char TLCDCANVABW::BuferLCD[LCD_WIDTH_PIXELS * (LCD_HEIGHT_PIXELS / 8)];
-//unsigned char TLCDCANVABW::RLEBufLCD[LCD_RLEBUFSIZE];
+
 
 
 
@@ -65,6 +64,14 @@ TLCDCANVABW::~TLCDCANVABW()
 
 
 
+void TLCDCANVABW::fixed_scr ()
+{
+	CopyMemorySDC (BuferLCD, FixBuferLCD, sizeof(BuferLCD));
+}
+
+
+
+
 unsigned char *TLCDCANVABW::GetLineAdress (unsigned char Indxss)
 {
 unsigned char *lpRv = 0;
@@ -76,7 +83,7 @@ return lpRv;
 
 
 // Формирует байт строку для LCD дисплеев с вертикальным рядовым расположением
-unsigned long TLCDCANVABW::CopyCanva_BLine (BUFPAR *lpDst, unsigned char IndxLine)
+unsigned long TLCDCANVABW::CopyCanva_BLine (BUFPAR *lpDst, unsigned char IndxLine, bool f_fxscr)
 {
 unsigned long rv = 0;
 if (IndxLine < CntVerticalLine && lpDst)
@@ -86,7 +93,9 @@ if (IndxLine < CntVerticalLine && lpDst)
 	unsigned long IdxB = 0;
 	unsigned long ofsbb = CntByteLine * 8;
 	ofsbb = ofsbb * IndxLine;
-	unsigned char *lpAdr = VideoBufer + ofsbb, *lpTmp;
+	unsigned char *lpAdr = (f_fxscr)?FixBuferLCD:VideoBufer;
+	unsigned char *lpTmp;
+	lpAdr += ofsbb;
 	unsigned char Dt,Hmask = 128, Vmask;
 	unsigned char *lpDest = (unsigned char *) lpDst->lRam;
 	unsigned long DstSize = rlsize;
@@ -122,12 +131,59 @@ return rv;
 
 
 
-
-
-unsigned long TLCDCANVABW::CopyCanva_BLine_RLE (BUFPAR *Dst, unsigned char IndxLine)
+uint32_t TLCDCANVABW::CopyCanva_ALine (BUFPAR *lpDst, uint8_t IndxLine, bool f_fxscr)
 {
 unsigned long rv = 0;
-unsigned long szline = CopyCanva_BLine (&tmpRLE,IndxLine);
+if (IndxLine < CntVerticalLine && lpDst)
+	{
+	unsigned long rlsize = Canvas_Width;
+	if (lpDst->sizes < rlsize) rlsize = lpDst->sizes;
+	unsigned long IdxB = 0;
+	unsigned long ofsbb = CntByteLine * 8;
+	ofsbb = ofsbb * (CntVerticalLine - IndxLine - 1);
+	unsigned char *lpAdr = (f_fxscr)?FixBuferLCD:VideoBufer;
+	unsigned char *lpTmp;
+	lpAdr += ofsbb;
+	unsigned char Dt,Hmask = 128, Vmask;
+	unsigned char *lpDest = (unsigned char *) lpDst->lRam + lpDst->sizes - 1;
+	unsigned long DstSize = rlsize;
+	while (IdxB < CntByteLine && DstSize)
+		{
+		//cnt8 = 8;
+		// формирование вертикального байта из горизонтально расположенных линий
+		lpTmp = lpAdr;
+		Dt = 0;
+		Vmask = 128;
+		while (Vmask)
+			{
+			if (lpTmp[0] & Hmask) Dt = Dt | Vmask;
+			Vmask = Vmask >> 1;
+			lpTmp = lpTmp + CntByteLine;
+			//cnt8--;
+			}
+		Hmask = Hmask >> 1;
+		if (!Hmask)
+			{
+			lpAdr++;
+			IdxB++;
+			Hmask = 128;
+			}
+		*lpDest-- = Dt;
+		DstSize--;
+		}
+	rv = rlsize;
+	}
+return rv;
+}
+
+
+
+
+
+unsigned long TLCDCANVABW::CopyCanva_BLine_RLE (BUFPAR *Dst, unsigned char IndxLine, bool f_fxscr)
+{
+unsigned long rv = 0;
+unsigned long szline = CopyCanva_BLine (&tmpRLE,IndxLine, f_fxscr);
 if (szline)
 	{
 	BUFPAR LOPR1;
@@ -159,7 +215,7 @@ return (MaxFontMicro *)SystemFont;
 
 void TLCDCANVABW::Init()
 {
-SetFonts ((MaxFontMicro*)resname_wendy16_engl_f);
+//SetFonts ((MaxFontMicro*)resname_wendy16_engl_f);
 Canvas_Width = LCD_WIDTH_PIXELS;
 Canvas_Height = LCD_HEIGHT_PIXELS;
 CntByteLine = Canvas_Width / 8;
@@ -1162,6 +1218,94 @@ return lpDest;
 
 
 
+void TLCDCANVABW::draw_param (short x, short y, TGRAPHPARAM *p, VID::EGALIGN algnn, uint32_t wd_all, bool f_blank)
+{
+	if (!p) return;
+	draw_param (x, y, p->get_lp_txt()->c_str(), algnn, wd_all, f_blank);
+}
+
+
+
+void TLCDCANVABW::draw_param (short x, short y, char *l_str, VID::EGALIGN algnn, uint32_t wd_all, bool f_blank)
+{
+	if (!l_str) return;
+	const uint32_t wdlcd = GetCanvaWidth ();
+	if (x >= wdlcd) return;
+	if (y >= GetCanvaHeight ()) return;
+	if (!wd_all) wd_all = wdlcd;
+
+	if ((wd_all + x) >= wdlcd) wd_all = wdlcd - x;
+	uint32_t lens = lenstr (l_str);
+	uint32_t wpix_str = GetDrawStringWidth (l_str);
+	if (wpix_str > wd_all) wpix_str = wd_all;
+	uint32_t blank_w_all = wd_all - wpix_str;
+	uint32_t fist_w = 0;
+	uint32_t last_w = 0;
+	switch (algnn)
+		{
+		case VID::EGALIGN_LEFT:
+			{
+			last_w = blank_w_all;
+			break;
+			}
+		case VID::EGALIGN_MIDLE:
+			{
+			fist_w = blank_w_all / 2;
+			last_w = wd_all - (wpix_str + fist_w);
+			break;
+			}
+		case VID::EGALIGN_RIGHT:
+			{
+			fist_w = blank_w_all;
+			break;
+			}
+		}
+	lastX = x;
+	lastY = y;
+	if (f_blank)
+		{
+		DrawVerticalBlankCnt (fist_w);
+		}
+	else
+		{
+		lastX += fist_w;
+		}
+	unsigned char tmb;
+	long curaswd;
+	while (lens)
+		{
+		tmb = *l_str;
+		curaswd = GetDrawMaskWidth (tmb);
+		if (curaswd > wpix_str)
+			{
+			// печатается символ который обрезан, т.е. последний в строке
+			if (Flash & 512)
+				{
+				tmb = ' ';
+				}
+			else
+				{
+				tmb = '>';
+				}		
+			DrawCharSlow (tmb);
+			break;
+			}
+		DrawCharSlow (tmb);
+		wpix_str = wpix_str - curaswd;
+		l_str++;		
+		lens--;
+		}
+	if (f_blank) 
+		{
+		DrawVerticalBlankCnt (last_w);
+		}
+	else
+		{
+		lastX += last_w;
+		}
+}
+
+
 
 
 void TLCDCANVABW::PrintStringCentrRect (const char *lpString, short Xk, short Yk, unsigned short widdtlc, char BlankMode)
@@ -1830,7 +1974,7 @@ if (!F_end && Col_cnt)
 	bout1.lRam = TAILLINE;
 	bout1.sizes = sizeof(TAILLINE);										// размер целой строки
 	unsigned long rawtailsize = Col_cnt * SzCrcDat;
-	unsigned long rvsize = CopyCanva_BLine (&bout1, InxGtChngSeg_Row);	// перенести байт-линию в буфер
+	unsigned long rvsize = CopyCanva_BLine (&bout1, InxGtChngSeg_Row, false);	// перенести байт-линию в буфер
 	if (rvsize)
 		{
 		if (RleMod)

@@ -2,7 +2,7 @@
 
 
 
-TPARAMCONTRL::TPARAMCONTRL (IFSTORAGE *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp) : c_startflash_adr (start_m), c_sizeflash (size_m)
+TPARAMCONTRL::TPARAMCONTRL (TEEPROMIF *m, uint32_t start_m, uint32_t size_m, S_MVPARAM_HDR_T **lst, uint32_t cp) : c_startflash_adr (start_m), c_sizeflash (size_m)
 {
 	param_internal = lst;
 	param_int_count = cp;
@@ -21,6 +21,7 @@ void TPARAMCONTRL::save ()
 void TPARAMCONTRL::load ()
 {
 	if (!load_internal_params ()) sets_internal_params_to_default ();
+	if (update_check_params_width ()) save ();
 }
 
 
@@ -42,37 +43,6 @@ uint32_t TPARAMCONTRL::param_external_cnt ()
 uint32_t TPARAMCONTRL::param_full_cnt ()
 {
 	return param_ext_count + param_int_count;
-}
-
-
-
-uint32_t TPARAMCONTRL::GN_CRC32 (void *ldata, uint32_t size)
-{
-const uint32_t one_sig = 0x724169A3;
-const uint32_t zero_sig = 0x28181277;
-const unsigned char mask_sig = 0x18;
-unsigned long crc = 0;
-if (ldata && size)
-    {
-    unsigned char *src = (unsigned char*)ldata;
-    unsigned char dat;
-    while (size)
-        {
-        dat = *src++;
-        if (dat & mask_sig)
-            {
-            crc += one_sig;
-            }
-        else
-            {
-            crc += zero_sig;
-            }
-        crc <<= 1;
-        crc += dat;
-        size--;
-        }
-    }
-return crc;
 }
 
 
@@ -293,6 +263,51 @@ void TPARAMCONTRL::set_param_to_default (long ix)
 			default: break;
 			}
 		}
+}
+
+
+
+bool TPARAMCONTRL::check_param_width (long ix)
+{
+	bool rv = false;
+	S_MVPARAM_HDR_T *s = get_param_tag (ix);
+	if (s) {
+		S_BASETAGPARAM_T *slot = (S_BASETAGPARAM_T*)s;
+		switch (slot->hdr.type)
+			{
+			case MAV_PARAM_TYPE_UINT32:
+			case MAV_PARAM_TYPE_INT32:
+				{
+				if (slot->value.u.u32 >= slot->min.u.u32 && slot->value.u.u32 <= slot->max.u.u32) rv = true;
+				break;
+				}
+			case MAV_PARAM_TYPE_REAL32:
+				{
+				if (slot->value.u.f >= slot->min.u.f && slot->value.u.f <= slot->max.u.f) rv = true;
+				break;
+				}
+			default: break;
+			}
+		}
+return rv;
+}
+
+
+
+bool TPARAMCONTRL::update_check_params_width ()
+{
+	bool rv = false;
+	uint32_t ix = 0;
+	while (ix < param_int_count)
+		{
+		if (!check_param_width (ix)) 
+			{
+			set_param_to_default (ix);
+			rv = true;
+			}
+		ix++;
+		}
+	return rv;
 }
 
 
