@@ -2,13 +2,15 @@
 #define TMCrRead1
 
 #include <vcl.h>
-#include "textrut.hpp"
+#include "filerut.hpp"
 #include <stdint.h>
+#include "STMSTRING.H"
 
 class TMCreateReadStream{
 public:
         TMCreateReadStream();
-        ~TMCreateReadStream();
+		~TMCreateReadStream();
+        static TDString GetExecPath ();
         unsigned char OpenStream (char *filename);
         void CloseStream ();
         uint32_t GetFileSize ();

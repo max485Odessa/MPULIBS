@@ -1,5 +1,4 @@
 #include "STMJSON.H"
-#include "textrut.hpp"
 
 
 
@@ -20,7 +19,7 @@ bool rv = false;
 TMCreateReadStream Rd1;
 if (flname)
     {
-    JsonFileDirPath = GetExecPath ();
+	JsonFileDirPath = TMCreateReadStream::GetExecPath ();
     if (Rd1.OpenStream(flname))
         {
         unsigned int sizes = Rd1.GetFileSize ();
@@ -29,10 +28,10 @@ if (flname)
             unsigned char *lpRam = new unsigned char [(sizes + 8)];
             if (Rd1.ReadData(lpRam, sizes) == sizes)
                 {
-                ljson_data = lpRam;
+                ljson_data = (char*)lpRam;
                 ResetLP ();
                 f_load_file = true;
-                loadfile_alloc = lpRam;
+                loadfile_alloc = (char*)lpRam;
                 rv = true;
                 }
             }
@@ -164,9 +163,9 @@ EJSEXTYPE STMJSON::GetTypeString (const char *name)
 {
 EJSEXTYPE rv = EJSEXTYPE_NONE;
 do  {
-    if (CheckDecValue (name))
+	if (TSTMSTRING::CheckDecValue ((char*)name))
         {
-        unsigned long sz = GetLenStr ((char*)name);
+		unsigned long sz = TSTMSTRING::lenstr ((char*)name);
         if (sz > 9)
             {
             rv = EJSEXTYPE_DIG_LONG64;
@@ -177,7 +176,7 @@ do  {
             }
         break;
         }
-    if (CheckFloatValue ((char*)name))
+    if (TSTMSTRING::CheckFloatValue ((char*)name))
         {
         rv = EJSEXTYPE_DIG_FLOAT;
         break;
@@ -188,14 +187,14 @@ return rv;
 
 
 
-bool STMJSON::GetItemExtType (TSTMSTRING const &ItmemName, TSTMSTRING &d_ItemVal, EJSEXTYPE *d_type)
+bool STMJSON::GetItemExtType (TSTMSTRING &ItmemName, TSTMSTRING &d_ItemVal, EJSEXTYPE *d_type)
 {
 bool rv = false;
 
     EJSNTYPE ctype;
     EJSEXTYPE nwext_type = EJSEXTYPE_NONE;
-    if (GetItem ((const char*)ItmemName.c_str(), &d_ItemVal, &ctype))
-        {
+	if (GetItem (ItmemName.c_str(), &d_ItemVal, &ctype))
+		{
         switch (ctype)
             {
             case EJST_DIG:
@@ -217,7 +216,8 @@ bool rv = false;
                 {
                 nwext_type = EJSEXTYPE_OBJ;
                 break;
-                }
+				}
+            default: break;
             }
         if (nwext_type != EJSEXTYPE_NONE)
             {
@@ -355,7 +355,7 @@ if (tslt && pd_type == EJST_DIG)
     {
     if (lpvalue)
         {
-        unsigned long lenn = GetLenS(d_ItemVal.c_str());
+        unsigned long lenn = TSTMSTRING::lenstr(d_ItemVal.c_str());
         float val_f;
         if (TxtToFloat (&val_f, d_ItemVal.c_str(), lenn))
             {
@@ -416,8 +416,8 @@ TParsJSNKey::TParsJSNKey()
 
 bool TParsJSNKey::p_parsekey_getFist (const char *lp_key, TSTMSTRING &d_Name, EJSKEYTYPE &d_type, long &d_indx)     // TSTMSTRING const &JS_key,
 {
-str_indx.init (bufsindx, sizeof(bufsindx));
-Str_rslt.init (bufrslt, sizeof(bufrslt));
+str_indx.set_space (bufsindx, sizeof(bufsindx));     // str_indx.init
+Str_rslt.set_space (bufrslt, sizeof(bufrslt));       // Str_rslt.init
 jslSqKey = (char*)lp_key;
 jsIndx = 0;
 return p_parsekey_getNext (d_Name, d_type, d_indx);
@@ -1037,7 +1037,7 @@ if (lpAdr)
 
 
 // преобразует данные по указателям в STRING
-void STMJSON::TLP_to_Str (TLPObj const &tlp, TSTMSTRING *dst_str)
+void STMJSON::TLP_to_Str (TLPObj &tlp, TSTMSTRING *dst_str)
 {
 if (dst_str) {
     if (tlp.IsCorrect())
@@ -1061,7 +1061,7 @@ if (!IN_Tlp) IN_Tlp = &BaseJSN_TLP;
 if (IN_Tlp->IsCorrect() && nameparam)
     {
     char buffname[C_JSONFPNAMESIZE_MAX];
-    TSTMSTRING find_name (buffname, sizeof(buffname));
+	TSTMSTRING find_name (buffname, sizeof(buffname));
 
     TLPObj find_param;
     unsigned long indx = 0;
@@ -1074,7 +1074,7 @@ if (IN_Tlp->IsCorrect() && nameparam)
         if (tlp1.IsCorrect())
             {
             EJSNTYPE type_rv = ExtractTypeParam (&tlp1, find_name, find_param);
-            if ( CompareStrings(find_name.c_str(), (char*)nameparam) && type_rv != EJST_NONE && find_param.IsCorrect())
+			if (TSTMSTRING::compare(find_name.c_str(), (char*)nameparam) && type_rv != EJST_NONE && find_param.IsCorrect())
                 {
                 if (lpd_type) *lpd_type = type_rv;
                 outTlp = find_param;
@@ -1110,7 +1110,7 @@ bool STMJSON::OpenPath (const char *lpath)      // const TSTMSTRING &strkey
 bool rv = false;
 if (lpath)
     {
-    unsigned long psize = GetLenS ((char*)lpath);
+    unsigned long psize = TSTMSTRING::lenstr ((char*)lpath);
     if (psize)
         {
         char bufdnm[C_PARSEKEYSIZE_MAX];
@@ -1293,7 +1293,7 @@ return rv;
 
 
 
-bool STMJSON::SetPathKey (TLPObj const &outval)
+bool STMJSON::SetPathKey (TLPObj &outval)
 {
 bool rv = false;
 if (outval.IsCorrect())

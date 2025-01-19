@@ -1,8 +1,6 @@
 #include "STMSTRING.h"
 
-#ifdef IS_WINDOWS_OS
-	using namespace TEX;
-#endif
+
 static const unsigned long C_MULTDV_L32_AMOUNT = 10;
 static const unsigned long tmpMultData[C_MULTDV_L32_AMOUNT] = {1,10,100,1000,10000,100000,1000000,10000000,100000000,1000000000};
 
@@ -479,11 +477,12 @@ InsChar (val_char);
 
 
 
-
+/*
 void TSTMSTRING::operator+=(char dat)
 {
 InsChar (dat);
 }
+*/
 
 
 
@@ -580,12 +579,13 @@ return *this;
 }
 
 
-
+/*
 TSTMSTRING TSTMSTRING::operator+( int8_t date)
 {
 Insert_Long (date);
 return *this;
 }
+*/
 
 
 
@@ -1157,7 +1157,7 @@ return lpDest;
 
 
 
-bool TSTMSTRING::str_compare (char *lStr1, char *lStr2, uint32_t size)
+bool TSTMSTRING::compare (char *lStr1, char *lStr2, uint32_t size)
 {
 	bool rv = false;
 	if (lStr1 && lStr2 && size)
@@ -1173,6 +1173,32 @@ bool TSTMSTRING::str_compare (char *lStr1, char *lStr2, uint32_t size)
 			lStr1++;
 			lStr2++;
 			size--;
+			}
+		}
+	return rv;
+}
+
+
+
+bool TSTMSTRING::compare (char *lStr1, char *lStr2)
+{
+	bool rv = false;
+	if (lStr1 && lStr2)
+		{
+		rv = true;
+		char d1, d2;
+		while (true)
+			{
+			d1 = *lStr1;
+			d2 = *lStr2;
+			if (!d1 && !d2) break;
+
+			if (d1 != d2 ) {
+				rv = false;
+				break;
+				}
+			lStr1++;
+			lStr2++;
 			}
 		}
 	return rv;
@@ -1237,6 +1263,19 @@ if (lpDest)
 	}
 return lpDest;
 }
+
+#ifdef ISWINDOWS
+TDString TSTMSTRING::LongToStr (long val)
+{
+TDString rv = "";
+unsigned char tmp[32];
+unsigned char *last = LongToStr (tmp, val);
+*last = 0;
+uint8_t sz = last - tmp;
+rv.insert (0,(char*)tmp);
+return rv;
+}
+#endif
 
 
 
@@ -1477,6 +1516,72 @@ return rv;
 }
 
 
+
+bool TSTMSTRING::CheckDecValue (char *lpStr)
+{
+bool rv = 0;
+if (lpStr)
+		{
+		//char *lpStr = (char*)strval.c_str();
+		if (*lpStr == '-') lpStr++;
+		unsigned char datt;
+		rv = 1;
+		while (1)
+				{
+				datt = lpStr[0];
+				if (!datt) break;
+				if (datt < '0' || datt > '9')
+						{
+						rv = 0;
+						break;
+						}
+				lpStr++;
+				}
+		}
+return rv;
+}
+
+
+
+bool TSTMSTRING::CheckFloatValue (char *lpStr)
+{
+bool rv = 0;
+if (lpStr)
+        {
+		//char *lpStr = (char*)strval.c_str();
+        if (*lpStr == '-') lpStr++;
+        unsigned char datt;
+        unsigned long pntcnt = 0;
+        rv = 1;
+        while (1)
+                {
+                datt = lpStr[0];
+                if (!datt) break;
+                if (datt != '.' && datt != ',')
+                        {
+                        if (datt < '0' || datt > '9')
+                                {
+                                rv = 0;
+                                break;
+                                }
+                        }
+                else
+                        {
+                        pntcnt++;
+                        if (pntcnt >= 2)
+                                {
+                                rv = 0;
+                                break;
+                                }
+                        }
+                lpStr++;
+                }
+        }
+return rv;
+}
+
+
+
 /*
 void I64ToStr (int64_t datas, TDString &dst)
 {
@@ -1484,7 +1589,7 @@ unsigned char flagnz = 0, resd;
 uint64_t delmt = 10000000000000000000;
 
 if (datas < 0)
-    {
+	{
     dst = "-";
     datas = abs64 (datas);
     }

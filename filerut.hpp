@@ -2,6 +2,8 @@
 #define Filerut_HPP_3
 
 #include <windows.h>
+#include <string>
+#define TDString std::string
 
 bool DeleteFile_E (char *lFileName);
 bool CheckDirectory_E (char *ldirnames);

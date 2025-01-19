@@ -311,3 +311,55 @@ bool TPARAMCONTRL::update_check_params_width ()
 }
 
 
+
+bool TPARAMCONTRL::get_bool (long ix)
+{
+	bool rv = false;
+	S_MVPARAM_HDR_T *s = get_param_tag (ix);
+	if (s) {
+		S_BASETAGPARAM_T *slot = (S_BASETAGPARAM_T*)s;
+		rv = (bool)slot->value.u.u32;
+		}
+	return rv;
+}
+
+
+
+float TPARAMCONTRL::get_f (long ix)
+{
+	float rv = 0;
+	S_MVPARAM_HDR_T *s = get_param_tag (ix);
+	if (s) {
+		S_BASETAGPARAM_T *slot = (S_BASETAGPARAM_T*)s;
+		rv = slot->value.u.f;
+		}
+	return rv;
+}
+
+
+
+uint32_t TPARAMCONTRL::get_u32 (long ix)
+{
+	uint32_t rv = 0;
+	S_MVPARAM_HDR_T *s = get_param_tag (ix);
+	if (s) {
+		S_BASETAGPARAM_T *slot = (S_BASETAGPARAM_T*)s;
+		rv = slot->value.u.u32;
+		}
+	return rv;
+}
+
+
+
+int32_t TPARAMCONTRL::get_i32 (long ix)
+{
+	int32_t rv = 0;
+	S_MVPARAM_HDR_T *s = get_param_tag (ix);
+	if (s) {
+		S_BASETAGPARAM_T *slot = (S_BASETAGPARAM_T*)s;
+		rv = (int32_t)slot->value.u.u32;
+		}
+	return rv;
+}
+
+

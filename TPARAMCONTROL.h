@@ -20,7 +20,8 @@ typedef enum MAV_PARAM_TYPE
    MAV_PARAM_TYPE_REAL32=9, /* 32-bit floating-point | */
    MAV_PARAM_TYPE_REAL64=10, /* 64-bit floating-point | */
 	 MAV_PARAM_TYPE_BOOL=11, 
-   MAV_PARAM_TYPE_ENUM_END=12, /*  | */
+	 MAV_PARAM_TYPE_ENUM=12, 
+   MAV_PARAM_TYPE_ENUM_END=13, /*  | */
 } MAV_PARAM_TYPE;
 
 // список внутрених параметров
@@ -48,6 +49,7 @@ typedef struct {
 	float max;
 	float def_value;
 	float step_val;
+	uint8_t view_dig_n;
 } S_MVPARAM_FLOAT_T;
 
 
@@ -130,6 +132,11 @@ class TPARAMCONTRL {
 		uint32_t param_internal_cnt ();
 		uint32_t param_external_cnt ();
 		uint32_t param_full_cnt ();
+	
+		bool get_bool (long ix);
+		float get_f (long ix);
+		uint32_t get_u32 (long ix);
+		int32_t get_i32 (long ix);
 	
 		void save ();
 		void load ();

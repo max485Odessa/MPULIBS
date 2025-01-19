@@ -123,13 +123,14 @@ TGRAPHPARAM::TGRAPHPARAM (int8_t *v, uint8_t c)
 }
 
 
-TGRAPHPARAM::TGRAPHPARAM (bool *v, uint8_t c, const char *t_on, const char *t_off)
+
+TGRAPHPARAM::TGRAPHPARAM (bool *v, uint8_t c, const char **t_enm2)
 {
 	data.txt_post = 0;
 	data.txt_pre = 0;
 	data.cb = 0;
-	data.txt_bool_on = (const_cast <char*>(t_on));
-	data.txt_bool_off = (const_cast <char*>(t_off));
+	data.txt_bool_enum = (const_cast <char**>(t_enm2));
+	data.dign_f = 2;
 	if (!c) c = 1;
 	data.type = MAV_PARAM_TYPE_BOOL;
 	data.u.bl = v;
@@ -138,6 +139,22 @@ TGRAPHPARAM::TGRAPHPARAM (bool *v, uint8_t c, const char *t_on, const char *t_of
 	data.str = new TSTMSTRING (data.txt, c + 1);
 }
 
+
+
+TGRAPHPARAM::TGRAPHPARAM (uint8_t *v_enm, uint8_t c, const char **t_list_enm, uint8_t cnt_enum)
+{
+	data.txt_post = 0;
+	data.txt_pre = 0;
+	data.cb = 0;
+	data.txt_bool_enum = (const_cast <char**>(t_list_enm));
+	data.dign_f = cnt_enum;
+	if (!c) c = 1;
+	data.type = MAV_PARAM_TYPE_ENUM;
+	data.u.u8 = v_enm;
+	data.cnt = c;
+	data.txt = new uint8_t[(c + 1)];
+	data.str = new TSTMSTRING (data.txt, c + 1);
+}
 
 
 void TGRAPHPARAM::set_prephix (const char *txt)
@@ -176,16 +193,26 @@ void TGRAPHPARAM::update ()
 	*data.str += data.txt_pre;
 	switch (data.type)
 		{
+		case MAV_PARAM_TYPE_ENUM:
+			{
+			if (data.u.u8) {
+				uint8_t ix = *data.u.u8;
+				if (ix < data.dign_f) {
+					if (data.txt_bool_enum[ix]) *data.str += data.txt_bool_enum[ix];
+					}
+				}
+			break;
+			}
 		case MAV_PARAM_TYPE_BOOL:
 			{
 			if (data.u.bl) {
 				if (*data.u.bl)
 					{
-					if (data.txt_bool_on) *data.str += data.txt_bool_on;
+					if (data.txt_bool_enum[0]) *data.str += data.txt_bool_enum[0];
 					}
 				else
 					{
-					if (data.txt_bool_off) *data.str += data.txt_bool_off;
+					if (data.txt_bool_enum[1]) *data.str += data.txt_bool_enum[1];
 					}
 				}
 			break;
@@ -249,6 +276,42 @@ void TGRAPHPARAM::update ()
 		}
 	
 	*data.str += data.txt_post;
+}
+
+
+
+bool TGRAPHPARAM::get_bool ()
+{
+	bool rv = false;
+	if (data.type == MAV_PARAM_TYPE_BOOL) rv = *data.u.bl;
+	return rv;
+}
+
+
+
+float TGRAPHPARAM::get_f ()
+{
+	float rv = 0;
+	if (data.type == MAV_PARAM_TYPE_REAL32) rv = *data.u.fl;
+	return rv;
+}
+
+
+
+uint32_t TGRAPHPARAM::get_u32 ()
+{
+	uint32_t rv = 0;
+	if (data.type == MAV_PARAM_TYPE_UINT32) rv = *data.u.u32;
+	return rv;
+}
+
+
+
+int32_t TGRAPHPARAM::get_i32 ()
+{
+	int32_t rv = 0;
+	if (data.type == MAV_PARAM_TYPE_INT32) rv = *data.u.i32;
+	return rv;
 }
 
 

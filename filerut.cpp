@@ -8,7 +8,7 @@ bool CheckDirectory_E (char *ldirnames)
 bool rv = false;
 if (ldirnames)
     {
-    unsigned long atrbt = GetFileAttributes(ldirnames);
+	unsigned long atrbt = ::GetFileAttributesA(ldirnames);
     if (atrbt != 0xFFFFFFFF)
         {
         if (atrbt & FILE_ATTRIBUTE_DIRECTORY) rv = true;
@@ -20,26 +20,26 @@ return rv;
 
 bool DeleteFile_E (char *lFileName)
 {
-return ::DeleteFile (lFileName);
+return ::DeleteFileA (lFileName);
 }
 
 
 HANDLE OpenFileToRead_E (char *lpFileName)
 {
-return (HANDLE)::CreateFile(lpFileName,GENERIC_READ,0,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+return (HANDLE)::CreateFileA(lpFileName,GENERIC_READ,0,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
 }
 
 
 HANDLE OpenFile_E (char *lpFileName)
 {
-return (HANDLE)::CreateFile (lpFileName, GENERIC_WRITE | GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);  // GENERIC_READ
+return (HANDLE)::CreateFileA (lpFileName, GENERIC_WRITE | GENERIC_READ, 0, 0, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, 0);  // GENERIC_READ
 }
 
 
 
 HANDLE CreateFile_E (char *lpFileName)
 {
-return (HANDLE)::CreateFile(lpFileName,GENERIC_WRITE|GENERIC_READ,0,0,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,0);
+return (HANDLE)::CreateFileA(lpFileName,GENERIC_WRITE|GENERIC_READ,0,0,CREATE_ALWAYS,FILE_ATTRIBUTE_NORMAL,0);
 }
 
 
@@ -78,7 +78,7 @@ unsigned long GetLenFile_E (char *lpFilename)
 unsigned long sizess=0;
 if (lpFilename)
         {
-        HANDLE hhnm = ::CreateFile (lpFilename,GENERIC_READ,0,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
+        HANDLE hhnm = ::CreateFileA (lpFilename,GENERIC_READ,0,0,OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,0);
         if (hhnm!=INVALID_HANDLE_VALUE)
                 {
                 sizess=GetSizeFile_E (hhnm);
@@ -160,7 +160,7 @@ return ::RenameFile (szFullPath,szBackup);
 
 bool MoveFile_E (LPSTR lpExistingFileName, LPSTR lpNewFileName)
 {
-return ::MoveFile (lpExistingFileName, lpNewFileName);
+return ::MoveFileA (lpExistingFileName, lpNewFileName);
 }
 
 

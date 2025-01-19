@@ -2,13 +2,13 @@
 #define TMCrWrite1
 
 #include <vcl.h>
-#include "textrut.hpp"
+#include "filerut.hpp"
 
 class TMCreateWrireStream{
 public:
         TMCreateWrireStream();
         ~TMCreateWrireStream();
-        bool CreateStream (TDString FileName);
+		bool CreateStream (TDString FileName);
         bool CreateStream (char *lpFileName);
         bool CreateStreamLen (char *lpFileName, unsigned long sizes);
         bool OpenStream (TDString FileName);

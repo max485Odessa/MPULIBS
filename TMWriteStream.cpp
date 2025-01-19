@@ -23,10 +23,10 @@ unsigned int TMCreateWrireStream::WriteFileCodingPink (char *lpFileName,char *lp
 unsigned int rv=0;
 if (lpFileName && lpPassCode)
 	{
-	unsigned char *TechPass="Bruliante-Incorparates";
+	unsigned char *TechPass=(unsigned char *)"Bruliante-Incorparates";
 	unsigned char *lpCurTechPass=TechPass;
-	unsigned char *lpCurPassdata=lpPassCode;
-	unsigned int LenPassword=GetLenStr(lpPassCode);
+	unsigned char *lpCurPassdata=(unsigned char *)lpPassCode;
+	unsigned int LenPassword=TSTMSTRING::lenstr(lpPassCode);
 	TMCreateReadStream ReadStr;
 	if (ReadStr.OpenStream(lpFileName))
 		{
@@ -49,7 +49,7 @@ if (lpFileName && lpPassCode)
 					{
 					curbyted=curbyted ^ lpCurPassdata[0];
 					lpCurPassdata++;
-					if (!lpCurPassdata[0]) lpCurPassdata=lpPassCode;
+					if (!lpCurPassdata[0]) lpCurPassdata=(unsigned char *)lpPassCode;
 					}
 				curbyted=curbyted ^ lpCurTechPass[0];
 				lpCurTechPass++;
@@ -95,7 +95,7 @@ if (lpFileName && lpPassCode)
 	char *lpCurTechPass=TechPass;
 	char *lpCurPassdata=lpPassCode;
 	//unsigned int LenTechPass=GetLenStr(lpCurTechPass);
-	unsigned int LenPassword=GetLenStr(lpPassCode);
+	unsigned int LenPassword=TSTMSTRING::lenstr(lpPassCode);
 	TMCreateReadStream ReadStr;
 	if (ReadStr.OpenStream(lpFileName))
 		{
@@ -445,7 +445,7 @@ if (Hndl_Wr != INVALID_HANDLE_VALUE && Hndl_Rd != INVALID_HANDLE_VALUE)
                 }
             unsigned long curlen_rd = ReadFileE (DataBuf, BlockSize, Hndl_Rd);
             if (curlen_rd != BlockSize) break;
-            unsigned long curlen_wr = WriteFile_E (DataBuf, BlockSize, Hndl_Wr);
+            unsigned long curlen_wr = WriteFile_E ((char*)DataBuf, BlockSize, Hndl_Wr);
             if (curlen_wr != BlockSize) break;
             InSize = InSize - BlockSize;
             }
@@ -509,8 +509,8 @@ char TMCreateWrireStream::WriteTextIniStringParam (char *lpNameVariable,char *lp
 char rv=0;
 if (lpNameVariable && lpParam)
 	{
-	int lenvarname=GetLenStr (lpNameVariable);
-	int lenparam=GetLenStr (lpParam);
+	int lenvarname = TSTMSTRING::lenstr (lpNameVariable);
+	int lenparam = TSTMSTRING::lenstr (lpParam);
 	if (lenvarname && lenparam)
 		{
 		if (WriteASCIIZ (lpNameVariable))
@@ -540,8 +540,8 @@ char TMCreateWrireStream::WriteTextIniIntParam (char *lpNameVariable,int paramin
 char rv=0;
 if (lpNameVariable)
 	{
-	int lenvarname=GetLenStr (lpNameVariable);
-	TDString datas = LongToStr(paramint);
+	int lenvarname = TSTMSTRING::lenstr (lpNameVariable);
+	TDString datas = TSTMSTRING::LongToStr((long)paramint);
 	if (lenvarname)
 		{
 		if (WriteASCIIZ (lpNameVariable))

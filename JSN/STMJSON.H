@@ -7,7 +7,7 @@
 #endif
 
 #include "STMSTRING.H"
-#include "textrut.hpp"
+
 
 enum EJSNTYPE {EJST_NONE = 0, EJST_DIG = 1, EJST_STRING = 2, EJST_OBJ = 3, EJST_ARRAY = 4};
 //enum EJSKEYTYPE {EJSKEY_VALUE = 0, EJSKEY_OBJ = 1, EJSKEY_ARR = 2};
@@ -97,8 +97,8 @@ class STMJSON {
     EJSNTYPE ExtractTypeParam (TLPObj *IN_Tlp, TSTMSTRING &outname, TLPObj &outval);  // ++
 
     long FindItemParam_fromOBJ (TLPObj *IN_Tlp, const char *nameparam, TLPObj &outParam, EJSNTYPE *d_type);   // ++ находит поле по имени и возвращает его тип и рамки размещения
-    void TLP_to_Str (TLPObj const &tlp, TSTMSTRING *dst_str);      // преобразует данные по указателям в STRING         ++
-    bool SetPathKey (TLPObj const &outval);     // устанавливает физическое ограничение по поиску элементнов в JSON структуре
+    void TLP_to_Str (TLPObj &tlp, TSTMSTRING *dst_str);      // преобразует данные по указателям в STRING         ++
+    bool SetPathKey (TLPObj &outval);     // устанавливает физическое ограничение по поиску элементнов в JSON структуре
 
     EJSEXTYPE GetTypeString (const char *name);               // определяет тип данных по строке
     //void shield_set_to (TSTMSTRING &str, bool f_on);        // установить/снять екранировку строки
@@ -129,7 +129,7 @@ class STMJSON {
     bool OpenPath (const char *lpath);			// const TSTMSTRING &strkey устанавливает PATHKEY к обьекту (не к элементу обьекта)
 
     bool GetItem (const char *ItmemName, TSTMSTRING *d_ItemVal, EJSNTYPE *d_type);		// возвращает значение по имени (массив, обьект или значение) и тип обьекта
-    bool GetItemExtType (TSTMSTRING const &ItmemName, TSTMSTRING &d_ItemVal, EJSEXTYPE *d_type);		// возвращает значение по имени (массив, обьект или значение) и тип обьекта расширенный
+    bool GetItemExtType (TSTMSTRING &ItmemName, TSTMSTRING &d_ItemVal, EJSEXTYPE *d_type);		// возвращает значение по имени (массив, обьект или значение) и тип обьекта расширенный
     long Item_Find (const char *jsn_rawlineitem);
     bool Item_NameCheck (const char *str_name); // ++
     bool Item_Get (long i_array, TSTMSTRING *itemfield);    // извлекает item, для извлечения array elements

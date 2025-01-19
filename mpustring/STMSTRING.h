@@ -4,19 +4,19 @@
 
 
 #include <stdint.h>
-#ifdef IS_WINDOWS_OS
-    #include "textrut.hpp"
-		using namespace TEX;
-#else
-		#include "rutine.h"
+#ifdef ISWINDOWS
+	#include <string>
+	#define TDString std::string
 #endif
+
+#include "rutine.h"
 
 
 
 class TSTMSTRING {
 private:
       static unsigned char *FloatToStrDroba (unsigned char *lpDest,float datas,unsigned char Cntr);
-	    static unsigned long GetSizeToDelim (char *lTxt, unsigned long sz, char delim);
+	  static unsigned long GetSizeToDelim (char *lTxt, unsigned long sz, char delim);
         
 protected:
 
@@ -38,7 +38,7 @@ public:
         explicit TSTMSTRING (void *lDRam, unsigned long size);
         explicit TSTMSTRING (const char *lstr);
         explicit TSTMSTRING (char datas, void *lDRam, unsigned long size);
-        explicit TSTMSTRING (BUFPAR *param);
+		explicit TSTMSTRING (BUFPAR *param);
 
         void set_space (void *lDRam, unsigned long size);
         void set_context (void *lDRam, unsigned long size);
@@ -58,8 +58,8 @@ public:
 				TSTMSTRING operator+=(int32_t val);
 				TSTMSTRING operator+(int32_t val);
 				TSTMSTRING operator+=(int8_t val);
-				TSTMSTRING operator+(int8_t val);
-        TSTMSTRING operator+=(unsigned long val);
+				//TSTMSTRING operator+(int8_t val);
+		TSTMSTRING operator+=(unsigned long val);
         bool operator==(TSTMSTRING &val);
         bool operator==(const char *lp);
         //bool operator!=(const char *lp);
@@ -80,11 +80,11 @@ public:
 
         TSTMSTRING operator=(const char *lpRams);
         TSTMSTRING operator=(char dt);
-				TSTMSTRING operator=(int8_t date);
+				//TSTMSTRING operator=(int8_t date);
         TSTMSTRING operator=(TSTMSTRING &dt);
         TSTMSTRING operator+=(TSTMSTRING &dt);
 
-        void operator+=(char val);
+        //void operator+=(char val);
         void Insert_Binary_L (unsigned long val, unsigned char bit_cnt);
         void Insert_Long (long val);
         void Insert_ULong (unsigned long val);
@@ -125,9 +125,10 @@ public:
         static unsigned char *FloatToString (unsigned char *lpRamBuf, float datas, unsigned char pcnt);
         static unsigned char *UlongToStr (unsigned char *lpDest, uint32_t datas);
         static char *CopyMemorySDC (char *lpSour, char *lpDest, uint32_t sizes);
-        static bool str_compare (char *lStr1, char *lStr2, uint32_t size);
-        static uint32_t lenstr (char *lpAdr);
-        static unsigned char *LongToStr (unsigned char *lpDest, long datas);
+		static bool compare (char *lStr1, char *lStr2, uint32_t size);
+        static bool compare (char *lStr1, char *lStr2);
+		static uint32_t lenstr (char *lpAdr);
+		static unsigned char *LongToStr (unsigned char *lpDest, long datas);
         static char ConvBinToASCIIHex (unsigned char datas);
         static void ByteToHEX (unsigned char *lpRams,unsigned char datas);
         static unsigned char *ConvertStrToLong (unsigned char *lpRamData, long *lpDataOut);
@@ -136,9 +137,16 @@ public:
         static bool TxtToULong (unsigned char *lpRamData, unsigned char sz, uint32_t *lpDataOut);
         static uint32_t abs32 (long datas);
         static uint32_t CheckDecimal (char *lTxt, uint32_t sz);
-				static uint32_t lenstr_max (const char *lsrt, uint32_t maxsz);
-        //operator  char*() ;
+		static uint32_t lenstr_max (const char *lsrt, uint32_t maxsz);
+		static bool CheckDecValue (char *strval);
+		static bool CheckFloatValue (char *lpStr);
+		#ifdef ISWINDOWS
+		static TDString LongToStr (long val);
+		#endif
 };
+
+        //operator  char*() ;
+
 
 #define TString(name,x) \
     char buf[x];\

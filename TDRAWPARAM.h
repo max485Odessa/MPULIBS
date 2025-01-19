@@ -26,11 +26,8 @@ typedef struct {
 	uint8_t dign_f;
 	TSTMSTRING *str;
 	uint8_t *txt_pre;
-	//uint8_t len_pre;
 	uint8_t *txt_post;
-	char *txt_bool_on;
-	char *txt_bool_off;
-	//uint8_t len_post;
+	char **txt_bool_enum;	
 	union {
 		uint32_t *u32;
 		float *fl;
@@ -61,9 +58,15 @@ class TGRAPHPARAM {
 		explicit TGRAPHPARAM (int16_t *v, uint8_t c);
 		explicit TGRAPHPARAM (uint8_t *v, uint8_t c);
 		explicit TGRAPHPARAM (int8_t *v, uint8_t c);
-		explicit TGRAPHPARAM (bool *v, uint8_t c, const char *t_on, const char *t_off);
+		explicit TGRAPHPARAM (bool *v, uint8_t c, const char **t_on_off);
+		explicit TGRAPHPARAM (uint8_t *v_enm, uint8_t c, const char **t_list_enm, uint8_t cnt_enum);
 		void set_prephix (const char *txt);
 		void set_postfix (const char *txt);
+		bool get_bool ();
+		float get_f ();
+		uint32_t get_u32 ();
+		int32_t get_i32 ();
+		
 		const TSTMSTRING &get_txt ();
 		TSTMSTRING *get_lp_txt ();
 

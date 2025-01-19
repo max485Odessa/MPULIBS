@@ -1,5 +1,4 @@
 #include "TMReadStream.hpp"
-#include "textrut.hpp"
 #include "filerut.hpp"
 #include "TMWriteStream.hpp"
 
@@ -14,6 +13,26 @@ BuferDataSize=0;
 FlagEndBX=0;
 Handll=INVALID_HANDLE_VALUE;
 memset(lpBufer,0,sizeof(lpBufer));
+}
+
+
+
+// возвращает путь где стартовала программа
+TDString TMCreateReadStream::GetExecPath ()
+{
+TDString CurentPath = "";
+CurentPath = (char*)GetCurrentDir().c_str();
+char *lpFlStr = (char*)CurentPath.c_str();
+unsigned long szln = TSTMSTRING::lenstr (lpFlStr);
+
+if (szln)
+        {
+        if (lpFlStr[szln-1] != '\\')
+                {
+                CurentPath = CurentPath + '\\';
+                }
+        }
+return CurentPath;
 }
 
 
@@ -155,11 +174,11 @@ if (lpOutRamAdr && lpInput && lpPassworde && wrsize)
 	{
 	if (1)
 		{
-		unsigned char *TechPass="Bruliante-Incorparates";
+		unsigned char *TechPass=(unsigned char *)"Bruliante-Incorparates";
 		unsigned char *lpCurTechPass=TechPass;
-		unsigned char *lpCurPassdata=lpPassworde;
+		unsigned char *lpCurPassdata=(	unsigned char *)lpPassworde;
 		//unsigned int LenTechPass=GetLenStr(lpCurTechPass);
-		unsigned int LenPassword=GetLenStr(lpPassworde);
+		unsigned int LenPassword=TSTMSTRING::lenstr(lpPassworde);
 		unsigned char curbyted;
                 unsigned char curbcod=234,tmpvvv;
 		unsigned char maskleft=1;
@@ -175,7 +194,7 @@ if (lpOutRamAdr && lpInput && lpPassworde && wrsize)
 				{
 				curbyted=curbyted ^ lpCurPassdata[0];
 				lpCurPassdata++;
-				if (!lpCurPassdata[0]) lpCurPassdata=lpPassworde;
+				if (!lpCurPassdata[0]) lpCurPassdata=(unsigned char *)lpPassworde;
 				}
 			curbyted=curbyted ^ lpCurTechPass[0];
 			lpCurTechPass++;
@@ -212,11 +231,11 @@ if (lpFileName && lpPassworde && wrsize && !FlagEndBX)
 	TMCreateWrireStream wrstrm;
 	if (wrstrm.CreateStream(lpFileName))
 		{
-		unsigned char *TechPass="Bruliante-Incorparates";
+		unsigned char *TechPass=(unsigned char *)"Bruliante-Incorparates";
 		unsigned char *lpCurTechPass=TechPass;
-		unsigned char *lpCurPassdata=lpPassworde;
+		unsigned char *lpCurPassdata=(	unsigned char *)lpPassworde;
 		//unsigned int LenTechPass=GetLenStr(lpCurTechPass);
-		unsigned int LenPassword=GetLenStr(lpPassworde);
+		unsigned int LenPassword=TSTMSTRING::lenstr(lpPassworde);
 		unsigned char curbyted;
         unsigned char curbcod=234,tmpvvv;
 		unsigned char maskleft=1;
@@ -232,7 +251,7 @@ if (lpFileName && lpPassworde && wrsize && !FlagEndBX)
 				{
 				curbyted=curbyted ^ lpCurPassdata[0];
 				lpCurPassdata++;
-				if (!lpCurPassdata[0]) lpCurPassdata=lpPassworde;
+				if (!lpCurPassdata[0]) lpCurPassdata=(unsigned char *)lpPassworde;
 				}
 			curbyted=curbyted ^ lpCurTechPass[0];
 			lpCurTechPass++;
@@ -275,7 +294,7 @@ if (lpFileName && lpPassworde && wrsize && !FlagEndBX)
 		char *lpCurTechPass=TechPass;
 		char *lpCurPassdata=lpPassworde;
 		//unsigned int LenTechPass=GetLenStr(lpCurTechPass);
-		unsigned int LenPassword=GetLenStr(lpPassworde);
+		unsigned int LenPassword=TSTMSTRING::lenstr(lpPassworde);
 		unsigned char curbyted;
 		unsigned char maskleft=1;
 		unsigned char maskright=128;
