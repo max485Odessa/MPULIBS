@@ -477,12 +477,12 @@ InsChar (val_char);
 
 
 
-/*
+
 void TSTMSTRING::operator+=(char dat)
 {
 InsChar (dat);
 }
-*/
+
 
 
 
@@ -519,6 +519,14 @@ return *this;
 }
 
 
+TSTMSTRING TSTMSTRING::operator=(unsigned char date)
+{
+size_str = 0;
+InsChar (date);
+return *this;
+}
+
+
 
 void TSTMSTRING::Insert_Long (long val)
 {
@@ -533,146 +541,8 @@ if (freem >= 10)
 
 
 
-TSTMSTRING TSTMSTRING::operator+=( unsigned short date)
-{
-Insert_ULong (date);
-return *this;
-}
 
 
-
-TSTMSTRING TSTMSTRING::operator+=( long date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator+( long date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator+=( int16_t date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-TSTMSTRING TSTMSTRING::operator+( int16_t date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator+=( int8_t date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-/*
-TSTMSTRING TSTMSTRING::operator+( int8_t date)
-{
-Insert_Long (date);
-return *this;
-}
-*/
-
-
-
-TSTMSTRING TSTMSTRING::operator+=( int32_t date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator+( int32_t date)
-{
-Insert_Long (date);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(unsigned short val)
-{
-size_str = 0;
-Insert_ULong (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(short val)
-{
-size_str = 0;
-Insert_Long (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(unsigned long val)
-{
-size_str = 0;
-Insert_ULong (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator+=(unsigned int val)
-{
-Insert_ULong (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(long val)
-{
-size_str = 0;
-Insert_Long (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(unsigned char val)
-{
-size_str = 0;
-Insert_ULong (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(unsigned int val)
-{
-size_str = 0;
-Insert_ULong (val);
-return *this;
-}
-
-
-
-TSTMSTRING TSTMSTRING::operator=(int val)
-{
-size_str = 0;
-Insert_Long (val);
-return *this;
-}
 
 
 
@@ -717,12 +587,13 @@ if (freem >= 12)
 }
 
 
-
+/*
 TSTMSTRING TSTMSTRING::operator+=(unsigned long date)
 {
 Insert_ULong (date);
 return *this;
 }
+*/
 
 
 

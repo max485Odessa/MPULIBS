@@ -81,7 +81,10 @@ class TParsJSNKey {
 
 class STMJSON {
   private:
-    TDString JsonFileDirPath;
+	#ifdef ISWINDOWS
+	TDString JsonFileDirPath;
+	#endif
+
 
     TParsJSNKey pars_f1;    // ++
     

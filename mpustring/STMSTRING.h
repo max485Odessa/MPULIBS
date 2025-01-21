@@ -52,39 +52,20 @@ public:
         bool operator!=(char *lpRams);
         bool operator!=(const char *lpRams);
 
-        TSTMSTRING operator+=(long val);
-				TSTMSTRING operator+(long val);
-				TSTMSTRING operator+(int16_t val);
-				TSTMSTRING operator+=(int32_t val);
-				TSTMSTRING operator+(int32_t val);
-				TSTMSTRING operator+=(int8_t val);
-				//TSTMSTRING operator+(int8_t val);
-		TSTMSTRING operator+=(unsigned long val);
+
         bool operator==(TSTMSTRING &val);
-        bool operator==(const char *lp);
-        //bool operator!=(const char *lp);
-        //bool operator!=(char *lp);
-        TSTMSTRING operator+=(short val);
-				TSTMSTRING operator+=(uint32_t val);
-        TSTMSTRING operator+=(uint16_t val);
-				//TSTMSTRING operator+=(uint16_t val);
-        TSTMSTRING operator+=(unsigned char val);
-				
-				TSTMSTRING operator=(uint16_t val);
-				TSTMSTRING operator=(short val);
-				TSTMSTRING operator=(unsigned long val);
-				TSTMSTRING operator=(long val);
-				TSTMSTRING operator=(uint32_t val);
-				TSTMSTRING operator=(int val);
-				TSTMSTRING operator=(unsigned char val);
+		bool operator==(const char *lp);
+
 
         TSTMSTRING operator=(const char *lpRams);
-        TSTMSTRING operator=(char dt);
-				//TSTMSTRING operator=(int8_t date);
+		TSTMSTRING operator=(char dt);
+		TSTMSTRING operator=(unsigned char dt);
         TSTMSTRING operator=(TSTMSTRING &dt);
         TSTMSTRING operator+=(TSTMSTRING &dt);
 
-        //void operator+=(char val);
+		void operator+=(char val);
+		TSTMSTRING operator+=(unsigned char dat);
+
         void Insert_Binary_L (unsigned long val, unsigned char bit_cnt);
         void Insert_Long (long val);
         void Insert_ULong (unsigned long val);

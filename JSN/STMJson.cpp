@@ -24,7 +24,9 @@ if (flname)
         {
         unsigned int sizes = Rd1.GetFileSize ();
         if (sizes)
-            {
+			{
+			if (loadfile_alloc) delete []loadfile_alloc;
+            loadfile_alloc = 0;
             unsigned char *lpRam = new unsigned char [(sizes + 8)];
             if (Rd1.ReadData(lpRam, sizes) == sizes)
                 {
