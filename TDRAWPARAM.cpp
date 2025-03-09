@@ -224,40 +224,40 @@ void TGRAPHPARAM::update ()
 			}
 		case MAV_PARAM_TYPE_UINT16:
 			{
-			*data.str += *data.u.u16;
+			data.str->Insert_ULong (*data.u.u16);
 			break;
 			}
 		case MAV_PARAM_TYPE_UINT32:
 			{
 			if (data.cb)
 				{
-				*data.str += (data.cb->get_param_u32 (data.cb_p_ix));
+				data.str->Insert_ULong ((data.cb->get_param_u32 (data.cb_p_ix)));
 				}
 			else
 				{
-				*data.str += *data.u.u32;
+				data.str->Insert_ULong (*data.u.u32); 
 				}
 			break;
 			}
 		case MAV_PARAM_TYPE_INT8:
 			{
-			*data.str += *data.u.i8;
+			data.str->Insert_Long (*data.u.i8);
 			break;
 			}
 		case MAV_PARAM_TYPE_INT16:
 			{
-			*data.str += *data.u.i16;
+			data.str->Insert_Long (*data.u.i16);
 			break;
 			}
 		case MAV_PARAM_TYPE_INT32:
 			{
 			if (data.cb)
 				{
-				*data.str += (data.cb->get_param_i32 (data.cb_p_ix));
+				data.str->Insert_Long (data.cb->get_param_i32 (data.cb_p_ix));
 				}
 			else
 				{
-				*data.str += *data.u.i32;
+				data.str->Insert_Long (*data.u.i32);
 				}
 			break;
 			}

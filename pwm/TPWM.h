@@ -1,5 +1,5 @@
-#ifndef _H_STM32HALL_AIN_CLASS_H_
-#define _H_STM32HALL_AIN_CLASS_H_
+#ifndef _H_STM32HALL_PWM_CLASS_H_
+#define _H_STM32HALL_PWM_CLASS_H_
 
 
 #include "SYSBIOS.H"
@@ -8,13 +8,24 @@
 #include "hard_rut.h"
 #include "ITIMINT.h"
 
+enum ETIMCH {ETIMCH_1 = 0, ETIMCH_2 = 1, ETIMCH_3 = 2, ETIMCH_4 = 3, EPWMCH_ENDENUM = 4};
+
+typedef struct {
+	S_GPIOPIN port;
+	ETIMCH ch;
+	bool f_inverse;
+	#if (HRDCPU == 4)
+		E_GPIO_AF af;
+	#endif
+} S_PWM_INIT_LIST_T;
 
 
-enum EPWMCH {EPWMCH_1 = 0, EPWMCH_2 = 1, EPWMCH_3 = 2, EPWMCH_4 = 3, EPWMCH_ENDENUM = 4};
+
 class TPWMIFC {
 	public:
 		virtual void enable (bool v) = 0;
-		virtual void set_pwm (float val) = 0;
+		virtual void set_pwm_f (float val) = 0;
+		virtual void set_pwm (uint32_t val) = 0;
 };
 
 
@@ -30,10 +41,10 @@ typedef struct {
 
 
 class TPWMSCHAN: public TPWMIFC {
-		virtual void enable (bool v) override;
-		virtual void set_pwm (float val) override;
 	
+		uint32_t period_pwm_control;
 		uint32_t pwm;
+		const bool c_f_inverse;
 		bool f_output_active;
 
 		TIM_OC_InitTypeDef sConfig;
@@ -41,27 +52,40 @@ class TPWMSCHAN: public TPWMIFC {
 		S_BASEPWM_INF_T const &tim;
 	
 		uint32_t calculate_pwm (float val);
+		void default_init ();
 	
 	public:
 		TPWMSCHAN (S_BASEPWM_INF_T &t, uint32_t ch);
-		
+		TPWMSCHAN (S_BASEPWM_INF_T &t, uint32_t ch, bool inv);
+		void set_control_period (uint32_t val);
+
+		void enable (bool v) override;
+		void set_pwm_f (float val) override;
+		void set_pwm (uint32_t val) override;
+	
 };
 
 
 
 class TPWM  {
-		static const uint32_t chanpwmlist[EPWMCH_ENDENUM];
 		void init_base ();
 
-		const S_BASEPWM_INF_T info;
+		S_BASEPWM_INF_T info;
 		TIM_HandleTypeDef    TimHandle;
 	
-		TPWMSCHAN *ch_array[EPWMCH_ENDENUM];
+	protected:
+		void tim_gpio_init (S_PWM_INIT_LIST_T *ls, uint8_t pn);
 	
+		TPWMSCHAN *ch_array[EPWMCH_ENDENUM];
+		
 	public:
-		TPWM (ESYSTIM t, uint32_t period, uint32_t hz_clk);
-		TPWMIFC *getChanel (EPWMCH c);
+		TPWM (ESYSTIM t, uint32_t period, uint32_t hz_clk, S_PWM_INIT_LIST_T *ls, uint8_t pn);
+		TPWMIFC *getChanel (ETIMCH c);
 		void set_period (uint32_t mks);
+		void set_pwm (uint8_t ix, uint32_t mks);
+		void enable (uint8_t ix, bool v);
+	
+		static const uint32_t chanpwmlist[EPWMCH_ENDENUM];
 };
 
 
