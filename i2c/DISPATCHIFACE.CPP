@@ -1,4 +1,4 @@
-#include "DISPATCHIFACE.H"
+#include "DISPATCHIFACE.hpp"
 
 
 extern void debug_message (char *ltxt, unsigned char sz);
@@ -6,9 +6,8 @@ extern bool check_firmware_status ();
 
 
 
-TI2CTRDIFACE::TI2CTRDIFACE ()
+TI2CTRDIFACE::TI2CTRDIFACE (uint8_t adr) : C_SLAVEADRESS (adr)
 {
-
 	ClearError ();
 	PermitCount = 0;
 	F_complete = true;
@@ -48,18 +47,6 @@ const char *TI2CTRDIFACE::get_device_name ()
 	return debug_chip_name;
 }
 
-
-/*
-void TI2CTRDIFACE::Init ()
-{
-	if (!F_timer_registered)
-		{
-		ReleaseTimeout = 0;
-		SYSBIOS::ADD_TIMER_SYS (&ReleaseTimeout);
-		F_timer_registered = true;
-		}
-}
-*/
 
 
 void TI2CTRDIFACE::SetBussError_i2c ()
@@ -116,14 +103,15 @@ void TI2CTRDIFACE::ClearError ()
 bool TI2CTRDIFACE::is_soft_reset ()
 {
 bool rv = f_need_ic_soft_reset;
-if (f_need_ic_soft_reset) f_need_ic_soft_reset = false;	// нужно
+if (f_need_ic_soft_reset) f_need_ic_soft_reset = false;
 return rv;	
 }
 
 
 
-TDISPATCHI2C::TDISPATCHI2C (TI2CIFACE *bus_obj)
+TDISPATCHI2C::TDISPATCHI2C (TI2CBUS *bus_obj, uint8_t c_maxi2c) : c_max_i2cdev (c_maxi2c)
 {
+	DevArray = new TI2CTRDIFACE*[c_max_i2cdev];
 	I2C_device = bus_obj;
 	DevCount = 0;
 	CurDevIndx = 0;
@@ -137,7 +125,7 @@ TDISPATCHI2C::TDISPATCHI2C (TI2CIFACE *bus_obj)
 bool TDISPATCHI2C::Add (TI2CTRDIFACE *dev_iface)
 {
 	bool rv = false;
-if (dev_iface && DevCount < C_MAXI2CDEV_AMOUNT)	
+if (dev_iface && DevCount < c_max_i2cdev)
 	{
 	DevArray[DevCount++] = dev_iface;
 	rv = true;
@@ -166,21 +154,18 @@ void TDISPATCHI2C::Task ()
 			{
 			lIface->Task (I2C_device);	
 				
-			if (lIface->CheckComplete())	// при ошибке или нормальном завершении цикла обмена - в любом случае устройтсво отпускает захват шины
+			if (lIface->CheckComplete())
 				{
-				if (lIface->CheckError ())	// зафиксированна ошибка линии
+				if (lIface->CheckError ())
 					{
-					debug_object = lIface;		// ставим метку что необходимо сбросить debug информацию о ошибках этого устройтсва в uavcan
+					debug_object = lIface;
 					
-					ReleaseTimeout = 2;				// 1-2 мс технологическа€ пауза перез запуском обмена со следущим устройством, если на линии вы€влена ошибка
+					ReleaseTimeout = 2;
 					lIface->ClearError ();	
 					}
 				else
 					{
-					// данные с этого устройства получены
-					// ошибок не найдено или была проведена тех пауза
-					// переходим к следующему устройству
-						
+
 					CurDevIndx++;
 					CircleIndexControl ();
 					lIface = DevArray[CurDevIndx];
@@ -202,7 +187,6 @@ void TDISPATCHI2C::Task ()
 			CurDevIndx++;
 			CircleIndexControl ();
 			}
-
 		}
 }
 
