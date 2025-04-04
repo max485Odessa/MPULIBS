@@ -1,6 +1,6 @@
 #include "TPWM.h"
 
-const uint32_t TPWM::chanpwmlist[EPWMCH_ENDENUM] = {TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3, TIM_CHANNEL_4};
+const uint32_t TPWMSCHAN::chanpwmlist[EPWMCH_ENDENUM] = {TIM_CHANNEL_1, TIM_CHANNEL_2, TIM_CHANNEL_3, TIM_CHANNEL_4};
 
 TPWMSCHAN::TPWMSCHAN (S_BASEPWM_INF_T &t, uint32_t ch) : tim(t), C_CHAN_ID (ch), c_f_inverse (false)
 {
@@ -20,15 +20,15 @@ void TPWMSCHAN::default_init ()
 {
 	f_output_active = false;
 	pwm = 0;
-  sConfig.OCMode       = TIM_OCMODE_PWM1;
-  sConfig.OCPolarity   = c_f_inverse ? TIM_OCPOLARITY_LOW:TIM_OCPOLARITY_HIGH;
+  sConfig.OCMode       = TIM_OCMODE_PWM1;//(c_f_inverse)?TIM_OCMODE_PWM1:TIM_OCMODE_PWM2; 
+  sConfig.OCPolarity   = c_f_inverse ? TIM_OCPOLARITY_LOW : TIM_OCPOLARITY_HIGH;
   sConfig.OCFastMode   = TIM_OCFAST_DISABLE;
   sConfig.OCNPolarity  = TIM_OCNPOLARITY_HIGH;
   sConfig.OCNIdleState = TIM_OCNIDLESTATE_RESET;
   sConfig.OCIdleState  = TIM_OCIDLESTATE_RESET;
 	sConfig.Pulse = pwm;
 	
-	HAL_TIM_PWM_ConfigChannel (tim.TimHandle, &sConfig, C_CHAN_ID);
+	HAL_TIM_PWM_ConfigChannel (tim.TimHandle, &sConfig, chanpwmlist[C_CHAN_ID]);
 }
 
 
@@ -40,11 +40,11 @@ void TPWMSCHAN::enable (bool v)
 		{
 		if (v)
 			{
-			HAL_TIM_PWM_Start (tim.TimHandle, C_CHAN_ID);
+			HAL_TIM_PWM_Start (tim.TimHandle, chanpwmlist[C_CHAN_ID]);
 			}
 		else
 			{
-			HAL_TIM_PWM_Stop (tim.TimHandle, C_CHAN_ID);
+			HAL_TIM_PWM_Stop (tim.TimHandle, chanpwmlist[C_CHAN_ID]);
 			}
 		f_output_active = v;
 		}
@@ -64,12 +64,23 @@ return data;
 
 
 
+void TPWMSCHAN::Set_CCR (uint32_t v)
+{
+	if (C_CHAN_ID < EPWMCH_ENDENUM) {
+		__IO uint32_t *dst = &tim.TimHandle->Instance->CCR1;
+		dst[C_CHAN_ID] = v;
+		}
+}
+
+
+
 void TPWMSCHAN::set_pwm_f (float val)
 {
 	pwm = calculate_pwm (val);
 	enable (pwm);
 	if (pwm > period_pwm_control) pwm = period_pwm_control;
-	tim.TimHandle->Instance->CCR1 = pwm;
+	
+	Set_CCR (pwm);
 }
 
 
@@ -85,7 +96,8 @@ void TPWMSCHAN::set_pwm (uint32_t val)
 {
 	if (val > period_pwm_control) val = period_pwm_control;
 	pwm = val;
-	tim.TimHandle->Instance->CCR1 = pwm;
+	Set_CCR (pwm);
+	//tim.TimHandle->Instance->CCR1 = pwm;
 }
 
 
@@ -108,7 +120,7 @@ TPWM::TPWM (ESYSTIM t, uint32_t period, uint32_t hz_clk, S_PWM_INIT_LIST_T *ls, 
 
 	uint8_t ix = ETIMCH_1;
 	while (ix < EPWMCH_ENDENUM) {
-		ch_array[ix] = new TPWMSCHAN (const_cast<S_BASEPWM_INF_T&>(info), chanpwmlist[ix], ls->f_inverse);
+		ch_array[ix] = new TPWMSCHAN (const_cast<S_BASEPWM_INF_T&>(info), ix /*chanpwmlist[ix]*/, ls[ix].f_inverse);
 		ix++;
 		}
 	init_base ();
@@ -130,11 +142,12 @@ void TPWM::enable (uint8_t ix, bool v)
 
 
 
-void TPWM::tim_gpio_init (S_PWM_INIT_LIST_T *ls, uint8_t pn)
+void TPWM::tim_gpio_init (S_PWM_INIT_LIST_T *ls, const uint8_t c_pn)
 {
-while (pn) {
-	_pin_low_init_out_pp_af (ls->af, &ls->port, EHRTGPIOSPEED_HI);
-	pn--;
+	uint8_t ix = 0;
+while (ix < c_pn) {
+	_pin_low_init_out_pp_af (ls[ix].af, &ls[ix].port, EHRTGPIOSPEED_HI);
+	ix++;
 	}
 }
 

@@ -54,6 +54,10 @@ class TPWMSCHAN: public TPWMIFC {
 		uint32_t calculate_pwm (float val);
 		void default_init ();
 	
+		void Set_CCR (uint32_t v);
+	
+		static const uint32_t chanpwmlist[EPWMCH_ENDENUM];
+	
 	public:
 		TPWMSCHAN (S_BASEPWM_INF_T &t, uint32_t ch);
 		TPWMSCHAN (S_BASEPWM_INF_T &t, uint32_t ch, bool inv);
@@ -74,7 +78,7 @@ class TPWM  {
 		TIM_HandleTypeDef    TimHandle;
 	
 	protected:
-		void tim_gpio_init (S_PWM_INIT_LIST_T *ls, uint8_t pn);
+		void tim_gpio_init (S_PWM_INIT_LIST_T *ls, const uint8_t pn);
 	
 		TPWMSCHAN *ch_array[EPWMCH_ENDENUM];
 		
@@ -85,7 +89,7 @@ class TPWM  {
 		void set_pwm (uint8_t ix, uint32_t mks);
 		void enable (uint8_t ix, bool v);
 	
-		static const uint32_t chanpwmlist[EPWMCH_ENDENUM];
+		
 };
 
 

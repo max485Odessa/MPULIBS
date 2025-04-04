@@ -25,6 +25,7 @@ void THBRIDGE::set_hbr_period (uint32_t mks)
 {
 	period_hbr_mks = mks;
 	pwm_base->set_period (period_hbr_mks);
+	set_hbr_pwm (pwm_hbr_mks);
 }
 
 
