@@ -5,9 +5,12 @@
 enum EGPIOIX {EGPIOIX_A = 0, EGPIOIX_B, EGPIOIX_C, EGPIOIX_D, EGPIOIX_E, EGPIOIX_F, EGPIOIX_ENDENUM};
 static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
 static bool cur_clock_state_tim[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
-static bool cur_clock_state_uart[ESYSUSART_ENDUNUM] = {0,0,0,0,0,0};
+static bool cur_clock_state_spi[ESYSSPI_ENDENUM] = {0,0,0,0,0,0};
+static bool cur_clock_state_uart[ESYSUSART_ENDENUM] = {0,0,0,0,0,0};
 static const TIM_TypeDef *cur_clock_port_tim[ESYSTIM_ENDENUM] = {TIM1,TIM2,TIM3,TIM4,TIM5,0,0,0,TIM9,TIM10,TIM11,0};
+static const SPI_TypeDef *cur_clock_port_spi[ESYSSPI_ENDENUM] = {SPI1,SPI2,SPI3,SPI4,SPI5,0};
 static const bool period_tim[ESYSTIM_ENDENUM] = {0,true,0,0,true,0,0,0,0,0,0,0};
+
 
 
 TIM_TypeDef *hard_get_tim (ESYSTIM tn, bool *f_wdth_32)
@@ -16,6 +19,16 @@ TIM_TypeDef *hard_get_tim (ESYSTIM tn, bool *f_wdth_32)
 	if (tn < ESYSTIM_ENDENUM) {
 		rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
 		if (f_wdth_32) *f_wdth_32 = period_tim[tn];
+		}
+	return rv;
+}
+
+
+SPI_TypeDef *hard_get_spi (ESYSSPI tn)
+{
+	SPI_TypeDef *rv = 0;
+	if (tn < ESYSSPI_ENDENUM) {
+		rv = const_cast<SPI_TypeDef*>(cur_clock_port_spi[tn]);
 		}
 	return rv;
 }
@@ -44,13 +57,74 @@ TIM_TypeDef *get_hard_tim (ESYSTIM tn)
 
 
 
+void hard_spi_clock_enable (ESYSSPI tn)
+{
+	bool f_sets = false;
+	if (cur_clock_state_spi[tn]) return;
+	do	{
+			#ifdef SPI1
+			if (tn == ESYSSPI_1) {
+				__HAL_RCC_SPI1_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef SPI2
+			if (tn == ESYSSPI_2) {
+				__HAL_RCC_SPI2_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef SPI3
+			if (tn == ESYSSPI_3) {
+				__HAL_RCC_SPI3_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef SPI4
+			if (tn == ESYSSPI_4) {
+				__HAL_RCC_SPI4_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+				
+			#ifdef SPI5
+			if (tn == ESYSSPI_5) {
+				__HAL_RCC_SPI5_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			#ifdef SPI6
+			if (tn == ESYSSPI_6) {
+				__HAL_RCC_SPI6_CLK_ENABLE();
+				f_sets = true;
+				break;
+				}
+			#endif
+				
+			} while (false);
+	
+	if (f_sets) cur_clock_state_spi[tn] = true;	
+}
+
+
+
 void hard_tim_clock_enable (ESYSTIM tn)
 {
 	bool f_sets = false;
 	if (cur_clock_state_tim[tn]) return;
 	do	{
 			#ifdef TIM1
-			if (tn == ESYSTIM_TIM1) {
+			if (tn == ESYSTIM_1) {
 				__HAL_RCC_TIM1_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -58,7 +132,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 			#endif
 				
 			#ifdef TIM2
-			if (tn == ESYSTIM_TIM2) {
+			if (tn == ESYSTIM_2) {
 				__HAL_RCC_TIM2_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -66,7 +140,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 			#endif
 				
 			#ifdef TIM3
-			if (tn == ESYSTIM_TIM3) {
+			if (tn == ESYSTIM_3) {
 				__HAL_RCC_TIM3_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -74,7 +148,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 			#endif
 				
 			#ifdef TIM4
-			if (tn == ESYSTIM_TIM4) {
+			if (tn == ESYSTIM_4) {
 				__HAL_RCC_TIM4_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -83,7 +157,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 				
 				
 			#ifdef TIM5
-			if (tn == ESYSTIM_TIM5) {
+			if (tn == ESYSTIM_5) {
 				__HAL_RCC_TIM5_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -115,7 +189,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 			#endif
 			
 			#ifdef TIM9
-			if (tn == ESYSTIM_TIM9) {
+			if (tn == ESYSTIM_9) {
 				__HAL_RCC_TIM9_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -123,7 +197,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 			#endif
 				
 			#ifdef TIM10
-			if (tn == ESYSTIM_TIM10) {
+			if (tn == ESYSTIM_10) {
 				__HAL_RCC_TIM10_CLK_ENABLE();
 				f_sets = true;
 				break;
@@ -131,7 +205,7 @@ void hard_tim_clock_enable (ESYSTIM tn)
 			#endif
 				
 			#ifdef TIM11
-			if (tn == ESYSTIM_TIM11) {
+			if (tn == ESYSTIM_11) {
 				__HAL_RCC_TIM11_CLK_ENABLE();
 				f_sets = true;
 				break;

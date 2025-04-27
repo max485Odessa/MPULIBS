@@ -1,6 +1,14 @@
 #include "tusartdata.h"
 
 
+static const uint32_t parityarr[EUSARTPARITYMODE_ENDENUM] = {UART_PARITY_NONE, UART_PARITY_EVEN, UART_PARITY_ODD};
+static const uint32_t stopbityarr[EUSARTSTOPBIT_ENDENUM] = {UART_STOPBITS_1, UART_STOPBITS_2};
+TSERIALISR *TSERIALISR::ifc[ESYSUSART_ENDENUM] = {0,0,0,0,0,0};
+
+#include "TUSARTconf.h"
+
+
+
 #define _IFCUSART_UART_DISABLE_IT(__HANDLE__, __INTERRUPT__)  ((((__INTERRUPT__) >> 28U) == UART_CR1_REG_INDEX)? ((__HANDLE__)->CR1 &= ~((__INTERRUPT__) & UART_IT_MASK)): \
                                                            (((__INTERRUPT__) >> 28U) == UART_CR2_REG_INDEX)? ((__HANDLE__)->CR2 &= ~((__INTERRUPT__) & UART_IT_MASK)): \
                                                            ((__HANDLE__)->CR3 &= ~ ((__INTERRUPT__) & UART_IT_MASK)))
@@ -10,21 +18,6 @@
 #define _IFCUSART_UART_CLEAR_FLAG(__HANDLE__, __FLAG__) ((__HANDLE__)->SR = ~(__FLAG__))
 #define _IFCUSART_UART_ENABLE(__HANDLE__)               ((__HANDLE__)->CR1 |=  USART_CR1_UE)
 
-
-#if (HRDCPU == 1)
-TSERIALISR *TSERIALISR::ifc[ESYSUSART_ENDENUM] = {0,0,0};
-static uint8_t usartisr_arr[ESYSUSART_ENDENUM] = {USART1_IRQn, USART2_IRQn, USART3_IRQn};
-static S_USARTPINS_T usarthardarr[ESYSUSART_ENDENUM] = {{GPIOB, GPIO_PIN_6/*tx*/, GPIOB, GPIO_PIN_7/*rx*/, USART1, 0}, {GPIOA, GPIO_PIN_2/*tx*/, GPIOA, GPIO_PIN_3/*rx*/, USART2, 0}, \
-{GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, USART3, 0}};
-#endif
-
-#if (HRDCPU == 4)
-TSERIALISR *TSERIALISR::ifc[ESYSUSART_ENDENUM] = {0,0,0,0,0,0};
-static uint8_t usartisr_arr[ESYSUSART_ENDENUM] = {USART1_IRQn, USART2_IRQn, USART3_IRQn, UART4_IRQn, UART5_IRQn, USART6_IRQn};
-static S_USARTPINS_T usarthardarr[ESYSUSART_ENDENUM] = {{GPIOA, GPIO_PIN_9/*tx*/, GPIOA, GPIO_PIN_10/*rx*/, USART1, GPIO_AF7_USART1}, {GPIOA, GPIO_PIN_2/*tx*/, GPIOA, GPIO_PIN_3/*rx*/, USART2, GPIO_AF7_USART2}, \
-{GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, USART3, GPIO_AF7_USART3}, {GPIOC, GPIO_PIN_10/*tx*/, GPIOC, GPIO_PIN_11/*rx*/, UART4, GPIO_AF8_UART4}, {GPIOC, GPIO_PIN_12/*tx*/, GPIOD, GPIO_PIN_2/*rx*/, UART5, GPIO_AF8_UART5}, \
-{GPIOC, GPIO_PIN_6/*tx*/, GPIOC, GPIO_PIN_7/*rx*/, USART6, GPIO_AF8_USART6}};
-#endif
 
 
 #ifdef __cplusplus
@@ -55,14 +48,29 @@ void base_txrx_isr (TSERIALISR &obj)
 }
 
 
-
+#ifdef USART1
 void USART1_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_1]);
 }
+#endif
+
+#ifdef UART1
+void UART1_IRQHandler ()
+{
+	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_1]);
+}
+#endif
 
 #ifdef USART2
 void USART2_IRQHandler ()
+{
+	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_2]);
+}
+#endif
+
+#ifdef UART2
+void UART2_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_2]);
 }
@@ -74,9 +82,21 @@ void USART3_IRQHandler ()
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_3]);
 }
 #endif
+#ifdef UART3
+void UART3_IRQHandler ()
+{
+	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_3]);
+}
+#endif
 
 #ifdef UART4
 void UART4_IRQHandler ()
+{
+	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_4]);
+}
+#endif
+#ifdef USART4
+void USART4_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_4]);
 }
@@ -88,8 +108,21 @@ void UART5_IRQHandler ()
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_5]);
 }
 #endif
+#ifdef USART5
+void USART5_IRQHandler ()
+{
+	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_5]);
+}
+#endif
 
 #ifdef UART6
+void UART6_IRQHandler ()
+{
+	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_6]);
+}
+#endif
+
+#ifdef USART6
 void USART6_IRQHandler ()
 {
 	base_txrx_isr (*TSERIALISR::ifc[ESYSUSART_6]);
@@ -101,6 +134,14 @@ void USART6_IRQHandler ()
 #ifdef __cplusplus
 }
 #endif
+
+
+
+bool TSERIALISR::is_hiz_mode ()
+{
+	return f_is_hiz_mode_activate;
+}
+
 
 
 
@@ -154,6 +195,54 @@ void TSERIALUSR::debug_peak_clear ()
 
 
 
+void TUSARTOBJ::hard_constr_init (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx, bool f_md, EUSARTPARITYMODE pm, EUSARTSTOPBIT sbm)
+{
+	f_tx_open_drain = f_md;
+	c_linkdetect_period = 2000;
+	c_port_ix = prt;
+	fifo_tx = new TTFIFO<uint8_t>(sz_b_tx);
+	fifo_rx = new TTFIFO<uint8_t>(sz_b_rx);
+
+	ifc[c_port_ix] = this;
+	USARTPort = usarthardarr[c_port_ix].usart;
+	UartHandle.Instance        = USARTPort;
+	hard_usart_clock_enable (USARTPort);
+	thizif_hiz_outputs (false);
+
+	default_settings (pm, sbm);
+	SetSpeed (C_USART_SPEED_DEF);
+
+	Init ();
+}
+
+
+
+void TSERIALUSR::SetSpeed (uint32_t c_speed)
+{
+  UartHandle.Init.BaudRate   = c_speed;
+  UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+  UartHandle.Init.StopBits   = UART_STOPBITS_1;
+  UartHandle.Init.Parity     = UART_PARITY_NONE;
+  UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+  UartHandle.Init.Mode       = UART_MODE_TX_RX;
+  UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
+  HAL_UART_Init (&UartHandle);
+}
+
+
+
+void TUSARTOBJ::default_settings (EUSARTPARITYMODE pm, EUSARTSTOPBIT sbm)
+{
+	  UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
+	  UartHandle.Init.StopBits   = stopbityarr[sbm];
+	  UartHandle.Init.Parity     = parityarr[pm];
+	  UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
+	  UartHandle.Init.Mode       = UART_MODE_TX_RX;
+	  UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
+}
+
+
+
 
 uint32_t TSERIALUSR::tx_free_space ()
 {
@@ -172,13 +261,35 @@ void TSERIALUSR::clear ()
 
 TUSARTOBJ::TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx)
 {
+	hard_constr_init ( prt,  sz_b_tx,  sz_b_rx, false, EUSARTPARITYMODE_NONE, EUSARTSTOPBIT_1);
+}
+
+
+
+TUSARTOBJ::TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx, bool f_tx_od)
+{
+	hard_constr_init ( prt,  sz_b_tx,  sz_b_rx, f_tx_od, EUSARTPARITYMODE_NONE, EUSARTSTOPBIT_1);
+}
+
+
+
+TUSARTOBJ::TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx, bool f_tx_od, EUSARTPARITYMODE pm, EUSARTSTOPBIT sbm)
+{
+	hard_constr_init ( prt,  sz_b_tx,  sz_b_rx, f_tx_od, pm, sbm);
+}
+
+
+
+/*
+TUSARTOBJ::TUSARTOBJ (ESYSUSART prt, uint32_t sz_b_tx, uint32_t sz_b_rx)
+{
 	c_linkdetect_period = 2000;
 	c_port_ix = prt;
 	fifo_tx = new TTFIFO<uint8_t>(sz_b_tx);
 	fifo_rx = new TTFIFO<uint8_t>(sz_b_rx);
 	Init ();
 }
-
+*/
 
 
 
@@ -254,14 +365,20 @@ void TUSARTOBJ::thizif_hiz_outputs (bool f_act_hiz)
 {
 	if (!f_act_hiz)
 		{
-		_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX]);
+		if (f_tx_open_drain)
+			{
+			_pin_low_init_out_od_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], EHRTGPIOSPEED_HI);
+			}
+		else
+			{
+			_pin_low_init_out_pp_af ( usarthardarr[c_port_ix].af_mux_id, &usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], EHRTGPIOSPEED_HI);
+			}
 		}
 	else
 		{
-		_pin_low_init_in (&usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], 1);
+		_pin_low_init_in (&usarthardarr[c_port_ix].pins[EUSARTPINIX_TX], 1, EHRTGPIOSPEED_HI, EHRTGPIOPULL_NO);
 		}
 }
-
 
 
 void TUSARTOBJ::Init ()
@@ -299,18 +416,5 @@ void TUSARTOBJ::Init ()
 	HAL_NVIC_EnableIRQ ((IRQn_Type)usartisr_arr[c_port_ix]);
 }
 
-
-
-void TUSARTOBJ::SetSpeed (uint32_t c_speed)
-{
-  UartHandle.Init.BaudRate   = c_speed;
-  UartHandle.Init.WordLength = UART_WORDLENGTH_8B;
-  UartHandle.Init.StopBits   = UART_STOPBITS_1;
-  UartHandle.Init.Parity     = UART_PARITY_NONE;
-  UartHandle.Init.HwFlowCtl  = UART_HWCONTROL_NONE;
-  UartHandle.Init.Mode       = UART_MODE_TX_RX;
-  UartHandle.Init.OverSampling = UART_OVERSAMPLING_16;
-  HAL_UART_Init (&UartHandle);
-}
 
 

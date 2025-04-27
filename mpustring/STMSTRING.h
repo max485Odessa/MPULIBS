@@ -10,7 +10,45 @@
 #endif
 
 #include "rutine.h"
+#include <stdint.h>
 
+
+enum EINDXIP {EINDXIP_A1 = 0, EINDXIP_A2, EINDXIP_A3, EINDXIP_A4, EINDXIP_ENDENUM};
+
+#pragma pack (push,1)
+
+typedef struct {
+	union	{
+		struct {
+			uint8_t a1;
+			uint8_t a2;
+			uint8_t a3;
+			uint8_t a4;
+		} u4 ;
+	uint8_t arr4[EINDXIP_ENDENUM];
+	uint32_t ip4;
+	};
+} S_IPADR_T;
+
+
+#pragma pack (pop)
+
+
+#pragma pack (push,1)
+
+enum EHEXN {EHEXN_A = 0, EHEXN_B, EHEXN_ENDENUM};
+
+typedef struct {
+	union {
+		uint8_t arr[EHEXN_ENDENUM];
+		struct {
+			uint8_t a;
+			uint8_t b;
+		}s;
+	}u;
+} s_hex_txt_t;
+
+#pragma pack (pop)
 
 
 class TSTMSTRING {
@@ -91,15 +129,17 @@ public:
 
         bool ToLong (long &ul_dat);
         bool ToULong (uint32_t &ul_dat);
+		bool to_ip (S_IPADR_T &dst);
         bool ToFloat (float &f_dat);
         bool HexToUint64 (uint64_t &ul_dat);
 
-        bool getcomastring_indx (TSTMSTRING *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField);
+        bool getcomastring_indx (TSTMSTRING *lOutput, unsigned long Indxx, char delimc, uint32_t *lPCountField);
         bool getstring_indx (TSTMSTRING *lOutput, unsigned long Indxx, unsigned long *lPCountField);
 
         char *c_str(void);
         unsigned long Length ();
         unsigned long size ();
+
 
         static bool hex1bin (uint8_t dat, uint8_t &rslt);
         static char *SkipBlank (char *lsrc, uint32_t maxsz);
@@ -111,7 +151,7 @@ public:
 		static uint32_t lenstr (char *lpAdr);
 		static unsigned char *LongToStr (unsigned char *lpDest, long datas);
         static char ConvBinToASCIIHex (unsigned char datas);
-        static void ByteToHEX (unsigned char *lpRams,unsigned char datas);
+        static void ByteToHEX (s_hex_txt_t *lpRams,uint8_t datas);
         static unsigned char *ConvertStrToLong (unsigned char *lpRamData, long *lpDataOut);
         static unsigned char *ConvertStrToULong (unsigned char *lpRamData, uint32_t *lpDataOut);
         static bool TxtToFloat (float *lpDest, char *lpTxtIn, uint32_t Sizes);

@@ -654,8 +654,8 @@ void TSTMSTRING::Insert_Hex_T (void *lsrc, unsigned short sz)
 
 void TSTMSTRING::Insert_Hex_C (char dat)
 {
-	unsigned char buf[3];
-	ByteToHEX (buf, dat);
+	uint8_t buf[3];
+	ByteToHEX ((s_hex_txt_t*)buf, dat);
 	buf[2] = 0;
 	Add_String ((const char *)buf);
 }
@@ -711,7 +711,7 @@ return rv;
 
 // Возвращает указатель вхождения на нужный стринг по указаному индексу, возвращает размер текстового поля по этому индексу.
 // Можно вычислить количество полей записи указав большой индекс поиска, количество полей возвращается по указателю lPCountField,
-bool TSTMSTRING::getcomastring_indx (TSTMSTRING *lOutput, unsigned long Indxx, char delimc, unsigned long *lPCountField)
+bool TSTMSTRING::getcomastring_indx (TSTMSTRING *lOutput, unsigned long Indxx, char delimc, uint32_t *lPCountField)
 {
 bool rv = false;
 if (size_str && lpStrRam)
@@ -1166,10 +1166,10 @@ return rv;
 }
 
 
-void TSTMSTRING::ByteToHEX (unsigned char *lpRams,unsigned char datas)
+void TSTMSTRING::ByteToHEX (s_hex_txt_t *dst,uint8_t datas)
 {
-lpRams[0] = (ConvBinToASCIIHex(datas>>4));
-lpRams[1] = (ConvBinToASCIIHex(datas));
+dst->u.s.a = (ConvBinToASCIIHex(datas>>4));
+dst->u.s.b = (ConvBinToASCIIHex(datas));
 }
 
 
@@ -1206,7 +1206,37 @@ return lprv;
 
 
 
+bool TSTMSTRING::to_ip (S_IPADR_T &dst)
+{
+	bool rv = false;
 
+	TString (str, 16);
+	uint32_t CountField = 0;
+	getcomastring_indx (&str, 5, '.', &CountField);	// подсчитываем количество полей разделенных точками
+
+	if (CountField == 4){
+		S_IPADR_T tmpadr;
+		uint8_t ix = 0;
+		uint32_t rval;
+		while (ix < 4)
+			{
+			str = "";
+			if (!getcomastring_indx (&str, ix, '.', 0)) break;
+			if (!str.ToULong (rval)) break;
+			if (rval > 255) break;
+			tmpadr.arr4[ix] = rval;
+
+			ix++;
+			}
+		if (ix == 4) {
+			dst = tmpadr;
+			rv = true;
+			}
+		}
+
+
+	return rv;
+}
 
 
 // преобразует данные из текста по указаному адресу в unsigned long число
