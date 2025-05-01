@@ -10,6 +10,8 @@
 
 
 // 42 Mhz in witch prescaler == 2
+// 380 нс - 1 
+// 3 bits spi data to 1 bit W2812
 
 
 
@@ -17,9 +19,13 @@ class TW2812LEDS: public TFRDEXEC {
 	public:
 		typedef struct {
 			ESYSSPI p_ix;
+			DMA_Stream_TypeDef *dmainst_tx;
+			uint32_t dma_chan_tx;
+			IRQn_Type itp_dma_tx;
 			uint8_t af;
 			S_GPIOPIN mosi;
 			} S_W2812MOSI_T;
+		
 #pragma pack (push,1)
 		typedef struct {
 			union {
@@ -41,17 +47,19 @@ class TW2812LEDS: public TFRDEXEC {
 			
 	private:
 		SPI_HandleTypeDef SpiHandle;
+		DMA_HandleTypeDef hdma_tx;
 		SYSBIOS::Timer updperiod_timer;
 	
 		const uint16_t c_width;
 		const uint16_t c_height;
-		const uint32_t c_leds_amount;
+		const uint16_t c_leds_amount;
 
 		uint16_t c_update_period;
 	
 		uint16_t raw_size ();
 		S_W2812MOSI_T pinmosi;
 		uint8_t *rawdmaarray;
+		uint8_t *rawdmaarray_rx;
 		S_GRB_T *canva;
 		bool f_enable;
 	

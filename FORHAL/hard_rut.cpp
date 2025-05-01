@@ -7,17 +7,26 @@ static bool cur_clock_state[EGPIOIX_ENDENUM] = {0,0,0,0,0,0};
 static bool cur_clock_state_tim[ESYSTIM_ENDENUM] = {0,0,0,0,0,0,0,0,0,0,0,0};
 static bool cur_clock_state_spi[ESYSSPI_ENDENUM] = {0,0,0,0,0,0};
 static bool cur_clock_state_uart[ESYSUSART_ENDENUM] = {0,0,0,0,0,0};
-static const TIM_TypeDef *cur_clock_port_tim[ESYSTIM_ENDENUM] = {TIM1,TIM2,TIM3,TIM4,TIM5,0,0,0,TIM9,TIM10,TIM11,0};
-static const SPI_TypeDef *cur_clock_port_spi[ESYSSPI_ENDENUM] = {SPI1,SPI2,SPI3,SPI4,SPI5,0};
+static const TIM_TypeDef *cur_port_tim[ESYSTIM_ENDENUM] = {TIM1,TIM2,TIM3,TIM4,TIM5,0,0,0,TIM9,TIM10,TIM11,0};
+static const SPI_TypeDef *cur_port_spi[ESYSSPI_ENDENUM] = {SPI1,SPI2,SPI3,SPI4,SPI5,0};
 static const bool period_tim[ESYSTIM_ENDENUM] = {0,true,0,0,true,0,0,0,0,0,0,0};
+static const IRQn_Type spiirq_type[ESYSSPI_ENDENUM] = {SPI1_IRQn, SPI2_IRQn, SPI3_IRQn, SPI4_IRQn, SPI5_IRQn};
 
+
+
+IRQn_Type hard_spi_irq_type (ESYSSPI p)
+{
+	IRQn_Type rv = (IRQn_Type)0xFF;
+	if (p < ESYSSPI_ENDENUM) rv = spiirq_type[p];
+	return rv;
+}
 
 
 TIM_TypeDef *hard_get_tim (ESYSTIM tn, bool *f_wdth_32)
 {
 	TIM_TypeDef *rv = 0;
 	if (tn < ESYSTIM_ENDENUM) {
-		rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
+		rv = const_cast<TIM_TypeDef*>(cur_port_tim[tn]);
 		if (f_wdth_32) *f_wdth_32 = period_tim[tn];
 		}
 	return rv;
@@ -28,7 +37,7 @@ SPI_TypeDef *hard_get_spi (ESYSSPI tn)
 {
 	SPI_TypeDef *rv = 0;
 	if (tn < ESYSSPI_ENDENUM) {
-		rv = const_cast<SPI_TypeDef*>(cur_clock_port_spi[tn]);
+		rv = const_cast<SPI_TypeDef*>(cur_port_spi[tn]);
 		}
 	return rv;
 }
@@ -44,16 +53,6 @@ bool rv = false;
 	return rv;
 }
 
-
-
-TIM_TypeDef *get_hard_tim (ESYSTIM tn)
-{
-	TIM_TypeDef *rv = 0;
-	if (tn < ESYSTIM_ENDENUM) {
-		rv = const_cast<TIM_TypeDef*>(cur_clock_port_tim[tn]);
-		}
-	return rv;
-}
 
 
 

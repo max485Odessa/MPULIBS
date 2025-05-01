@@ -25,28 +25,28 @@ static void TimIsr (TTIM_MKS_ISR *o)
 	 
 void TIM2_IRQHandler ()
 {
-	TimIsr (isr_this[ESYSTIM_TIM2]);
+	TimIsr (isr_this[ESYSTIM_2]);
 }
 
 
 
 void TIM3_IRQHandler ()
 {
-	TimIsr (isr_this[ESYSTIM_TIM3]);
+	TimIsr (isr_this[ESYSTIM_3]);
 }
 
 
 
 void TIM4_IRQHandler ()
 {
-	TimIsr (isr_this[ESYSTIM_TIM4]);
+	TimIsr (isr_this[ESYSTIM_4]);
 }
 
 
 
 void TIM5_IRQHandler ()
 {
-	TimIsr (isr_this[ESYSTIM_TIM5]);
+	TimIsr (isr_this[ESYSTIM_5]);
 }
 
 

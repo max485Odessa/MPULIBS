@@ -95,9 +95,10 @@ void _pin_low_init_out_od_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin, EHRTGPIOSP
 void _pin_low_init_in_af ( uint8_t af_codemux, S_GPIOPIN *lp_pin );
 #endif
 
+
+IRQn_Type hard_spi_irq_type (ESYSSPI p);
 TIM_TypeDef *hard_get_tim (ESYSTIM t, bool *f_wdth_32);
 bool hard_tim_is_32bit (ESYSTIM tn);
-TIM_TypeDef *get_hard_tim (ESYSTIM tn);
 SPI_TypeDef *hard_get_spi (ESYSSPI tn);
 void hard_tim_clock_enable (ESYSTIM tn);
 void hard_spi_clock_enable (ESYSSPI tn);
